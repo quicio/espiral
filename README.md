@@ -2,6 +2,8 @@
 
 Instrumento generativo de ritmos, escalas y automatización.
 
+[![Espiral](docs/espiral.png)](https://quicio.github.io/espiral/)
+
 - 7 canales: kick, bass, hi-hat, perc, drone, pad y lead.
 - Performances por escenas: `Umbral`, `Deriva`, `Pulso`, `Caos contenido`.
 - Semilla reproducible, Euclid, densidad, mutación, freeze y evolución.
