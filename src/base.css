@@ -1,0 +1,144 @@
+:root {
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, Monaco, "Courier New", monospace;
+  --font-sans: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --umbral-ink: #e9e6dc;
+  --umbral-dim: #9aa3a1;
+  --umbral-muted: #7f8a88;
+  --umbral-bg: #060708;
+  --umbral-trace: #9fc6c9;
+  --umbral-ember: #c7a466;
+  --umbral-rule: rgba(233, 230, 220, 0.12);
+  --umbral-rule-faint: rgba(233, 230, 220, 0.07);
+  --poem-cinnabar: #c0816e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--umbral-bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.espiral-shell {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.espiral-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.35rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--umbral-rule);
+}
+
+.espiral-header__kicker {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.espiral-header__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(2.7rem, 6vw, 4.4rem);
+  font-weight: 250;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  font-variation-settings: "opsz" 72;
+  color: var(--umbral-ink);
+}
+
+.espiral-header__home {
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+  text-decoration: none;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.espiral-header__home:hover,
+.espiral-header__home:focus-visible {
+  border-color: var(--umbral-trace);
+  color: var(--umbral-trace);
+}
+
+.espiral-intro {
+  max-width: 68ch;
+  margin: 0 0 clamp(1.75rem, 4vw, 2.5rem);
+  font-family: var(--font-serif);
+  font-size: clamp(1rem, 1.6vw, 1.12rem);
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--umbral-dim);
+}
+
+body.espiral-page ::selection {
+  background: rgba(159, 198, 201, 0.28);
+  color: #f4f1e9;
+}
+
+body.espiral-page :focus-visible {
+  outline: 1px solid var(--umbral-trace);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .espiral-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .espiral-header__title {
+    font-size: clamp(2.4rem, 12vw, 3.2rem);
+  }
+}
