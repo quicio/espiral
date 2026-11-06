@@ -1,0 +1,61 @@
+{
+  "name": "Minimal",
+  "description": "Solo kick, bass y hi-hat con poco ambiente",
+  "bpm": 110,
+  "masterVolume": -4,
+  "channels": {
+    "kick": {
+      "volume": -4,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "bass": {
+      "volume": -6,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "hihat": {
+      "volume": -12,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.2,
+          "feedback": 0.25,
+          "delayTime": 0.125
+        },
+        "reverb": {
+          "wet": 0.2,
+          "roomSize": 0.6
+        }
+      }
+    },
+    "drone": {
+      "volume": -20,
+      "muted": true,
+      "solo": false,
+      "effects": null
+    },
+    "pad": {
+      "volume": -20,
+      "muted": true,
+      "solo": false,
+      "effects": null
+    },
+    "perc": {
+      "volume": -20,
+      "muted": true,
+      "solo": false,
+      "effects": null
+    },
+    "lead": {
+      "volume": -20,
+      "muted": true,
+      "solo": false,
+      "effects": null
+    }
+  }
+}
+

@@ -726,9 +726,9 @@ function renderMixPresets() {
   const select = q('#mix-preset');
   if (!select) return;
   const presets = [
-    { name: 'Techno Ambiental', file: '/assets/data/presets/default.json' },
-    { name: 'Minimal', file: '/assets/data/presets/minimal.json' },
-    { name: 'Ambient', file: '/assets/data/presets/ambient.json' }
+    { name: 'Techno Ambiental', file: './presets/default.json' },
+    { name: 'Minimal', file: './presets/minimal.json' },
+    { name: 'Ambient', file: './presets/ambient.json' }
   ];
   select.innerHTML = '<option value="-1">Seleccionar…</option>' + presets.map((preset, index) =>
     `<option value="${index}">${preset.name}</option>`
@@ -1093,7 +1093,7 @@ function applySession(data) {
 }
 function saveSession() {
   try {
-    localStorage.setItem('kndl000-mixer-session-v1', JSON.stringify(collectSession()));
+    localStorage.setItem('quicio-espiral-session-v1', JSON.stringify(collectSession()));
     setSessionStatus('Sesión guardada.');
   } catch (error) {
     setSessionStatus('No se pudo guardar la sesión.');
@@ -1101,7 +1101,7 @@ function saveSession() {
 }
 function loadSession() {
   try {
-    const raw = localStorage.getItem('kndl000-mixer-session-v1');
+    const raw = localStorage.getItem('quicio-espiral-session-v1');
     if (!raw) return setSessionStatus('No hay una sesión guardada.');
     applySession(JSON.parse(raw));
     setSessionStatus('Sesión cargada.');
@@ -1115,7 +1115,7 @@ function exportSession() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'kndl-mixer-session.json';
+    link.download = 'espiral-session.json';
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 0);
     setSessionStatus('Sesión exportada.');

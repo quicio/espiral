@@ -1,0 +1,111 @@
+{
+  "name": "Ambient",
+  "description": "Mucho ambiente, delay y espacio",
+  "bpm": 90,
+  "masterVolume": -4,
+  "channels": {
+    "kick": {
+      "volume": -8,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "bass": {
+      "volume": -12,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.3,
+          "feedback": 0.4,
+          "delayTime": 0.25
+        },
+        "reverb": {
+          "wet": 0.4,
+          "roomSize": 0.9
+        }
+      }
+    },
+    "hihat": {
+      "volume": -14,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.5,
+          "feedback": 0.5,
+          "delayTime": 0.25
+        },
+        "reverb": {
+          "wet": 0.6,
+          "roomSize": 0.95
+        }
+      }
+    },
+    "drone": {
+      "volume": -8,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.6,
+          "feedback": 0.5,
+          "delayTime": 0.5
+        },
+        "reverb": {
+          "wet": 0.7,
+          "roomSize": 0.98
+        }
+      }
+    },
+    "pad": {
+      "volume": -10,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.6,
+          "feedback": 0.5,
+          "delayTime": 0.5
+        },
+        "reverb": {
+          "wet": 0.7,
+          "roomSize": 0.98
+        }
+      }
+    },
+    "perc": {
+      "volume": -12,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.4,
+          "feedback": 0.4,
+          "delayTime": 0.25
+        },
+        "reverb": {
+          "wet": 0.5,
+          "roomSize": 0.9
+        }
+      }
+    },
+    "lead": {
+      "volume": -14,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.5,
+          "feedback": 0.4,
+          "delayTime": 0.25
+        },
+        "reverb": {
+          "wet": 0.6,
+          "roomSize": 0.95
+        }
+      }
+    }
+  }
+}
+

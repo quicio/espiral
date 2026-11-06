@@ -1,0 +1,91 @@
+{
+  "name": "Techno Ambiental",
+  "description": "Patrón base con ambiente y delay",
+  "bpm": 120,
+  "masterVolume": -4,
+  "channels": {
+    "kick": {
+      "volume": -4,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "bass": {
+      "volume": -8,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "hihat": {
+      "volume": -10,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.3,
+          "feedback": 0.35,
+          "delayTime": 0.125
+        },
+        "reverb": {
+          "wet": 0.4,
+          "roomSize": 0.8
+        }
+      }
+    },
+    "drone": {
+      "volume": -10,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.3,
+          "feedback": 0.4,
+          "delayTime": 0.125
+        },
+        "reverb": {
+          "wet": 0.5,
+          "roomSize": 0.95
+        }
+      }
+    },
+    "pad": {
+      "volume": -14,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.3,
+          "feedback": 0.4,
+          "delayTime": 0.125
+        },
+        "reverb": {
+          "wet": 0.5,
+          "roomSize": 0.95
+        }
+      }
+    },
+    "perc": {
+      "volume": -8,
+      "muted": false,
+      "solo": false,
+      "effects": null
+    },
+    "lead": {
+      "volume": -16,
+      "muted": false,
+      "solo": false,
+      "effects": {
+        "delay": {
+          "wet": 0.2,
+          "feedback": 0.3,
+          "delayTime": 0.125
+        },
+        "reverb": {
+          "wet": 0.4,
+          "roomSize": 0.9
+        }
+      }
+    }
+  }
+}
+
