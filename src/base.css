@@ -60,16 +60,6 @@ select {
   border-bottom: 1px solid var(--umbral-rule);
 }
 
-.espiral-header__kicker {
-  margin: 0 0 0.35rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--umbral-muted);
-}
-
 .espiral-header__title {
   margin: 0;
   font-family: var(--font-serif);
@@ -79,6 +69,16 @@ select {
   letter-spacing: 0.02em;
   font-variation-settings: "opsz" 72;
   color: var(--umbral-ink);
+}
+
+.espiral-header__subtitle {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
 }
 
 .espiral-header__home {
