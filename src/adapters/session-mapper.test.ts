@@ -34,7 +34,15 @@ describe('SessionMapper', () => {
           )
         },
         pulses: { ...state.pattern.pulses, 'track-08': 5 },
-        frozen: { ...state.pattern.frozen, 'track-08': true }
+        frozen: { ...state.pattern.frozen, 'track-08': true },
+        locks: {
+          ...state.pattern.locks,
+          kick: state.pattern.locks.kick!.map((locks, index) =>
+            index === 2
+              ? [{ insertId: 'drive', paramId: 'drive', value: 0.7 }]
+              : locks
+          )
+        }
       },
       selected: 'track-08',
       harmony: { ...state.harmony, root: 7, scale: 'major', progression: 'cadencia', sustain: 0.8 },
@@ -118,6 +126,9 @@ describe('SessionMapper', () => {
     expect(restored.pattern.steps['track-08']?.[4]).toBe(1);
     expect(restored.pattern.pulses['track-08']).toBe(5);
     expect(restored.pattern.frozen['track-08']).toBe(true);
+    expect(restored.pattern.locks.kick?.[2]).toEqual([
+      { insertId: 'drive', paramId: 'drive', value: 0.7 }
+    ]);
     expect(restored.kit.tracks['track-08']?.gainDb).toBe(-13);
     expect(restored.kit.tracks['track-08']?.sends).toEqual([
       { busId: 'reverb-bus', amount: 0.35, preFader: true }
@@ -127,6 +138,9 @@ describe('SessionMapper', () => {
     expect(restored.modulation.routes).toEqual(original.modulation.routes);
     expect(restored.scenes.umbral.kit.tracks.kick?.gainDb).toBe(-9);
     expect(restored.scenes.umbral.pattern.steps.kick?.[0]).toBe(0);
+    expect(restored.scenes.umbral.pattern.locks.kick?.[2]).toEqual([
+      { insertId: 'drive', paramId: 'drive', value: 0.7 }
+    ]);
     expect(restored.scenes.deriva.pattern.steps.kick).toEqual(
       original.scenes.deriva.pattern.steps.kick
     );

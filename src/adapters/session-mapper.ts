@@ -7,6 +7,7 @@ import {
   isChannelKey,
   isPatternChannel,
   PATTERN_CHANNELS,
+  PATTERN_LENGTH,
   type PatternChannel
 } from '../domain/channels';
 import type { InsertConfig, MachineConfig, SendConfig } from '../domain/graph';
@@ -34,9 +35,12 @@ import type {
 } from '../domain/modulation';
 import type { GenerativePort, SessionCodec } from '../domain/ports';
 import {
+  emptyTrackLocks,
   isValidPattern,
   toPattern,
+  type ParamLock,
   type Pattern,
+  type PatternLocks,
   type PatternState,
   type PatternSteps
 } from '../domain/pattern';
@@ -82,6 +86,10 @@ export interface SessionPatternDto {
   readonly steps: Record<string, readonly number[]>;
   readonly pulses: Record<string, number>;
   readonly frozen: Record<string, boolean>;
+  readonly locks?: Record<
+    string,
+    readonly (readonly { insertId: string; paramId: string; value: number }[])[]
+  >;
 }
 
 export interface SessionSceneDto {
@@ -117,6 +125,7 @@ export interface SessionDto {
   readonly pulses: Record<string, number>;
   readonly frozen: Record<string, boolean>;
   readonly patterns: Record<string, readonly number[]>;
+  readonly locks?: SessionPatternDto['locks'];
   readonly selected: string;
   readonly bpm: number;
   readonly master: number;
@@ -158,6 +167,7 @@ export class SessionMapper implements SessionCodec {
       patterns: Object.fromEntries(
         Object.entries(state.pattern.steps).map(([key, steps]) => [key, [...steps]])
       ),
+      locks: toLocksDto(state.pattern),
       selected: state.selected,
       bpm: state.transport.bpm,
       master: state.masterVolume,
@@ -197,6 +207,7 @@ export class SessionMapper implements SessionCodec {
     const modulation = readModulation(data.modulation, current.modulation);
     const pulses = readPulses(data.pulses, current.pattern.pulses);
     const frozen = readFrozen(data.frozen, current.pattern.frozen);
+    const locks = readLocks(data.locks, current.pattern.locks);
     const patterns = { ...current.pattern.steps };
 
     const kit =
@@ -214,7 +225,7 @@ export class SessionMapper implements SessionCodec {
     }
 
     const patternState = alignPatternToKit(
-      { steps: patterns, pulses, frozen },
+      { steps: patterns, pulses, frozen, locks },
       kit
     );
     const selected =
@@ -228,7 +239,12 @@ export class SessionMapper implements SessionCodec {
       seed: numberOr(data.seed, current.seed),
       params,
       harmony: { root, scale, progression, sustain },
-      pattern: { steps: patternState.steps, pulses: patternState.pulses, frozen: patternState.frozen },
+      pattern: {
+        steps: patternState.steps,
+        pulses: patternState.pulses,
+        frozen: patternState.frozen,
+        locks: patternState.locks
+      },
       automation,
       modulation,
       selected,
@@ -305,8 +321,18 @@ function toPatternDto(pattern: PatternState): SessionPatternDto {
       Object.entries(pattern.steps).map(([key, steps]) => [key, [...steps]])
     ),
     pulses: { ...pattern.pulses },
-    frozen: { ...pattern.frozen }
+    frozen: { ...pattern.frozen },
+    locks: toLocksDto(pattern)
   };
+}
+
+function toLocksDto(pattern: PatternState): SessionPatternDto['locks'] {
+  return Object.fromEntries(
+    Object.entries(pattern.locks).map(([key, steps]) => [
+      key,
+      steps.map(locks => locks.map(lock => ({ ...lock })))
+    ])
+  );
 }
 
 function toSceneDto(snapshot: SceneSnapshot): SessionSceneDto {
@@ -396,7 +422,8 @@ function readPatternState(raw: unknown, fallback: PatternState): PatternState {
   return {
     steps,
     pulses: readPulses(data.pulses, fallback.pulses),
-    frozen: readFrozen(data.frozen, fallback.frozen)
+    frozen: readFrozen(data.frozen, fallback.frozen),
+    locks: readLocks(data.locks, fallback.locks)
   };
 }
 
@@ -800,6 +827,59 @@ function readFrozen(
   return next;
 }
 
+function readLocks(
+  raw: unknown,
+  fallback: PatternLocks
+): PatternLocks {
+  const data = asRecord(raw);
+  const next = cloneLocks(fallback);
+  if (!data) return next;
+
+  Object.entries(data).forEach(([trackId, value]) => {
+    if (!Array.isArray(value)) return;
+    const steps: ParamLock[][] = Array.from(
+      { length: PATTERN_LENGTH },
+      () => []
+    );
+    value.forEach((stepValue, index) => {
+      if (index >= PATTERN_LENGTH || !Array.isArray(stepValue)) return;
+      steps[index] = stepValue
+        .map(readLock)
+        .filter((lock): lock is ParamLock => lock !== null);
+    });
+    next[trackId] = steps;
+  });
+
+  return next;
+}
+
+function readLock(value: unknown): ParamLock | null {
+  const data = asRecord(value);
+  if (
+    !data ||
+    typeof data.insertId !== 'string' ||
+    typeof data.paramId !== 'string' ||
+    typeof data.value !== 'number' ||
+    !Number.isFinite(data.value)
+  ) {
+    return null;
+  }
+  return {
+    insertId: data.insertId,
+    paramId: data.paramId,
+    value: data.value
+  };
+}
+
+function cloneLocks(locks: PatternLocks): PatternLocks {
+  return Object.fromEntries(
+    Object.entries(locks).map(([key, steps]) => [
+      key,
+      steps.map(step => step.map(lock => ({ ...lock })))
+    ])
+  );
+}
+
 function emptyPattern(): Pattern {
   return Array.from({ length: 16 }, () => 0 as const);
 }
@@ -813,12 +893,14 @@ function alignPatternToKit(pattern: PatternState, kit: KitState): PatternState {
   const steps: PatternSteps = {};
   const pulses: Record<string, number> = {};
   const frozen: Record<string, boolean> = {};
+  const locks: PatternLocks = {};
   ids.forEach(id => {
     steps[id] = pattern.steps[id] ?? emptyPattern();
     pulses[id] = pattern.pulses[id] ?? 4;
     frozen[id] = pattern.frozen[id] ?? false;
+    locks[id] = pattern.locks[id] ?? emptyTrackLocks();
   });
-  return { steps, pulses, frozen };
+  return { steps, pulses, frozen, locks };
 }
 
 function isSceneId(value: unknown, generative: GenerativePort): value is SceneId {

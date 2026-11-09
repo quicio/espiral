@@ -7,7 +7,13 @@ import { DEFAULT_AUTOMATION_VALUES } from '../domain/automation';
 import { createDefaultKit } from '../domain/default-kit';
 import { cloneKit, kitTracks } from '../domain/kit';
 import { createDefaultModulation } from '../domain/modulation';
-import { INITIAL_PATTERNS, type Pattern, type PatternSteps } from '../domain/pattern';
+import {
+  emptyTrackLocks,
+  INITIAL_PATTERNS,
+  type Pattern,
+  type PatternLocks,
+  type PatternSteps
+} from '../domain/pattern';
 import type { InstrumentState, SceneId } from '../domain/models';
 import type { GenerativePort } from '../domain/ports';
 import type { SceneCollection } from '../domain/scene';
@@ -55,7 +61,14 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
           id: id as SceneId,
           name: scene.label,
           kit: cloneKit(kitTemplate),
-          pattern: { steps, pulses: { ...pulses }, frozen: { ...frozen } },
+          pattern: {
+            steps,
+            pulses: { ...pulses },
+            frozen: { ...frozen },
+            locks: Object.fromEntries(
+              patternTracks.map(key => [key, emptyTrackLocks()])
+            ) as PatternLocks
+          },
           harmony: { ...scene.harmony },
           seed: INITIAL_SEED,
           params: { ...scene.params },

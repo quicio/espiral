@@ -1,5 +1,5 @@
 import type { InstrumentState } from '../domain/models';
-import { normalizeStep, patternStep } from '../domain/pattern';
+import { locksAt, normalizeStep, patternStep } from '../domain/pattern';
 import type {
   AudioEnginePort,
   AutomationRunner,
@@ -25,6 +25,7 @@ export class PlaybackService {
   private readonly unsubscribe: () => void;
   private running = false;
   private startId = 0;
+  private readonly activeLocks = new Map<string, AppliedLock>();
 
   constructor(
     private readonly store: Store,
@@ -95,6 +96,7 @@ export class PlaybackService {
     this.running = false;
     this.clock.stop();
     this.engine.stop();
+    this.restoreLocks();
     this.store.update(current => ({
       ...current,
       transport: {
@@ -151,11 +153,86 @@ export class PlaybackService {
     }
 
     this.automation.applyAt(step, time);
+    this.applyLocks(state, time, step, stepCount);
     this.triggerStep(state, time, stepCount);
 
     if (state.evolve && stepCount > 0 && stepCount % 32 === 0) {
       this.patterns.evolve();
     }
+  }
+
+  private applyLocks(
+    state: InstrumentState,
+    time: number,
+    step: number,
+    stepCount: number
+  ): void {
+    const desired = new Map<string, AppliedLock>();
+
+    Object.values(state.kit.tracks).forEach(track => {
+      if (!track.hasPattern) return;
+      if (!patternStep(state.pattern.steps, track.id, stepCount)) return;
+
+      locksAt(state.pattern.locks, track.id, step).forEach(lock => {
+        const insert = track.inserts.find(entry => entry.id === lock.insertId);
+        if (!insert) return;
+        const definition = this.engine
+          .listPlugins()
+          .find(plugin => plugin.id === insert.pluginId);
+        const param = definition?.params.find(entry => entry.id === lock.paramId);
+        const base =
+          insert.params[lock.paramId] ?? param?.defaultValue ?? lock.value;
+        const key = lockKey(track.id, lock.insertId, lock.paramId);
+        desired.set(key, {
+          trackId: track.id,
+          insertId: lock.insertId,
+          paramId: lock.paramId,
+          value: lock.value,
+          base
+        });
+      });
+    });
+
+    desired.forEach((lock, key) => {
+      const offset = timingOffset(
+        state,
+        this.generative,
+        lock.trackId,
+        stepCount
+      );
+      this.engine.setInsertParam(
+        lock.trackId,
+        lock.insertId,
+        lock.paramId,
+        lock.value,
+        time + offset
+      );
+      this.activeLocks.set(key, lock);
+    });
+
+    this.activeLocks.forEach((lock, key) => {
+      if (desired.has(key)) return;
+      this.engine.setInsertParam(
+        lock.trackId,
+        lock.insertId,
+        lock.paramId,
+        lock.base,
+        time
+      );
+      this.activeLocks.delete(key);
+    });
+  }
+
+  private restoreLocks(): void {
+    this.activeLocks.forEach(lock => {
+      this.engine.setInsertParam(
+        lock.trackId,
+        lock.insertId,
+        lock.paramId,
+        lock.base
+      );
+    });
+    this.activeLocks.clear();
   }
 
   private triggerStep(state: InstrumentState, time: number, stepCount: number): void {
@@ -261,6 +338,18 @@ export class PlaybackService {
       }
     }
   }
+}
+
+function lockKey(trackId: string, insertId: string, paramId: string): string {
+  return `${trackId}:${insertId}:${paramId}`;
+}
+
+interface AppliedLock {
+  readonly trackId: string;
+  readonly insertId: string;
+  readonly paramId: string;
+  readonly value: number;
+  readonly base: number;
 }
 
 function clamp(value: number, min: number, max: number): number {

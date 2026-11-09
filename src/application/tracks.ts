@@ -2,7 +2,12 @@ import { PATTERN_LENGTH } from '../domain/channels';
 import { createUserTrack } from '../domain/default-kit';
 import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
-import type { Pattern, PatternState, PatternSteps } from '../domain/pattern';
+import {
+  emptyTrackLocks,
+  type Pattern,
+  type PatternState,
+  type PatternSteps
+} from '../domain/pattern';
 import type { AudioEnginePort, StatusPort } from '../domain/ports';
 import type { SceneSnapshot } from '../domain/scene';
 import type { Store } from './store';
@@ -39,7 +44,8 @@ export class TrackService {
       pattern: {
         steps: { ...state.pattern.steps, [track.id]: empty },
         pulses: { ...state.pattern.pulses, [track.id]: 4 },
-        frozen: { ...state.pattern.frozen, [track.id]: false }
+        frozen: { ...state.pattern.frozen, [track.id]: false },
+        locks: { ...state.pattern.locks, [track.id]: emptyTrackLocks() }
       },
       scenes: mapScenes(state, scene => addTrackToScene(scene, track, empty)),
       selected: track.id,
@@ -130,7 +136,8 @@ function addTrackToScene(
     pattern: {
       steps: { ...scene.pattern.steps, [track.id]: [...pattern] },
       pulses: { ...scene.pattern.pulses, [track.id]: 4 },
-      frozen: { ...scene.pattern.frozen, [track.id]: false }
+      frozen: { ...scene.pattern.frozen, [track.id]: false },
+      locks: { ...scene.pattern.locks, [track.id]: emptyTrackLocks() }
     }
   };
 }
@@ -157,7 +164,8 @@ function removeTrackFromPattern(
   return {
     steps,
     pulses: omit(pattern.pulses, trackId),
-    frozen: omit(pattern.frozen, trackId)
+    frozen: omit(pattern.frozen, trackId),
+    locks: omit(pattern.locks, trackId)
   };
 }
 

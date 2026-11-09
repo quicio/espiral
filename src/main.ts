@@ -5,6 +5,7 @@ import { SessionMapper } from './adapters/session-mapper';
 import { AutomationService } from './application/automation';
 import type { AudioEnginePort } from './domain/ports';
 import { createInitialState } from './application/initial-state';
+import { LocksService } from './application/locks';
 import { MixService } from './application/mix';
 import { ModulationService } from './application/modulation';
 import { PatternService } from './application/patterns';
@@ -64,6 +65,7 @@ async function boot(): Promise<void> {
   const tracks = new TrackService(store, engine, status);
   const routing = new RoutingService(store, engine);
   const modulation = new ModulationService(store, engine, new IntervalTicker());
+  const locks = new LocksService(store, engine);
   const sessionMapper = new SessionMapper(generative);
   const sessions = new SessionService(
     store,
@@ -99,6 +101,7 @@ async function boot(): Promise<void> {
     tracks,
     routing,
     modulation,
+    locks,
     status
   });
   app.mount();

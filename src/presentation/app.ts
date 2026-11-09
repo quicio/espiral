@@ -1,8 +1,10 @@
 import type { GenerativeParams, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import type { ModulationState } from '../domain/modulation';
+import { denormalizePluginParam } from '../domain/plugin';
 import type { StatusPort } from '../domain/ports';
 import type { AutomationService } from '../application/automation';
 import type { MixService } from '../application/mix';
+import type { LocksService } from '../application/locks';
 import type { ModulationService } from '../application/modulation';
 import type { PatternService } from '../application/patterns';
 import type { PlaybackService } from '../application/playback';
@@ -13,6 +15,7 @@ import type { SessionService } from '../application/sessions';
 import type { Store } from '../application/store';
 import type { TrackService } from '../application/tracks';
 import * as view from './render';
+import { formatPluginParam } from './plugin-controls';
 
 type ViewId = 'performance' | 'sequencer' | 'sound' | 'routing' | 'modulation';
 
@@ -29,6 +32,7 @@ interface PresentationDependencies {
   readonly tracks: TrackService;
   readonly routing: RoutingService;
   readonly modulation: ModulationService;
+  readonly locks: LocksService;
   readonly status: StatusPort;
 }
 
@@ -286,6 +290,7 @@ export class EspiralApp {
     this.bindTrackActions();
     this.bindRouting();
     this.bindModulation();
+    this.bindLocks();
     this.bindChannelActions();
     this.bindSessionActions();
     this.bindViewControls();
@@ -412,6 +417,62 @@ export class EspiralApp {
         const output = view.q(`[data-mod-source-value="${lfo}"]`);
         if (output) output.textContent = `${Number(value).toFixed(2)} Hz`;
       }
+    });
+  }
+
+  private bindLocks(): void {
+    const { locks } = this.deps;
+    const stepSelect = view.must<HTMLSelectElement>('#lock-step');
+
+    stepSelect.addEventListener('change', () => {
+      view.renderLocks(this.deps.store.getState(), this.deps.mix);
+    });
+
+    view.must<HTMLSelectElement>('#lock-target').addEventListener('change', () => {
+      view.syncLockValue(this.deps.store.getState(), this.deps.mix);
+    });
+
+    view.must<HTMLInputElement>('#lock-value').addEventListener('input', event => {
+      const descriptor = view.selectedLockDescriptor(
+        this.deps.store.getState(),
+        this.deps.mix
+      );
+      const output = view.q('#lock-value-output');
+      if (!descriptor || !output) return;
+      const value = denormalizePluginParam(
+        descriptor.param,
+        Number(inputValue(event))
+      );
+      output.textContent = formatPluginParam(descriptor.param, value);
+    });
+
+    view.must('#lock-set').addEventListener('click', () => {
+      const descriptor = view.selectedLockDescriptor(
+        this.deps.store.getState(),
+        this.deps.mix
+      );
+      const input = view.q<HTMLInputElement>('#lock-value');
+      if (!descriptor || !input) {
+        this.deps.status.generative('Elegí un track con inserts y un paso.');
+        return;
+      }
+      locks.setLock(
+        descriptor.trackId,
+        descriptor.step,
+        descriptor.insertId,
+        descriptor.paramId,
+        denormalizePluginParam(descriptor.param, Number(input.value))
+      );
+    });
+
+    view.must('#lock-list').addEventListener('click', event => {
+      if (attr(event, 'data-lock-remove') === null) return;
+      const trackId = attr(event, 'data-lock-track');
+      const step = Number(attr(event, 'data-lock-step'));
+      const insertId = attr(event, 'data-lock-insert');
+      const paramId = attr(event, 'data-lock-param');
+      if (!trackId || !insertId || !paramId || !Number.isFinite(step)) return;
+      locks.removeLock(trackId, step, insertId, paramId);
     });
   }
 

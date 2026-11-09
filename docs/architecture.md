@@ -80,6 +80,10 @@ La modulación vive en `ModulationState` (fuentes, rutas y enable) y es global, 
 la escena. `ModulationService` evalúa las fuentes a control-rate 60 Hz y aplica el valor
 modulado a los parámetros de plugins sin mutar el valor base del estado.
 
+Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parámetros). Playback
+los aplica en el timestamp del paso activo mediante `AudioEnginePort.setInsertParam` y
+restaura el valor base en el paso siguiente o al detener el transporte.
+
 La calidad de audio se verifica con `npm run test:audio`: renderiza 8 compases en un
 `OfflineAudioContext` real y falla si hay clipping, NaN, DC o silencio.
 
@@ -117,6 +121,6 @@ otro adapter y se cambia únicamente en `main.ts`.
   y se sincroniza desde `GenerativePort`.
 - La UI es DOM directo. Se puede migrar vista por vista a un framework sin tocar las capas internas.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
-  La UI se genera desde el kit, permite crear/eliminar tracks de usuario, editar routing
-  y modulación a control-rate; los parameter locks y los destinos AudioParam a audio-rate
-  son el siguiente corte de Fase 3.
+  La UI se genera desde el kit, permite crear/eliminar tracks de usuario, editar routing,
+  modulación a control-rate y parameter locks; los destinos AudioParam a audio-rate son el
+  siguiente corte de Fase 3.

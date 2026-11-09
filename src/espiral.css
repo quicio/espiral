@@ -606,8 +606,21 @@ body.instrument-page .page-title {
 
 .activity-step {
   display: block;
+  position: relative;
   height: 10px;
   background: var(--umbral-rule-faint);
+}
+
+.activity-step.has-locks::after,
+.matrix-cell.has-locks::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--umbral-ink);
 }
 
 .activity-step.is-active {
@@ -789,6 +802,21 @@ body.instrument-page .page-title {
 .radial-step.is-current {
   outline: 1px solid var(--umbral-ink);
   outline-offset: 2px;
+}
+
+.radial-step.has-locks::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--umbral-trace);
+}
+
+.radial-step.is-active.has-locks::after {
+  background: var(--umbral-bg);
 }
 
 .radial-center {
@@ -1075,6 +1103,7 @@ body.instrument-page .page-title {
 
 .matrix-cell {
   display: block;
+  position: relative;
   height: 8px;
   background: var(--umbral-rule-faint);
 }
@@ -1393,6 +1422,72 @@ body.instrument-page .page-title {
 .mod-empty {
   margin: 0;
   padding: 1rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--umbral-muted);
+}
+
+.lock-block {
+  margin-top: 0.6rem;
+}
+
+.lock-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.8rem 1.2rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--umbral-rule-faint);
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.lock-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.lock-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.lock-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.lock-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--umbral-ink);
+}
+
+.lock-info span,
+.lock-value-display {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.lock-value-display {
+  text-align: right;
+}
+
+.lock-empty {
+  margin: 0;
+  padding: 0.8rem 0;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--umbral-muted);

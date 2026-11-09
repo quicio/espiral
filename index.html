@@ -161,6 +161,48 @@
           <div id="seq-matrix" class="seq-matrix"></div>
         </div>
 
+        <div class="lock-block">
+          <div class="section-head">
+            <p class="section-label">Parameter locks</p>
+            <p id="lock-readout" class="section-meta">Paso 01 · sin locks</p>
+          </div>
+          <div class="lock-form">
+            <label class="mod-field">
+              <span>Paso</span>
+              <select id="lock-step" aria-label="Paso para editar locks">
+                <option value="1">01</option>
+                <option value="2">02</option>
+                <option value="3">03</option>
+                <option value="4">04</option>
+                <option value="5">05</option>
+                <option value="6">06</option>
+                <option value="7">07</option>
+                <option value="8">08</option>
+                <option value="9">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+              </select>
+            </label>
+            <label class="mod-field mod-field--wide">
+              <span>Destino</span>
+              <select id="lock-target"></select>
+            </label>
+            <label class="mod-field mod-field--amount">
+              <span>Valor</span>
+              <input id="lock-value" type="range" min="0" max="1" step="0.001" value="0.5">
+              <output id="lock-value-output" for="lock-value">0.50</output>
+            </label>
+            <button id="lock-set" class="line-action" type="button">Fijar lock</button>
+          </div>
+          <div id="lock-list" class="lock-list"></div>
+          <p class="tool-hint">El lock se aplica cuando el paso del track está activo y se restaura en el paso siguiente.</p>
+        </div>
+
         <div class="automation-block" aria-labelledby="automation-title">
           <div class="section-head">
             <p class="section-label" id="automation-title">Automatización</p>

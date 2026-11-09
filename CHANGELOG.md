@@ -61,7 +61,11 @@
 - Modulación a control-rate 60 Hz, con restauración del valor base al apagar o quitar rutas.
 - Nueva vista Mod con fuentes, formulario de ruta, cantidad bipolar y lista de rutas.
 - La modulación persiste en la sesión y se limpia al eliminar tracks o inserts.
-- 62 tests unitarios.
+- Parameter locks por track y paso sobre parámetros de inserts, con editor en Sequencer.
+- Los locks se aplican en el timestamp del paso activo y se restauran al paso siguiente o al detener.
+- Las marcas de lock aparecen en el anillo, la matriz y la fila de Performance.
+- Los locks persisten en escenas y sesión.
+- 68 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
 
 ## 0.1.1 — 2026-11-06

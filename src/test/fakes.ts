@@ -224,6 +224,15 @@ export class FakeAudioEngine implements AudioEnginePort {
           defaultValue: 1200,
           unit: 'hz',
           curve: 'log'
+        },
+        {
+          id: 'q',
+          label: 'Resonance',
+          min: 0.1,
+          max: 20,
+          defaultValue: 1,
+          unit: 'q',
+          curve: 'log'
         }
       ]
     }

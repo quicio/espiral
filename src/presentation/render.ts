@@ -8,7 +8,7 @@ import {
 import { kitHasSolo, kitTracks } from '../domain/kit';
 import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
-import { normalizePluginParam } from '../domain/plugin';
+import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
 import type { GenerativePort } from '../domain/ports';
 import type { MixService } from '../application/mix';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
@@ -388,8 +388,13 @@ export function updatePatternClasses(state: InstrumentState, catalog: Catalog): 
     const key = element.getAttribute('data-pattern-channel');
     const index = Number(element.getAttribute('data-pattern-step'));
     const active = key !== null && statePattern(state, key)[index] === 1;
+    const lockCount =
+      key !== null ? state.pattern.locks[key]?.[index]?.length ?? 0 : 0;
     element.classList.toggle('is-active', active);
     element.classList.toggle('is-current', index === current);
+    element.classList.toggle('has-locks', lockCount > 0);
+    if (lockCount > 0) element.setAttribute('data-lock-count', String(lockCount));
+    else element.removeAttribute('data-lock-count');
     if (element.tagName === 'BUTTON') {
       element.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
@@ -659,6 +664,185 @@ export function syncRouting(
   });
 }
 
+export interface LockDescriptor {
+  readonly trackId: string;
+  readonly step: number;
+  readonly insertId: string;
+  readonly paramId: string;
+  readonly param: PluginDefinition['params'][number];
+  readonly value: number;
+}
+
+export function renderLocks(
+  state: InstrumentState,
+  mixService: MixService
+): void {
+  const supports = mixService.supportsInserts;
+  const step = lockStepValue();
+  const targets = lockTargets(state, mixService);
+  const track = state.kit.tracks[state.selected];
+  const locks = state.pattern.locks[state.selected]?.[step] ?? [];
+
+  const targetSelect = q<HTMLSelectElement>('#lock-target');
+  if (targetSelect) {
+    const previous = targetSelect.value;
+    targetSelect.innerHTML = !supports
+      ? '<option value="">Locks no disponibles en motor legacy</option>'
+      : targets.length === 0
+        ? '<option value="">Sin inserts en el track</option>'
+        : targets
+            .map(target => `<option value="${target.value}">${target.label}</option>`)
+            .join('');
+    if (targets.some(target => target.value === previous)) {
+      targetSelect.value = previous;
+    }
+    targetSelect.disabled = !supports || targets.length === 0;
+  }
+
+  const list = q('#lock-list');
+  if (list) {
+    list.innerHTML =
+      locks.length === 0
+        ? '<p class="lock-empty">Sin locks en este paso.</p>'
+        : locks
+            .map(lock => {
+              const target = targets.find(
+                entry => entry.value === `${lock.insertId}:${lock.paramId}`
+              );
+              const label =
+                target?.label ?? `${lock.insertId} · ${lock.paramId}`;
+              return `<div class="lock-row">
+                <div class="lock-info"><strong>${label}</strong><span>paso ${String(step + 1).padStart(2, '0')}</span></div>
+                <output class="lock-value-display">${formatPluginParam(target?.param ?? fallbackParam(lock.value), lock.value)}</output>
+                <button class="small-toggle" type="button" data-lock-remove data-lock-track="${state.selected}" data-lock-step="${step}" data-lock-insert="${lock.insertId}" data-lock-param="${lock.paramId}" aria-label="Quitar lock de ${label}">×</button>
+              </div>`;
+            })
+            .join('');
+  }
+
+  const readout = q('#lock-readout');
+  if (readout) {
+    const trackName = track?.name ?? state.selected;
+    readout.textContent =
+      locks.length === 0
+        ? `Paso ${String(step + 1).padStart(2, '0')} · ${trackName} · sin locks`
+        : `Paso ${String(step + 1).padStart(2, '0')} · ${trackName} · ${locks.length} ${locks.length === 1 ? 'lock' : 'locks'}`;
+  }
+
+  const set = q<HTMLButtonElement>('#lock-set');
+  if (set) set.disabled = !supports || targets.length === 0;
+
+  syncLockValue(state, mixService);
+}
+
+export function syncLockValue(
+  state: InstrumentState,
+  mixService: MixService
+): void {
+  const supports = mixService.supportsInserts;
+  const descriptor = selectedLockDescriptor(state, mixService);
+  const input = q<HTMLInputElement>('#lock-value');
+  const output = q('#lock-value-output');
+
+  if (!descriptor) {
+    if (input) input.disabled = true;
+    if (output) output.textContent = '—';
+    return;
+  }
+
+  const value = descriptor.value;
+  if (input) {
+    input.disabled = !supports;
+    input.min = '0';
+    input.max = '1';
+    input.step = '0.001';
+    input.value = String(normalizePluginParam(descriptor.param, value));
+  }
+  if (output) output.textContent = formatPluginParam(descriptor.param, value);
+}
+
+export function selectedLockDescriptor(
+  state: InstrumentState,
+  mixService: MixService
+): LockDescriptor | null {
+  const step = lockStepValue();
+  const targetValue = q<HTMLSelectElement>('#lock-target')?.value ?? '';
+  const parsed = parseLockTarget(targetValue);
+  if (!parsed) return null;
+
+  const track = state.kit.tracks[state.selected];
+  const insert = track?.inserts.find(entry => entry.id === parsed.insertId);
+  if (!insert) return null;
+  const definition = mixService
+    .listPlugins()
+    .find(plugin => plugin.id === insert.pluginId);
+  const param = definition?.params.find(entry => entry.id === parsed.paramId);
+  if (!param) return null;
+
+  const lock = state.pattern.locks[state.selected]?.[step]?.find(
+    entry => entry.insertId === parsed.insertId && entry.paramId === parsed.paramId
+  );
+
+  return {
+    trackId: state.selected,
+    step,
+    insertId: parsed.insertId,
+    paramId: parsed.paramId,
+    param,
+    value: lock?.value ?? param.defaultValue
+  };
+}
+
+function lockTargets(
+  state: InstrumentState,
+  mixService: MixService
+): readonly { value: string; label: string; param: PluginDefinition['params'][number] }[] {
+  const track = state.kit.tracks[state.selected];
+  if (!track) return [];
+  const plugins = mixService.listPlugins();
+  const targets: {
+    value: string;
+    label: string;
+    param: PluginDefinition['params'][number];
+  }[] = [];
+  track.inserts.forEach(insert => {
+    const definition = plugins.find(plugin => plugin.id === insert.pluginId);
+    if (!definition) return;
+    definition.params.forEach(param => {
+      targets.push({
+        value: `${insert.id}:${param.id}`,
+        label: `${definition.name} · ${param.label}`,
+        param
+      });
+    });
+  });
+  return targets;
+}
+
+function lockStepValue(): number {
+  const value = Number(q<HTMLSelectElement>('#lock-step')?.value ?? 1);
+  return Number.isFinite(value) ? Math.max(0, Math.min(PATTERN_LENGTH - 1, value - 1)) : 0;
+}
+
+function parseLockTarget(
+  value: string
+): { insertId: string; paramId: string } | null {
+  const [insertId, paramId] = value.split(':');
+  if (!insertId || !paramId) return null;
+  return { insertId, paramId };
+}
+
+function fallbackParam(value: number): PluginDefinition['params'][number] {
+  return {
+    id: 'value',
+    label: 'Valor',
+    min: 0,
+    max: 1,
+    defaultValue: value,
+    unit: 'none'
+  };
+}
+
 export function renderModulation(
   state: InstrumentState,
   mixService: MixService
@@ -864,6 +1048,7 @@ export function renderAll(
   renderAutomation(state, catalog);
   renderRouting(state, mixService);
   renderModulation(state, mixService);
+  renderLocks(state, mixService);
   syncTrackManagement(state, mixService.supportsTrackManagement);
   syncParams(state);
   syncSeed(state);

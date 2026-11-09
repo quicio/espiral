@@ -97,6 +97,89 @@ describe('PlaybackService', () => {
     );
   });
 
+  it('applies parameter locks on active steps and restores the base', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const locks: { insertId: string; paramId: string; value: number }[][] =
+        Array.from({ length: 16 }, () => []);
+      locks[0] = [{ insertId: 'filter', paramId: 'cutoff', value: 400 }];
+      return {
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: {
+            ...state.kit.tracks,
+            kick: {
+              ...state.kit.tracks.kick!,
+              inserts: [
+                {
+                  id: 'filter',
+                  pluginId: 'filter',
+                  bypass: false,
+                  params: { cutoff: 1200, q: 1 }
+                }
+              ]
+            }
+          }
+        },
+        pattern: {
+          ...state.pattern,
+          locks: { ...state.pattern.locks, kick: locks }
+        }
+      };
+    });
+    await playback.start();
+    engine.params.length = 0;
+
+    clock.fire(1, 0);
+
+    expect(engine.params.at(-1)?.value).toBe(400);
+
+    clock.fire(1.125, 1);
+
+    expect(engine.params.at(-1)?.value).toBe(1200);
+  });
+
+  it('restores active locks when the transport stops', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const locks: { insertId: string; paramId: string; value: number }[][] =
+        Array.from({ length: 16 }, () => []);
+      locks[0] = [{ insertId: 'filter', paramId: 'cutoff', value: 400 }];
+      return {
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: {
+            ...state.kit.tracks,
+            kick: {
+              ...state.kit.tracks.kick!,
+              inserts: [
+                {
+                  id: 'filter',
+                  pluginId: 'filter',
+                  bypass: false,
+                  params: { cutoff: 1200, q: 1 }
+                }
+              ]
+            }
+          }
+        },
+        pattern: {
+          ...state.pattern,
+          locks: { ...state.pattern.locks, kick: locks }
+        }
+      };
+    });
+    await playback.start();
+    clock.fire(1, 0);
+    engine.params.length = 0;
+
+    playback.stop();
+
+    expect(engine.params.at(-1)?.value).toBe(1200);
+  });
+
   it('does not trigger silent steps', async () => {
     const { playback, clock, engine } = setup();
     await playback.start();

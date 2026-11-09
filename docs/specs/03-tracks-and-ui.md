@@ -24,8 +24,11 @@
 - Hecho: mod matrix con LFO, macros y fuente de paso, apuntando a parámetros de inserts.
 - Hecho: modulación a control-rate 60 Hz con restauración del valor base al apagar o quitar una ruta.
 - Hecho: el estado de modulación persiste en la sesión.
-- Pendiente: parameter locks.
+- Hecho: parameter locks por track y paso sobre parámetros de inserts, con marcas en la grilla.
+- Hecho: los locks se aplican cuando el paso está activo y se restauran al paso siguiente o al detener.
+- Hecho: los locks persisten en escenas y sesión.
 - Pendiente: destinos AudioParam a audio-rate.
+- Pendiente: locks sobre parámetros que no sean de plugins.
 
 ## Objetivo
 
@@ -100,6 +103,11 @@ audio-rate quedan para una fase posterior.
 - Se programan con `setValueAtTime`/`linearRampToValueAtTime` en el timestamp del step.
 - La UI muestra los locks como marcas en el paso.
 
+**Primer corte implementado:** locks por track/paso sobre parámetros de inserts. Playback
+los aplica en el timestamp del paso activo y restaura el valor base en el paso siguiente o
+al detener el transporte. La UI los muestra con un punto en el anillo, la matriz y la fila
+de Performance.
+
 ## Estado y comandos
 
 - El `Store` sigue siendo la fuente de verdad.
@@ -154,5 +162,5 @@ Requisitos:
 - [x] Crear/eliminar tracks desde la UI.
 - [x] Matriz de routing.
 - [x] Matriz de modulación (control-rate).
+- [x] Editor de parameter locks.
 - [ ] Destinos AudioParam a audio-rate.
-- [ ] Editor de locks.
