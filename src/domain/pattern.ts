@@ -5,11 +5,18 @@ export type Pattern = readonly Step[];
 export type Patterns = Record<PatternChannel, Pattern>;
 export type PatternSteps = Record<string, Pattern>;
 
-export interface ParamLock {
-  readonly insertId: string;
-  readonly paramId: string;
-  readonly value: number;
-}
+export type LockTarget =
+  | {
+      readonly kind?: 'insert';
+      readonly insertId: string;
+      readonly paramId: string;
+    }
+  | {
+      readonly kind: 'track';
+      readonly paramId: 'gain' | 'pan';
+    };
+
+export type ParamLock = LockTarget & { readonly value: number };
 
 export type StepLocks = readonly ParamLock[];
 export type TrackLocks = readonly StepLocks[];
@@ -96,6 +103,12 @@ export function locksAt(
   return locks[trackId]?.[normalizeStep(step)] ?? [];
 }
 
+export function lockTargetKey(target: LockTarget): string {
+  return target.kind === 'track'
+    ? `track:${target.paramId}`
+    : `insert:${target.insertId}:${target.paramId}`;
+}
+
 export function withLock(
   pattern: PatternState,
   trackId: string,
@@ -105,14 +118,9 @@ export function withLock(
   const index = normalizeStep(step);
   const trackLocks = [...(pattern.locks[trackId] ?? emptyTrackLocks())];
   const current = trackLocks[index] ?? [];
-  const next = current.some(
-    entry => entry.insertId === lock.insertId && entry.paramId === lock.paramId
-  )
-    ? current.map(entry =>
-        entry.insertId === lock.insertId && entry.paramId === lock.paramId
-          ? lock
-          : entry
-      )
+  const key = lockTargetKey(lock);
+  const next = current.some(entry => lockTargetKey(entry) === key)
+    ? current.map(entry => (lockTargetKey(entry) === key ? lock : entry))
     : [...current, lock];
   trackLocks[index] = next;
   return {
@@ -125,13 +133,13 @@ export function withoutLock(
   pattern: PatternState,
   trackId: string,
   step: number,
-  insertId: string,
-  paramId: string
+  target: LockTarget
 ): PatternState {
   const index = normalizeStep(step);
   const trackLocks = [...(pattern.locks[trackId] ?? emptyTrackLocks())];
+  const key = lockTargetKey(target);
   trackLocks[index] = (trackLocks[index] ?? []).filter(
-    entry => !(entry.insertId === insertId && entry.paramId === paramId)
+    entry => lockTargetKey(entry) !== key
   );
   return {
     ...pattern,

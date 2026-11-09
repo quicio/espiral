@@ -1,7 +1,13 @@
 import type { NoteDuration } from '../domain/audio';
 import type { InstrumentState } from '../domain/models';
 import type { TrackState } from '../domain/kit';
-import { locksAt, normalizeStep, patternStep } from '../domain/pattern';
+import {
+  locksAt,
+  lockTargetKey,
+  normalizeStep,
+  patternStep,
+  type LockTarget
+} from '../domain/pattern';
 import type {
   AudioEnginePort,
   AutomationRunner,
@@ -177,6 +183,19 @@ export class PlaybackService {
       if (!patternStep(state.pattern.steps, track.id, stepCount)) return;
 
       locksAt(state.pattern.locks, track.id, step).forEach(lock => {
+        if (lock.kind === 'track') {
+          const base = lock.paramId === 'gain' ? track.gainDb : track.pan;
+          const key = lockKey(track.id, lock);
+          desired.set(key, {
+            trackId: track.id,
+            kind: 'track',
+            paramId: lock.paramId,
+            value: lock.value,
+            base
+          });
+          return;
+        }
+
         const insert = track.inserts.find(entry => entry.id === lock.insertId);
         if (!insert) return;
         const definition = this.engine
@@ -185,9 +204,10 @@ export class PlaybackService {
         const param = definition?.params.find(entry => entry.id === lock.paramId);
         const base =
           insert.params[lock.paramId] ?? param?.defaultValue ?? lock.value;
-        const key = lockKey(track.id, lock.insertId, lock.paramId);
+        const key = lockKey(track.id, lock);
         desired.set(key, {
           trackId: track.id,
+          kind: 'insert',
           insertId: lock.insertId,
           paramId: lock.paramId,
           value: lock.value,
@@ -203,39 +223,44 @@ export class PlaybackService {
         lock.trackId,
         stepCount
       );
-      this.engine.setInsertParam(
-        lock.trackId,
-        lock.insertId,
-        lock.paramId,
-        lock.value,
-        time + offset
-      );
+      this.applyLockValue(lock, lock.value, time + offset);
       this.activeLocks.set(key, lock);
     });
 
     this.activeLocks.forEach((lock, key) => {
       if (desired.has(key)) return;
-      this.engine.setInsertParam(
-        lock.trackId,
-        lock.insertId,
-        lock.paramId,
-        lock.base,
-        time
-      );
+      this.applyLockValue(lock, lock.base, time);
       this.activeLocks.delete(key);
     });
   }
 
   private restoreLocks(): void {
     this.activeLocks.forEach(lock => {
-      this.engine.setInsertParam(
-        lock.trackId,
-        lock.insertId,
-        lock.paramId,
-        lock.base
-      );
+      this.applyLockValue(lock, lock.base);
     });
     this.activeLocks.clear();
+  }
+
+  private applyLockValue(
+    lock: AppliedLock,
+    value: number,
+    time?: number
+  ): void {
+    if (lock.kind === 'track') {
+      if (lock.paramId === 'gain') {
+        this.engine.setChannelVolume(lock.trackId, value, time);
+      } else {
+        this.engine.setChannelPan(lock.trackId, value, time);
+      }
+      return;
+    }
+    this.engine.setInsertParam(
+      lock.trackId,
+      lock.insertId ?? '',
+      lock.paramId,
+      value,
+      time
+    );
   }
 
   private triggerStep(state: InstrumentState, time: number, stepCount: number): void {
@@ -482,13 +507,14 @@ function machineNoteDuration(
   return noteDuration('pad', sustain);
 }
 
-function lockKey(trackId: string, insertId: string, paramId: string): string {
-  return `${trackId}:${insertId}:${paramId}`;
+function lockKey(trackId: string, target: LockTarget): string {
+  return `${trackId}:${lockTargetKey(target)}`;
 }
 
 interface AppliedLock {
   readonly trackId: string;
-  readonly insertId: string;
+  readonly kind: 'insert' | 'track';
+  readonly insertId?: string;
   readonly paramId: string;
   readonly value: number;
   readonly base: number;

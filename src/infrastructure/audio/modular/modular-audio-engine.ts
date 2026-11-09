@@ -203,12 +203,12 @@ export class ModularAudioEngine implements AudioEnginePort {
     await this.pluginHost.load(pluginId);
   }
 
-  setChannelVolume(trackId: string, db: number): void {
-    this.tracks.get(trackId)?.setVolume(db);
+  setChannelVolume(trackId: string, db: number, time?: number): void {
+    this.tracks.get(trackId)?.setVolume(db, time);
   }
 
-  setChannelPan(trackId: string, pan: number): void {
-    this.tracks.get(trackId)?.setPan(pan);
+  setChannelPan(trackId: string, pan: number, time?: number): void {
+    this.tracks.get(trackId)?.setPan(pan, time);
   }
 
   setChannelMute(trackId: string, muted: boolean): void {

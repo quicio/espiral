@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Parameter locks sobre gain y pan del track, además de parámetros de inserts.
+- Los locks de track se programan en el timestamp del paso y se restauran al siguiente o al detener.
+- Persistencia de locks de track en sesión y escenas.
+- 92 tests unitarios.
+
 ## 0.5.0 — 2026-11-09
 
 - Modulación audio-rate: rutas LFO hacia parámetros de plugins que exponen `AudioParam`.

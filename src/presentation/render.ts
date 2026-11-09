@@ -812,13 +812,38 @@ function dynStepValue(): number {
     : 0;
 }
 
-export interface LockDescriptor {
-  readonly trackId: string;
-  readonly step: number;
-  readonly insertId: string;
+export type LockDescriptor =
+  | {
+      readonly kind: 'insert';
+      readonly trackId: string;
+      readonly step: number;
+      readonly insertId: string;
+      readonly paramId: string;
+      readonly param: PluginDefinition['params'][number];
+      readonly value: number;
+    }
+  | {
+      readonly kind: 'track';
+      readonly trackId: string;
+      readonly step: number;
+      readonly paramId: 'gain' | 'pan';
+      readonly value: number;
+      readonly min: number;
+      readonly max: number;
+      readonly stepSize: number;
+      readonly unit: 'db' | 'none';
+    };
+
+interface LockTargetOption {
+  readonly value: string;
+  readonly label: string;
+  readonly scope: 'insert' | 'track';
   readonly paramId: string;
-  readonly param: PluginDefinition['params'][number];
-  readonly value: number;
+  readonly param?: PluginDefinition['params'][number];
+  readonly min?: number;
+  readonly max?: number;
+  readonly stepSize?: number;
+  readonly unit?: 'db' | 'none';
 }
 
 export function renderLocks(
@@ -854,15 +879,30 @@ export function renderLocks(
         ? '<p class="lock-empty">Sin locks en este paso.</p>'
         : locks
             .map(lock => {
-              const target = targets.find(
-                entry => entry.value === `${lock.insertId}:${lock.paramId}`
-              );
+              const target =
+                lock.kind === 'track'
+                  ? targets.find(
+                      entry => entry.value === `@track:${lock.paramId}`
+                    )
+                  : targets.find(
+                      entry => entry.value === `${lock.insertId}:${lock.paramId}`
+                    );
               const label =
-                target?.label ?? `${lock.insertId} · ${lock.paramId}`;
+                target?.label ??
+                (lock.kind === 'track'
+                  ? `Track · ${lock.paramId}`
+                  : `${lock.insertId} · ${lock.paramId}`);
+              const value =
+                lock.kind === 'track'
+                  ? formatTrackLockValue(lock.paramId, lock.value)
+                  : formatPluginParam(
+                      target?.param ?? fallbackParam(lock.value),
+                      lock.value
+                    );
               return `<div class="lock-row">
                 <div class="lock-info"><strong>${label}</strong><span>paso ${String(step + 1).padStart(2, '0')}</span></div>
-                <output class="lock-value-display">${formatPluginParam(target?.param ?? fallbackParam(lock.value), lock.value)}</output>
-                <button class="small-toggle" type="button" data-lock-remove data-lock-track="${state.selected}" data-lock-step="${step}" data-lock-insert="${lock.insertId}" data-lock-param="${lock.paramId}" aria-label="Quitar lock de ${label}">×</button>
+                <output class="lock-value-display">${value}</output>
+                <button class="small-toggle" type="button" data-lock-remove data-lock-track="${state.selected}" data-lock-step="${step}" data-lock-scope="${lock.kind === 'track' ? 'track' : 'insert'}" data-lock-insert="${lock.kind === 'track' ? '' : lock.insertId}" data-lock-param="${lock.paramId}" aria-label="Quitar lock de ${label}">×</button>
               </div>`;
             })
             .join('');
@@ -899,6 +939,18 @@ export function syncLockValue(
   }
 
   const value = descriptor.value;
+  if (descriptor.kind === 'track') {
+    if (input) {
+      input.disabled = !supports;
+      input.min = String(descriptor.min);
+      input.max = String(descriptor.max);
+      input.step = String(descriptor.stepSize);
+      input.value = String(value);
+    }
+    if (output) output.textContent = formatTrackLockValue(descriptor.paramId, value);
+    return;
+  }
+
   if (input) {
     input.disabled = !supports;
     input.min = '0';
@@ -919,7 +971,30 @@ export function selectedLockDescriptor(
   if (!parsed) return null;
 
   const track = state.kit.tracks[state.selected];
-  const insert = track?.inserts.find(entry => entry.id === parsed.insertId);
+  if (!track) return null;
+
+  if (parsed.kind === 'track') {
+    const lock = state.pattern.locks[state.selected]?.[step]?.find(
+      entry => entry.kind === 'track' && entry.paramId === parsed.paramId
+    );
+    const min = parsed.paramId === 'gain' ? -60 : -1;
+    const max = parsed.paramId === 'gain' ? 6 : 1;
+    return {
+      kind: 'track',
+      trackId: state.selected,
+      step,
+      paramId: parsed.paramId,
+      value:
+        lock?.value ??
+        (parsed.paramId === 'gain' ? track.gainDb : track.pan),
+      min,
+      max,
+      stepSize: parsed.paramId === 'gain' ? 0.5 : 0.01,
+      unit: parsed.paramId === 'gain' ? 'db' : 'none'
+    };
+  }
+
+  const insert = track.inserts.find(entry => entry.id === parsed.insertId);
   if (!insert) return null;
   const definition = mixService
     .listPlugins()
@@ -928,10 +1003,14 @@ export function selectedLockDescriptor(
   if (!param) return null;
 
   const lock = state.pattern.locks[state.selected]?.[step]?.find(
-    entry => entry.insertId === parsed.insertId && entry.paramId === parsed.paramId
+    entry =>
+      entry.kind !== 'track' &&
+      entry.insertId === parsed.insertId &&
+      entry.paramId === parsed.paramId
   );
 
   return {
+    kind: 'insert',
     trackId: state.selected,
     step,
     insertId: parsed.insertId,
@@ -944,15 +1023,32 @@ export function selectedLockDescriptor(
 function lockTargets(
   state: InstrumentState,
   mixService: MixService
-): readonly { value: string; label: string; param: PluginDefinition['params'][number] }[] {
+): readonly LockTargetOption[] {
   const track = state.kit.tracks[state.selected];
   if (!track) return [];
   const plugins = mixService.listPlugins();
-  const targets: {
-    value: string;
-    label: string;
-    param: PluginDefinition['params'][number];
-  }[] = [];
+  const targets: LockTargetOption[] = [
+    {
+      value: '@track:gain',
+      label: 'Track · Gain',
+      scope: 'track',
+      paramId: 'gain',
+      min: -60,
+      max: 6,
+      stepSize: 0.5,
+      unit: 'db'
+    },
+    {
+      value: '@track:pan',
+      label: 'Track · Pan',
+      scope: 'track',
+      paramId: 'pan',
+      min: -1,
+      max: 1,
+      stepSize: 0.01,
+      unit: 'none'
+    }
+  ];
   track.inserts.forEach(insert => {
     const definition = plugins.find(plugin => plugin.id === insert.pluginId);
     if (!definition) return;
@@ -960,6 +1056,8 @@ function lockTargets(
       targets.push({
         value: `${insert.id}:${param.id}`,
         label: `${definition.name} · ${param.label}`,
+        scope: 'insert',
+        paramId: param.id,
         param
       });
     });
@@ -974,10 +1072,25 @@ function lockStepValue(): number {
 
 function parseLockTarget(
   value: string
-): { insertId: string; paramId: string } | null {
+):
+  | { kind: 'track'; paramId: 'gain' | 'pan' }
+  | { kind: 'insert'; insertId: string; paramId: string }
+  | null {
+  if (value === '@track:gain' || value === '@track:pan') {
+    return { kind: 'track', paramId: value === '@track:gain' ? 'gain' : 'pan' };
+  }
   const [insertId, paramId] = value.split(':');
   if (!insertId || !paramId) return null;
-  return { insertId, paramId };
+  return { kind: 'insert', insertId, paramId };
+}
+
+export function formatTrackLockValue(
+  paramId: 'gain' | 'pan',
+  value: number
+): string {
+  if (paramId === 'gain') return `${value.toFixed(1)} dB`;
+  if (Math.abs(value) < 0.005) return 'C';
+  return `${value < 0 ? 'L' : 'R'} ${Math.round(Math.abs(value) * 100)}`;
 }
 
 function fallbackParam(value: number): PluginDefinition['params'][number] {

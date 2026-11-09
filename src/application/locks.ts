@@ -47,7 +47,45 @@ export class LocksService {
   ): void {
     this.store.update(current => ({
       ...current,
-      pattern: withoutLock(current.pattern, trackId, step, insertId, paramId)
+      pattern: withoutLock(current.pattern, trackId, step, {
+        insertId,
+        paramId
+      })
+    }));
+  }
+
+  setTrackLock(
+    trackId: string,
+    step: number,
+    paramId: 'gain' | 'pan',
+    value: number
+  ): void {
+    if (!this.store.getState().kit.tracks[trackId]) return;
+    const next =
+      paramId === 'gain'
+        ? Math.max(-60, Math.min(6, value))
+        : Math.max(-1, Math.min(1, value));
+    this.store.update(current => ({
+      ...current,
+      pattern: withLock(current.pattern, trackId, step, {
+        kind: 'track',
+        paramId,
+        value: next
+      })
+    }));
+  }
+
+  removeTrackLock(
+    trackId: string,
+    step: number,
+    paramId: 'gain' | 'pan'
+  ): void {
+    this.store.update(current => ({
+      ...current,
+      pattern: withoutLock(current.pattern, trackId, step, {
+        kind: 'track',
+        paramId
+      })
     }));
   }
 }

@@ -92,10 +92,7 @@ export interface SessionPatternDto {
   readonly steps: Record<string, readonly number[]>;
   readonly pulses: Record<string, number>;
   readonly frozen: Record<string, boolean>;
-  readonly locks?: Record<
-    string,
-    readonly (readonly { insertId: string; paramId: string; value: number }[])[]
-  >;
+  readonly locks?: Record<string, readonly (readonly ParamLock[])[]>;
   readonly velocity?: Record<string, readonly number[]>;
   readonly probability?: Record<string, readonly number[]>;
   readonly ratchets?: Record<string, readonly number[]>;
@@ -996,13 +993,16 @@ function readLocks(
 
 function readLock(value: unknown): ParamLock | null {
   const data = asRecord(value);
-  if (
-    !data ||
-    typeof data.insertId !== 'string' ||
-    typeof data.paramId !== 'string' ||
-    typeof data.value !== 'number' ||
-    !Number.isFinite(data.value)
-  ) {
+  if (!data || typeof data.value !== 'number' || !Number.isFinite(data.value)) {
+    return null;
+  }
+  if (data.kind === 'track') {
+    if (data.paramId === 'gain' || data.paramId === 'pan') {
+      return { kind: 'track', paramId: data.paramId, value: data.value };
+    }
+    return null;
+  }
+  if (typeof data.insertId !== 'string' || typeof data.paramId !== 'string') {
     return null;
   }
   return {

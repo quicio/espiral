@@ -66,19 +66,14 @@ en la vista Sound de la app. Pendiente: plugins de terceros y UI custom.
 - Bypass, reordenamiento y carga de sesión no producen clicks.
 - Un test verifica que el estado del plugin sobrevive round-trip.
 
-### Fase 3 — 16 tracks y modelo Elektron (en curso)
+### Fase 3 — 16 tracks y modelo Elektron (completada)
 
 **Estado:** `TrackState`/`KitState`, `PatternState` y `SceneState` implementados. El kit
 por defecto tiene 16 tracks y la UI de Performance, Sequencer, Sound, Routing y Mod se
-genera desde el kit; tracks de usuario, routing, modulación a control-rate, parameter
-locks y dinámica por paso ya funcionan. Hay presets musicales por género con escenas,
-pan por track, sends rápidos, Tremolo/Bitcrusher y samples variados en tracks de usuario.
-El catálogo de máquinas permite crear tracks con Analog Pad, Bass Synth o Pluck. El grafo
-se construye desde el kit, las escenas son snapshots y las sesiones v2 persisten kit,
-patrón, escenas, buses, sends, modulación, locks, dinámica y máquina por track con
-migración v1. Instrument plugins, macros por track, máquinas por preset/escena y
-modulación audio-rate sobre AudioParams implementados. Pendiente: locks sobre parámetros
-que no sean de plugins.
+genera desde el kit; tracks de usuario, routing, modulación control-rate y audio-rate,
+parameter locks, dinámica, presets por género, máquinas de synth, instrument plugins,
+macros por track y máquinas por preset/escena implementados. Las sesiones v2 persisten
+todo con migración v1. El siguiente trabajo es calidad de Fase 4.
 
 **Entrega:** instrumento de 16 tracks con kits, patrones y escenas.
 

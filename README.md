@@ -9,6 +9,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Routing matrix track × bus con envíos PRE/POST, retorno por bus y dos buses por defecto.
 - Mod matrix con LFO, macros y paso, aplicada a parámetros de plugins a control-rate.
 - Parameter locks por paso con marcas en el secuenciador y persistencia en sesión.
+- Locks sobre parámetros de inserts y sobre gain/pan de cada track.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.

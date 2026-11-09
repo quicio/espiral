@@ -47,6 +47,24 @@ describe('LocksService', () => {
     ]);
   });
 
+  it('sets, clamps and removes track-level locks', () => {
+    const { store, locks } = setup();
+
+    locks.setTrackLock('kick', 0, 'gain', -12);
+    locks.setTrackLock('kick', 0, 'pan', 2);
+
+    expect(store.getState().pattern.locks.kick?.[0]).toEqual([
+      { kind: 'track', paramId: 'gain', value: -12 },
+      { kind: 'track', paramId: 'pan', value: 1 }
+    ]);
+
+    locks.removeTrackLock('kick', 0, 'gain');
+
+    expect(store.getState().pattern.locks.kick?.[0]).toEqual([
+      { kind: 'track', paramId: 'pan', value: 1 }
+    ]);
+  });
+
   it('ignores unknown inserts and parameters', () => {
     const { store, locks } = setup();
 

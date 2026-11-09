@@ -339,6 +339,32 @@ describe('PlaybackService', () => {
     ).toBe(true);
   });
 
+  it('applies track-level parameter locks and restores the base', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const locks: { kind: 'track'; paramId: 'gain' | 'pan'; value: number }[][] =
+        Array.from({ length: 16 }, () => []);
+      locks[0] = [{ kind: 'track', paramId: 'gain', value: -20 }];
+      return {
+        ...state,
+        pattern: {
+          ...state.pattern,
+          locks: { ...state.pattern.locks, kick: locks }
+        }
+      };
+    });
+    await playback.start();
+    engine.volumes.length = 0;
+
+    clock.fire(1, 0);
+
+    expect(engine.volumes.at(-1)).toEqual({ channel: 'kick', db: -20 });
+
+    clock.fire(1.125, 1);
+
+    expect(engine.volumes.at(-1)?.db).toBe(-4);
+  });
+
   it('does not trigger silent steps', async () => {
     const { playback, clock, engine } = setup();
     await playback.start();

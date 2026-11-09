@@ -445,6 +445,13 @@ export class EspiralApp {
       );
       const output = view.q('#lock-value-output');
       if (!descriptor || !output) return;
+      if (descriptor.kind === 'track') {
+        output.textContent = view.formatTrackLockValue(
+          descriptor.paramId,
+          Number(inputValue(event))
+        );
+        return;
+      }
       const value = denormalizePluginParam(
         descriptor.param,
         Number(inputValue(event))
@@ -459,7 +466,16 @@ export class EspiralApp {
       );
       const input = view.q<HTMLInputElement>('#lock-value');
       if (!descriptor || !input) {
-        this.deps.status.generative('Elegí un track con inserts y un paso.');
+        this.deps.status.generative('Elegí un track y un paso para el lock.');
+        return;
+      }
+      if (descriptor.kind === 'track') {
+        locks.setTrackLock(
+          descriptor.trackId,
+          descriptor.step,
+          descriptor.paramId,
+          Number(input.value)
+        );
         return;
       }
       locks.setLock(
@@ -475,9 +491,16 @@ export class EspiralApp {
       if (attr(event, 'data-lock-remove') === null) return;
       const trackId = attr(event, 'data-lock-track');
       const step = Number(attr(event, 'data-lock-step'));
+      const scope = attr(event, 'data-lock-scope');
       const insertId = attr(event, 'data-lock-insert');
       const paramId = attr(event, 'data-lock-param');
-      if (!trackId || !insertId || !paramId || !Number.isFinite(step)) return;
+      if (!trackId || !paramId || !Number.isFinite(step)) return;
+      if (scope === 'track') {
+        if (paramId !== 'gain' && paramId !== 'pan') return;
+        locks.removeTrackLock(trackId, step, paramId);
+        return;
+      }
+      if (!insertId) return;
       locks.removeLock(trackId, step, insertId, paramId);
     });
   }

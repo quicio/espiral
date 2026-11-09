@@ -40,7 +40,9 @@ describe('SessionMapper', () => {
           kick: state.pattern.locks.kick!.map((locks, index) =>
             index === 2
               ? [{ insertId: 'drive', paramId: 'drive', value: 0.7 }]
-              : locks
+              : index === 3
+                ? [{ kind: 'track' as const, paramId: 'pan' as const, value: -0.5 }]
+                : locks
           )
         },
         velocity: {
@@ -165,6 +167,9 @@ describe('SessionMapper', () => {
     expect(restored.pattern.frozen['track-08']).toBe(true);
     expect(restored.pattern.locks.kick?.[2]).toEqual([
       { insertId: 'drive', paramId: 'drive', value: 0.7 }
+    ]);
+    expect(restored.pattern.locks.kick?.[3]).toEqual([
+      { kind: 'track', paramId: 'pan', value: -0.5 }
     ]);
     expect(restored.pattern.velocity.kick?.[2]).toBe(0.4);
     expect(restored.pattern.probability.kick?.[2]).toBe(0.3);

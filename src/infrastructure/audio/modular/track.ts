@@ -74,12 +74,12 @@ export class Track {
     });
   }
 
-  setVolume(db: number): void {
-    this.volume.volume.rampTo(db, 0.05, Tone.now());
+  setVolume(db: number, time = Tone.now()): void {
+    this.volume.volume.rampTo(db, 0.05, time);
   }
 
-  setPan(pan: number): void {
-    this.panner.pan.rampTo(pan, 0.05, Tone.now());
+  setPan(pan: number, time = Tone.now()): void {
+    this.panner.pan.rampTo(pan, 0.05, time);
   }
 
   setMute(muted: boolean): void {

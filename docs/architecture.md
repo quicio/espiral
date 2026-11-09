@@ -81,9 +81,10 @@ la escena. `ModulationService` evalúa a control-rate 60 Hz las fuentes macro/pa
 destinos sin `AudioParam`. Las rutas LFO hacia parámetros de plugins que exponen
 `AudioParam` se conectan directamente a audio-rate mediante `Tone.LFO` en el motor modular.
 
-Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parámetros). Playback
-los aplica en el timestamp del paso activo mediante `AudioEnginePort.setInsertParam` y
-restaura el valor base en el paso siguiente o al detener el transporte.
+Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parámetros). Pueden
+apuntar a parámetros de inserts o al gain/pan del track. Playback los aplica en el
+timestamp del paso activo mediante el puerto de audio y restaura el valor base en el paso
+siguiente o al detener el transporte.
 
 La dinámica por paso vive junto al patrón (`velocity`, `probability`, `ratchets`). Playback
 usa esos valores para escalar la ganancia, omitir pasos de forma determinista y subdividir
@@ -141,4 +142,5 @@ otro adapter y se cambia únicamente en `main.ts`.
   La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
   a control-rate, parameter locks, dinámica, máquinas de synth e instrument plugins.
   Las máquinas pueden venir de presets y variar por escena; las rutas LFO usan audio-rate
-  cuando el destino expone `AudioParam`. Pendiente: locks sobre parámetros fuera de plugins.
+  cuando el destino expone `AudioParam`; los locks alcanzan inserts y gain/pan. Pendiente:
+  calidad de Fase 4 (medidores por track, baseline de performance y A/B humano).

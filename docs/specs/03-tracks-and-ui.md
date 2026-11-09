@@ -36,7 +36,7 @@
 - Hecho: dos macros por track como fuentes del mod matrix.
 - Hecho: presets y escenas pueden definir máquinas por track.
 - Hecho: destinos AudioParam a audio-rate para rutas LFO sobre parámetros de plugins.
-- Pendiente: locks sobre parámetros que no sean de plugins.
+- Hecho: locks de track sobre gain y pan, además de parámetros de inserts.
 
 ## Objetivo
 
@@ -112,10 +112,10 @@ indica `audio-rate` o `control-rate` por ruta.
 - Se programan con `setValueAtTime`/`linearRampToValueAtTime` en el timestamp del step.
 - La UI muestra los locks como marcas en el paso.
 
-**Primer corte implementado:** locks por track/paso sobre parámetros de inserts. Playback
-los aplica en el timestamp del paso activo y restaura el valor base en el paso siguiente o
-al detener el transporte. La UI los muestra con un punto en el anillo, la matriz y la fila
-de Performance.
+**Implementado:** locks por track/paso sobre parámetros de inserts y sobre gain/pan del
+track. Playback los aplica en el timestamp del paso activo y restaura el valor base en el
+paso siguiente o al detener el transporte. La UI los muestra con un punto en el anillo, la
+matriz y la fila de Performance.
 
 ## Estado y comandos
 
@@ -177,4 +177,4 @@ Requisitos:
 - [x] Pan y sends rápidos por track.
 - [x] Macros por track.
 - [x] Destinos AudioParam a audio-rate.
-- [ ] Locks sobre parámetros que no sean de plugins.
+- [x] Locks sobre gain/pan de track.
