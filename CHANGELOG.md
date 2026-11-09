@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-11-09
+
+- Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.
+- Instrument plugins: `InstrumentPluginHost`, instancia con trigger/release y `FM Synth` built-in.
+- Las máquinas `plugin` guardan `pluginId`, estado de parámetros y se editan en Sound.
+- Dos macros por track como fuentes de modulación (`track-macro:*`).
+- Las macros de track persisten en sesión y se limpian al eliminar el track.
+- 87 tests unitarios.
+
 ## 0.3.0 — 2026-11-09
 
 - Fase 3, primer corte: modelo `TrackState`/`KitState` como fuente de verdad del sonido.
@@ -38,12 +47,8 @@
 - `NoteSource` por track: nota fija, grado de escala o acorde de la progresión.
 - Motor modular con `MonoSynth` y `PluckSynth`; cambio de máquina en caliente.
 - Selector de máquina en Sound y al crear un track.
-- Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.
-- Instrument plugins: `InstrumentPluginHost`, instancia con trigger/release y `FM Synth` built-in.
-- Las máquinas `plugin` guardan `pluginId`, estado de parámetros y se editan en Sound.
-- Dos macros por track como fuentes de modulación (`track-macro:*`).
 - Persistencia de máquina y fuente de notas en sesión y escenas.
-- 87 tests unitarios.
+- 76 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
 
 ## 0.2.0 — 2026-11-08
