@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-11-09
 
 - Modulación audio-rate: rutas LFO hacia parámetros de plugins que exponen `AudioParam`.
 - `PluginInstance.getAudioParam()` y conexión directa con `Tone.LFO` en el motor modular.
