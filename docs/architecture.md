@@ -139,4 +139,5 @@ otro adapter y se cambia únicamente en `main.ts`.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
   La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
   a control-rate, parameter locks, dinámica, máquinas de synth e instrument plugins.
-  Pendiente: máquinas por preset/escena y destinos AudioParam a audio-rate.
+  Las máquinas pueden venir de presets y variar por escena. Pendiente: destinos AudioParam
+  a audio-rate.

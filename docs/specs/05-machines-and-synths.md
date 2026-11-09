@@ -92,6 +92,14 @@ type NoteSource =
 - El motor modular crea el instrumento, lo conecta al track y lo dispara con `trigger()`.
 - Los parámetros del instrumento aparecen en el editor de máquina de Sound.
 
+## Presets y escenas
+
+- Un preset puede declarar `machines` por track con un `MachinePreset` del catálogo.
+- Las máquinas de track se aplican a todas las escenas del preset.
+- Cada escena puede sobrescribir la máquina de un track existente.
+- Si la máquina apunta a un `track-N` inexistente, el preset crea ese track de usuario.
+- Los patrones del preset se alinean con los tracks creados.
+
 ## Persistencia
 
 - La sesión v2 guarda `machineId`, `machine` y `noteSource`.
@@ -118,4 +126,4 @@ type NoteSource =
 - [x] Persistencia de máquina y fuente de notas.
 - [x] Editor de parámetros de máquina en Sound.
 - [x] Instrument plugins de terceros.
-- [ ] Máquinas por preset/escena.
+- [x] Máquinas por preset/escena.

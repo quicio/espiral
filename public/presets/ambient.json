@@ -62,7 +62,18 @@
     "track-09": {
       "volume": -24,
       "pan": 0.3
+    },
+    "track-17": {
+      "volume": -18,
+      "pan": 0.25,
+      "effects": {
+        "reverb": { "wet": 0.45, "roomSize": 0.95 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.3 }]
     }
+  },
+  "machines": {
+    "track-17": "analog-pad"
   },
   "patterns": {
     "kick": "x...............",
@@ -70,12 +81,14 @@
     "hihat": "................",
     "perc": "........x.......",
     "track-08": "....x.......x...",
-    "track-09": "........x......."
+    "track-09": "........x.......",
+    "track-17": "x.......x......."
   },
   "scenes": {
     "umbral": { "seed": 3201 },
     "deriva": {
       "seed": 3202,
+      "machines": { "track-17": "pluck" },
       "patterns": {
         "bass": "....x.......x...",
         "perc": "................"

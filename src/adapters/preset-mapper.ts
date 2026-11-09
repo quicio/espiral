@@ -1,10 +1,8 @@
-import {
-  delayInsert,
-  findInsertByPlugin,
-  reverbInsert
-} from '../domain/channels';
+import { delayInsert, findInsertByPlugin, reverbInsert } from '../domain/channels';
+import { createUserTrack } from '../domain/default-kit';
 import type { InsertConfig } from '../domain/graph';
 import { cloneKit, kitTracks, type KitState } from '../domain/kit';
+import { MACHINE_PRESETS, type NoteSource } from '../domain/machines';
 import type {
   GenerativeParams,
   HarmonyState,
@@ -41,6 +39,7 @@ export class PresetMapper implements PresetCodec {
     if (!data) throw new Error('Preset inválido');
 
     const channels = asRecord(data.channels);
+    const topMachines = asRecord(data.machines);
     const topPatterns = asRecord(data.patterns);
     const topHarmony = readHarmony(data.harmony, current.harmony, this.generative);
     const topParams = readParams(data.params, current.params);
@@ -56,7 +55,13 @@ export class PresetMapper implements PresetCodec {
     const scenes: SceneCollection = { ...current.scenes };
     Object.entries(current.scenes).forEach(([id, snapshot]) => {
       const sceneData = asRecord(sceneDtos?.[id]);
-      const kit = applyMix(snapshot.kit, channels);
+      const withTopMachines = applyMachines(snapshot.kit, topMachines, true);
+      const withMachines = applyMachines(
+        withTopMachines,
+        asRecord(sceneData?.machines),
+        false
+      );
+      const kit = applyMix(withMachines, channels);
       const pattern = applyPatterns(
         snapshot.pattern,
         kit,
@@ -106,6 +111,89 @@ export class PresetMapper implements PresetCodec {
       selected
     };
   }
+}
+
+function applyMachines(
+  kit: KitState,
+  machines: Record<string, unknown> | null,
+  allowCreate: boolean
+): KitState {
+  const cloned = cloneKit(kit);
+  const tracks = { ...cloned.tracks };
+
+  Object.entries(machines ?? {}).forEach(([trackId, value]) => {
+    const override = readMachineOverride(value);
+    if (!override) return;
+    const preset = MACHINE_PRESETS[override.presetId];
+    if (!preset) return;
+
+    const existing = tracks[trackId];
+    if (existing) {
+      if (existing.role !== 'user') return;
+      tracks[trackId] = {
+        ...existing,
+        machineId: preset.id,
+        machine: preset.machine,
+        noteSource: override.noteSource ?? preset.noteSource
+      };
+      return;
+    }
+
+    if (!allowCreate) return;
+    const index = trackIndex(trackId);
+    if (index === null) return;
+    tracks[trackId] = createUserTrack(index, preset.id, preset);
+  });
+
+  return { ...cloned, tracks };
+}
+
+function readMachineOverride(
+  value: unknown
+): { presetId: string; noteSource?: NoteSource } | null {
+  if (typeof value === 'string') return { presetId: value };
+  const data = asRecord(value);
+  if (!data) return null;
+  const presetId =
+    typeof data.preset === 'string'
+      ? data.preset
+      : typeof data.machine === 'string'
+        ? data.machine
+        : typeof data.id === 'string'
+          ? data.id
+          : null;
+  if (!presetId) return null;
+  const noteSource = readNoteSource(data.noteSource);
+  return noteSource ? { presetId, noteSource } : { presetId };
+}
+
+function readNoteSource(raw: unknown): NoteSource | null {
+  const data = asRecord(raw);
+  if (!data) return null;
+  if (data.kind === 'fixed' && typeof data.note === 'string') {
+    return { kind: 'fixed', note: data.note };
+  }
+  if (data.kind === 'scale-degree') {
+    return {
+      kind: 'scale-degree',
+      degree: Math.round(numberOr(data.degree, 0)),
+      octave: clamp(Math.round(numberOr(data.octave, 4)), -2, 8)
+    };
+  }
+  if (data.kind === 'chord') {
+    return {
+      kind: 'chord',
+      degreeOffset: Math.round(numberOr(data.degreeOffset, 0)),
+      octave: clamp(Math.round(numberOr(data.octave, 3)), -2, 8),
+      size: clamp(Math.round(numberOr(data.size, 4)), 1, 8)
+    };
+  }
+  return null;
+}
+
+function trackIndex(trackId: string): number | null {
+  const match = /^track-(\d+)$/.exec(trackId);
+  return match ? Number(match[1]) : null;
 }
 
 function applyMix(
@@ -260,8 +348,6 @@ function applyPatterns(
   topPatterns: Record<string, unknown> | null,
   scenePatterns: Record<string, unknown> | null
 ): PatternState {
-  if (!topPatterns && !scenePatterns) return base;
-
   const steps: PatternSteps = {};
   const pulses: Record<string, number> = {};
   const frozen: Record<string, boolean> = {};
@@ -273,17 +359,28 @@ function applyPatterns(
   kitTracks(kit)
     .filter(track => track.hasPattern)
     .forEach(track => {
-      const pattern =
+      const override =
         readPattern(scenePatterns?.[track.id]) ??
-        readPattern(topPatterns?.[track.id]) ??
-        emptyPattern();
-      steps[track.id] = pattern;
-      pulses[track.id] = clamp(countSteps(pattern), 1, 16);
-      frozen[track.id] = false;
-      locks[track.id] = emptyTrackLocks();
-      velocity[track.id] = emptyStepValues(1);
-      probability[track.id] = emptyStepValues(1);
-      ratchets[track.id] = emptyStepValues(1);
+        readPattern(topPatterns?.[track.id]);
+
+      if (override) {
+        steps[track.id] = override;
+        pulses[track.id] = clamp(countSteps(override), 1, 16);
+        frozen[track.id] = false;
+        locks[track.id] = emptyTrackLocks();
+        velocity[track.id] = emptyStepValues(1);
+        probability[track.id] = emptyStepValues(1);
+        ratchets[track.id] = emptyStepValues(1);
+        return;
+      }
+
+      steps[track.id] = base.steps[track.id] ?? emptyPattern();
+      pulses[track.id] = base.pulses[track.id] ?? 4;
+      frozen[track.id] = base.frozen[track.id] ?? false;
+      locks[track.id] = base.locks[track.id] ?? emptyTrackLocks();
+      velocity[track.id] = base.velocity[track.id] ?? emptyStepValues(1);
+      probability[track.id] = base.probability[track.id] ?? emptyStepValues(1);
+      ratchets[track.id] = base.ratchets[track.id] ?? emptyStepValues(1);
     });
 
   return { steps, pulses, frozen, locks, velocity, probability, ratchets };

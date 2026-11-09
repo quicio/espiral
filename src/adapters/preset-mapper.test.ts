@@ -75,6 +75,43 @@ describe('PresetMapper', () => {
     expect(findInsertByPlugin(config.kit.tracks.bass!.inserts, 'reverb')?.params.wet).toBe(0.7);
   });
 
+  it('maps machines per preset and per scene', () => {
+    const { store, mapper } = setup();
+    const current = store.getState();
+
+    const config = mapper.fromDto(
+      {
+        channels: {
+          'track-17': { volume: -16, pan: -0.2 }
+        },
+        machines: {
+          'track-08': 'analog-pad',
+          'track-17': 'pluck'
+        },
+        patterns: {
+          'track-17': '..x..x..x..x..x.'
+        },
+        scenes: {
+          deriva: {
+            machines: { 'track-08': 'bass-synth' }
+          }
+        }
+      },
+      current
+    );
+
+    expect(config.scenes?.umbral.kit.tracks['track-08']?.machineId).toBe(
+      'analog-pad'
+    );
+    expect(config.scenes?.deriva.kit.tracks['track-08']?.machineId).toBe(
+      'bass-synth'
+    );
+    expect(config.scenes?.caos.kit.tracks['track-17']?.machineId).toBe('pluck');
+    expect(config.scenes?.umbral.kit.tracks['track-17']?.gainDb).toBe(-16);
+    expect(config.scenes?.umbral.kit.tracks['track-17']?.pan).toBe(-0.2);
+    expect(config.scenes?.umbral.pattern.steps['track-17']?.[2]).toBe(1);
+  });
+
   it('maps a full musical preset with scenes, patterns, pan and sends', () => {
     const { store, mapper } = setup();
     const current = store.getState();

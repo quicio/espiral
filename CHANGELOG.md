@@ -5,9 +5,11 @@
 - Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.
 - Instrument plugins: `InstrumentPluginHost`, instancia con trigger/release y `FM Synth` built-in.
 - Las máquinas `plugin` guardan `pluginId`, estado de parámetros y se editan en Sound.
+- Los presets declaran máquinas por track y las escenas pueden sobrescribirlas.
+- Los presets pueden crear tracks de synth y alinear sus patrones.
 - Dos macros por track como fuentes de modulación (`track-macro:*`).
 - Las macros de track persisten en sesión y se limpian al eliminar el track.
-- 87 tests unitarios.
+- 88 tests unitarios.
 
 ## 0.3.0 — 2026-11-09
 

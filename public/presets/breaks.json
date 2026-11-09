@@ -58,7 +58,17 @@
     "track-10": {
       "volume": -20,
       "pan": 0.4
+    },
+    "track-17": {
+      "volume": -16,
+      "pan": -0.25,
+      "effects": {
+        "delay": { "wet": 0.18, "feedback": 0.28, "delayTime": 0.125 }
+      }
     }
+  },
+  "machines": {
+    "track-17": "pluck"
   },
   "patterns": {
     "kick": "x..x..x...x..x..",
@@ -67,7 +77,8 @@
     "perc": "....x.......x...",
     "track-08": "....x..x....x..x",
     "track-09": "..x..x..x..x..x.",
-    "track-10": "x.....x.....x..."
+    "track-10": "x.....x.....x...",
+    "track-17": "..x..x..x..x..x."
   },
   "scenes": {
     "umbral": { "seed": 4201 },
