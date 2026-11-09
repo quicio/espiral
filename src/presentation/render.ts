@@ -255,6 +255,10 @@ export function renderSound(
       <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span>${machineControl}</div>
       <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
       <output class="sound-value" data-sound-value="${track.id}">${track.gainDb.toFixed(1)} dB</output>
+      <div class="node-meter" data-track-meter="${track.id}" aria-label="Nivel de ${track.name}">
+        <span class="node-meter__track"><span class="node-meter__fill" data-track-meter-fill="${track.id}"></span></span>
+        <button class="node-meter__clip" type="button" data-meter-reset="track:${track.id}" aria-pressed="false" aria-label="Reset clip de ${track.name}">CLIP</button>
+      </div>
       <div class="sound-controls">
         <button class="small-toggle${track.muted ? ' is-active' : ''}" type="button" data-sound-mute="${track.id}" aria-label="Silenciar ${track.name}" aria-pressed="${track.muted}">M</button>
         <button class="small-toggle${track.solo ? ' is-active' : ''}" type="button" data-sound-solo="${track.id}" aria-label="Aislar ${track.name}" aria-pressed="${track.solo}">S</button>
@@ -653,6 +657,10 @@ export function renderRouting(
           <div class="routing-bus-name"><strong>${bus.name}</strong><span>return</span></div>
           <input class="routing-range" type="range" min="-60" max="6" step="0.5" value="${bus.returnDb}" data-bus-return="${bus.id}" aria-label="Retorno de ${bus.name}"${supports ? '' : ' disabled'}>
           <output class="routing-value" data-bus-value="${bus.id}">${bus.returnDb.toFixed(1)} dB</output>
+          <div class="node-meter" data-bus-meter="${bus.id}" aria-label="Nivel de ${bus.name}">
+            <span class="node-meter__track"><span class="node-meter__fill" data-bus-meter-fill="${bus.id}"></span></span>
+            <button class="node-meter__clip" type="button" data-meter-reset="bus:${bus.id}" aria-pressed="false" aria-label="Reset clip de ${bus.name}">CLIP</button>
+          </div>
         </div>`
       )
       .join('');

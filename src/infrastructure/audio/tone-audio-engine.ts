@@ -17,6 +17,7 @@ interface EngineChannel {
   readonly volume: Tone.Volume;
   readonly panner: Tone.Panner;
   readonly mute: Tone.Gain;
+  readonly meter: Tone.Meter;
   readonly synth?: Tone.PolySynth | Tone.MembraneSynth;
   readonly pools?: readonly SampleVoicePool[];
   readonly delay?: Tone.FeedbackDelay;
@@ -199,6 +200,16 @@ export class ToneAudioEngine implements AudioEnginePort {
     return Array.isArray(value) ? Math.max(...value) : value;
   }
 
+  getTrackLevel(trackId: string): number {
+    const value = this.channels.get(trackId as ChannelKey)?.meter.getValue();
+    if (value === undefined) return -Infinity;
+    return Array.isArray(value) ? Math.max(...value) : value;
+  }
+
+  getBusLevel(): number {
+    return -Infinity;
+  }
+
   listPlugins(): readonly PluginDefinition[] {
     return [];
   }
@@ -241,6 +252,7 @@ export class ToneAudioEngine implements AudioEnginePort {
       channel.volume.dispose();
       channel.panner.dispose();
       channel.mute.dispose();
+      channel.meter.dispose();
     });
     this.channels.clear();
     this.reverbs.clear();
@@ -402,15 +414,22 @@ export class ToneAudioEngine implements AudioEnginePort {
   private createOutput(
     channel: ChannelKey,
     kit: KitState
-  ): { volume: Tone.Volume; panner: Tone.Panner; mute: Tone.Gain } {
+  ): {
+    volume: Tone.Volume;
+    panner: Tone.Panner;
+    mute: Tone.Gain;
+    meter: Tone.Meter;
+  } {
     const track = kit.tracks[channel];
     const volume = new Tone.Volume(track?.gainDb ?? 0);
     const panner = new Tone.Panner(track?.pan ?? 0);
     const mute = new Tone.Gain(track?.muted ? 0 : 1);
+    const meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
     volume.connect(panner);
     panner.connect(mute);
     mute.connect(this.masterVolume);
-    return { volume, panner, mute };
+    mute.connect(meter);
+    return { volume, panner, mute, meter };
   }
 
   private connectEffects(

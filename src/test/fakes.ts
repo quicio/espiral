@@ -223,6 +223,8 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly inserts: { channel: ChannelKey; inserts: readonly InsertConfig[] }[] = [];
   readonly master: number[] = [];
   masterLevel = -60;
+  readonly trackLevels: Record<string, number> = {};
+  readonly busLevels: Record<string, number> = {};
   pluginDefinitions: readonly PluginDefinition[] = [
     {
       id: 'filter',
@@ -348,6 +350,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   getMasterLevel(): number {
     return this.masterLevel;
+  }
+
+  getTrackLevel(trackId: string): number {
+    return this.trackLevels[trackId] ?? -Infinity;
+  }
+
+  getBusLevel(busId: string): number {
+    return this.busLevels[busId] ?? -Infinity;
   }
 
   listPlugins(): readonly PluginDefinition[] {

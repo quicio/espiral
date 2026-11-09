@@ -247,6 +247,14 @@ export class ModularAudioEngine implements AudioEnginePort {
     return this.master.getLevel();
   }
 
+  getTrackLevel(trackId: string): number {
+    return this.tracks.get(trackId)?.getLevel() ?? -Infinity;
+  }
+
+  getBusLevel(busId: string): number {
+    return this.buses.get(busId)?.getLevel() ?? -Infinity;
+  }
+
   setTrackSend(
     trackId: string,
     busId: string,
@@ -420,14 +428,6 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   private async loadInsertPlugins(inserts: readonly InsertConfig[]): Promise<void> {
     await Promise.all(inserts.map(insert => this.pluginHost.load(insert.pluginId)));
-  }
-
-  getTrackLevel(trackId: string): number {
-    return this.tracks.get(trackId)?.getLevel() ?? -Infinity;
-  }
-
-  getBusLevel(busId: string): number {
-    return this.buses.get(busId)?.getLevel() ?? -Infinity;
   }
 
   dispose(): void {

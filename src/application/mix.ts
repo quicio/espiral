@@ -151,6 +151,14 @@ export class MixService {
     return this.engine.getMasterLevel();
   }
 
+  getTrackLevel(trackId: string): number {
+    return this.engine.getTrackLevel(trackId);
+  }
+
+  getBusLevel(busId: string): number {
+    return this.engine.getBusLevel(busId);
+  }
+
   setMasterVolume(db: number): void {
     const masterVolume = clamp(db, -60, 0);
     this.store.update(state => ({ ...state, masterVolume }));

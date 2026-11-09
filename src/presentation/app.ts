@@ -81,6 +81,18 @@ export class EspiralApp {
     };
     clipButton?.addEventListener('click', resetClip);
 
+    const resetNodeClip = (event: Event): void => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-meter-reset]')
+          : null;
+      if (!target) return;
+      target.classList.remove('is-clip');
+      target.setAttribute('aria-pressed', 'false');
+    };
+    view.q('#sound-channels')?.addEventListener('click', resetNodeClip);
+    view.q('#routing-buses')?.addEventListener('click', resetNodeClip);
+
     const tick = (): void => {
       const db = this.deps.mix.getMasterLevel();
       const level = Number.isFinite(db) ? Math.max(0, Math.min(1, (db + 60) / 60)) : 0;
@@ -93,10 +105,35 @@ export class EspiralApp {
         clipButton?.setAttribute('aria-pressed', 'true');
       }
 
+      view.qa('[data-track-meter]').forEach(element => {
+        const trackId = element.getAttribute('data-track-meter');
+        if (!trackId) return;
+        this.updateNodeMeter('track', trackId, this.deps.mix.getTrackLevel(trackId));
+      });
+      view.qa('[data-bus-meter]').forEach(element => {
+        const busId = element.getAttribute('data-bus-meter');
+        if (!busId) return;
+        this.updateNodeMeter('bus', busId, this.deps.mix.getBusLevel(busId));
+      });
+
       this.meterFrame = requestAnimationFrame(tick);
     };
 
     this.meterFrame = requestAnimationFrame(tick);
+  }
+
+  private updateNodeMeter(kind: 'track' | 'bus', id: string, db: number): void {
+    const level = Number.isFinite(db)
+      ? Math.max(0, Math.min(1, (db + 60) / 60))
+      : 0;
+    const fill = view.q(`[data-${kind}-meter-fill="${id}"]`);
+    if (fill) fill.style.setProperty('--level', level.toFixed(3));
+
+    if (db > -0.5) {
+      const clip = view.q(`[data-meter-reset="${kind}:${id}"]`);
+      clip?.classList.add('is-clip');
+      clip?.setAttribute('aria-pressed', 'true');
+    }
   }
 
   private handleState(state: InstrumentState): void {

@@ -45,6 +45,9 @@ Reglas:
 - La UI lee medidores con `requestAnimationFrame` y no bloquea el audio.
 - Opcional: LUFS integrado para comparar presets.
 
+**Implementado:** medidores de track en Sound, medidores de bus en Routing y clip latch
+por nodo con reset individual. El master mantiene su meter y latch existentes.
+
 ## Test offline determinista
 
 **Herramienta:** Playwright + navegador real, `OfflineAudioContext` o `Tone.Offline`.
@@ -93,6 +96,7 @@ Reglas:
 - `npm test` (unitarios).
 - `npm run build`.
 - Job separado de audio con Playwright y Chromium.
+- El mismo job ejecuta el test de integración de la app principal.
 - Cachear browsers de Playwright.
 - Falla el job si peak > −1 dBFS, hay NaN o error de consola.
 
@@ -121,8 +125,8 @@ Reglas:
 - [x] Test Playwright offline.
 - [x] Job de CI de audio.
 - [x] A/B formal entre motores.
-- [ ] Test Playwright de integración de la app principal.
-- [ ] Medidores por track/bus.
-- [ ] Clip latch por nodo.
+- [x] Test Playwright de integración de la app principal.
+- [x] Medidores por track/bus.
+- [x] Clip latch por nodo.
 - [ ] Baseline de performance.
 - [ ] Escenarios adicionales: preset `ambient`, todo al máximo, solo+mute combinados.

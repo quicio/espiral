@@ -55,6 +55,8 @@ export interface AudioEnginePort {
   setReverbSettings(channel: ChannelKey, settings: ReverbSettings): void;
   setMasterVolume(db: number, time?: number): void;
   getMasterLevel(): number;
+  getTrackLevel(trackId: string): number;
+  getBusLevel(busId: string): number;
   listPlugins(): readonly PluginDefinition[];
   listInstruments(): readonly PluginDefinition[];
   setTrackInserts(trackId: string, inserts: readonly InsertConfig[]): Promise<void>;

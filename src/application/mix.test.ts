@@ -69,6 +69,16 @@ describe('MixService', () => {
     expect(mix.getMasterLevel()).toBe(-9);
   });
 
+  it('reads per-track and per-bus levels', () => {
+    const { engine, mix } = setup();
+    engine.trackLevels.kick = -12;
+    engine.busLevels['reverb-bus'] = -18;
+
+    expect(mix.getTrackLevel('kick')).toBe(-12);
+    expect(mix.getBusLevel('reverb-bus')).toBe(-18);
+    expect(mix.getTrackLevel('nope')).toBe(-Infinity);
+  });
+
   it('adds, edits, bypasses, moves and removes inserts', () => {
     const { store, mix, engine } = setup();
 

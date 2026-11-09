@@ -29,3 +29,6 @@ jobs:
 
       - name: Offline audio check
         run: npm run test:audio
+
+      - name: Integration check
+        run: npm run test:integration

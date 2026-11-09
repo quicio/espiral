@@ -10,6 +10,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Mod matrix con LFO, macros y paso, aplicada a parámetros de plugins a control-rate.
 - Parameter locks por paso con marcas en el secuenciador y persistencia en sesión.
 - Locks sobre parámetros de inserts y sobre gain/pan de cada track.
+- Medidores y clip latch por track/bus, además del master.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
@@ -54,10 +55,12 @@ npm run build
 npm run preview
 npm test
 npm run test:audio
+npm run test:integration
 ```
 
 `test:audio` renderiza la sesión en un `OfflineAudioContext` real y verifica peak,
-NaN, DC y silencio. La primera vez requiere:
+NaN, DC y silencio. `test:integration` levanta Vite, reproduce la app y verifica tracks,
+transporte, presets, samples y errores de consola. La primera vez requiere:
 
 ```bash
 npx playwright install chromium

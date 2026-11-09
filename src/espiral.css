@@ -1224,7 +1224,7 @@ body.instrument-page .page-title {
 
 .routing-bus {
   display: grid;
-  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 5rem;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 5rem minmax(6rem, 8rem);
   gap: 1rem;
   align-items: center;
   padding: 0.7rem 0;
@@ -1563,6 +1563,7 @@ body.instrument-page .page-title {
   grid-template-columns: 7.5rem minmax(0, 1fr) 4rem auto;
   grid-template-areas:
     "name fader value controls"
+    "name meter meter meter"
     "name pan pan pan"
     "name macros macros macros"
     "name params params params"
@@ -1631,6 +1632,55 @@ body.instrument-page .page-title {
   grid-template-columns: auto minmax(0, 1fr) 3.2rem;
   gap: 0.6rem;
   align-items: center;
+}
+
+.node-meter {
+  grid-area: meter;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.node-meter__track {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  background: var(--umbral-rule);
+}
+
+.node-meter__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--umbral-trace), var(--umbral-ember));
+  transform: scaleX(var(--level, 0));
+  transform-origin: left center;
+  transition: transform 80ms linear;
+}
+
+.node-meter__clip {
+  padding: 0 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.node-meter__clip.is-clip {
+  border-color: var(--poem-cinnabar, #c0816e);
+  color: var(--poem-cinnabar, #c0816e);
+  opacity: 1;
+}
+
+.routing-bus .node-meter {
+  grid-area: auto;
 }
 
 .sound-pan span,
