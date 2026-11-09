@@ -203,6 +203,51 @@
           <p class="tool-hint">El lock se aplica cuando el paso del track está activo y se restaura en el paso siguiente.</p>
         </div>
 
+        <div class="dyn-block">
+          <div class="section-head">
+            <p class="section-label">Dinámica</p>
+            <p id="dyn-readout" class="section-meta">Paso 01 · sin track</p>
+          </div>
+          <div class="dyn-form">
+            <label class="mod-field">
+              <span>Paso</span>
+              <select id="dyn-step" aria-label="Paso para editar dinámica">
+                <option value="1">01</option>
+                <option value="2">02</option>
+                <option value="3">03</option>
+                <option value="4">04</option>
+                <option value="5">05</option>
+                <option value="6">06</option>
+                <option value="7">07</option>
+                <option value="8">08</option>
+                <option value="9">09</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+              </select>
+            </label>
+            <label class="mod-field mod-field--amount">
+              <span>Velocity</span>
+              <input id="dyn-velocity" type="range" min="0" max="100" step="1" value="100">
+              <output id="dyn-velocity-value" for="dyn-velocity">100%</output>
+            </label>
+            <label class="mod-field mod-field--amount">
+              <span>Probabilidad</span>
+              <input id="dyn-probability" type="range" min="0" max="100" step="1" value="100">
+              <output id="dyn-probability-value" for="dyn-probability">100%</output>
+            </label>
+            <label class="mod-field mod-field--amount">
+              <span>Ratchets</span>
+              <input id="dyn-ratchets" type="range" min="1" max="4" step="1" value="1">
+              <output id="dyn-ratchets-value" for="dyn-ratchets">1</output>
+            </label>
+          </div>
+        </div>
+
         <div class="automation-block" aria-labelledby="automation-title">
           <div class="section-head">
             <p class="section-label" id="automation-title">Automatización</p>
@@ -231,7 +276,7 @@
             <p class="sound-readout">Nivel, espacio y congelado por track.</p>
           </div>
           <div class="mix-preset-field">
-            <label for="mix-preset">Preset de mezcla</label>
+            <label for="mix-preset">Preset musical</label>
             <select id="mix-preset">
               <option value="-1">Seleccionar…</option>
             </select>

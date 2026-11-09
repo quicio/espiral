@@ -1,0 +1,113 @@
+{
+  "name": "Dub",
+  "description": "Medio tiempo, delays largos y reverb profunda",
+  "scene": "umbral",
+  "bpm": 126,
+  "masterVolume": -4,
+  "harmony": {
+    "root": 2,
+    "scale": "dorian",
+    "progression": "pedal",
+    "sustain": 0.65
+  },
+  "params": {
+    "density": 0.4,
+    "complexity": 0.3,
+    "variation": 0.12,
+    "stability": 0.85,
+    "randomness": 0.2
+  },
+  "channels": {
+    "kick": { "volume": -6, "pan": 0 },
+    "bass": { "volume": -7, "pan": 0 },
+    "hihat": {
+      "volume": -16,
+      "pan": 0.18,
+      "effects": {
+        "delay": { "wet": 0.35, "feedback": 0.45, "delayTime": 0.375 },
+        "reverb": { "wet": 0.5, "roomSize": 0.9 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.35 }]
+    },
+    "perc": {
+      "volume": -12,
+      "pan": -0.25,
+      "effects": {
+        "delay": { "wet": 0.3, "feedback": 0.4, "delayTime": 0.375 },
+        "reverb": { "wet": 0.4, "roomSize": 0.85 }
+      },
+      "sends": [{ "busId": "delay-bus", "amount": 0.28 }]
+    },
+    "drone": {
+      "volume": -14,
+      "pan": 0,
+      "effects": {
+        "delay": { "wet": 0.5, "feedback": 0.5, "delayTime": 0.5 },
+        "reverb": { "wet": 0.6, "roomSize": 0.95 }
+      }
+    },
+    "pad": {
+      "volume": -12,
+      "pan": 0,
+      "effects": {
+        "delay": { "wet": 0.4, "feedback": 0.45, "delayTime": 0.375 },
+        "reverb": { "wet": 0.6, "roomSize": 0.95 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.3 }]
+    },
+    "lead": {
+      "volume": -20,
+      "pan": 0.3,
+      "effects": {
+        "delay": { "wet": 0.35, "feedback": 0.4, "delayTime": 0.375 },
+        "reverb": { "wet": 0.5, "roomSize": 0.9 }
+      }
+    },
+    "track-08": {
+      "volume": -16,
+      "pan": -0.2,
+      "effects": {
+        "delay": { "wet": 0.3, "feedback": 0.4, "delayTime": 0.375 },
+        "reverb": { "wet": 0.45, "roomSize": 0.85 }
+      },
+      "sends": [{ "busId": "delay-bus", "amount": 0.3 }]
+    },
+    "track-09": {
+      "volume": -20,
+      "pan": 0.28
+    }
+  },
+  "patterns": {
+    "kick": "x.......x.......",
+    "bass": "x...x.....x.....",
+    "hihat": "..x...x...x...x.",
+    "perc": "....x.......x...",
+    "track-08": "....x.......x...",
+    "track-09": "x..............."
+  },
+  "scenes": {
+    "umbral": { "seed": 2201 },
+    "deriva": {
+      "seed": 2202,
+      "patterns": {
+        "kick": "x...............",
+        "bass": "....x.......x..."
+      }
+    },
+    "pulso": {
+      "seed": 2203,
+      "patterns": {
+        "kick": "x...x...x...x...",
+        "bass": "..x...x...x...x."
+      }
+    },
+    "caos": {
+      "seed": 2204,
+      "patterns": {
+        "kick": "x..x....x..x....",
+        "bass": "...x..x....x..x.",
+        "hihat": "..x.x...x.x...x."
+      }
+    }
+  }
+}

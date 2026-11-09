@@ -1,111 +1,98 @@
 {
   "name": "Ambient",
-  "description": "Mucho ambiente, delay y espacio",
+  "description": "Pulso lento, pads largos y espacio",
+  "scene": "umbral",
   "bpm": 90,
-  "masterVolume": -4,
+  "masterVolume": -5,
+  "harmony": {
+    "root": 9,
+    "scale": "minor",
+    "progression": "epica",
+    "sustain": 0.82
+  },
+  "params": {
+    "density": 0.25,
+    "complexity": 0.25,
+    "variation": 0.1,
+    "stability": 0.9,
+    "randomness": 0.2
+  },
   "channels": {
-    "kick": {
-      "volume": -8,
-      "muted": false,
-      "solo": false,
-      "effects": null
-    },
-    "bass": {
-      "volume": -12,
-      "muted": false,
-      "solo": false,
-      "effects": {
-        "delay": {
-          "wet": 0.3,
-          "feedback": 0.4,
-          "delayTime": 0.25
-        },
-        "reverb": {
-          "wet": 0.4,
-          "roomSize": 0.9
-        }
-      }
-    },
-    "hihat": {
-      "volume": -14,
-      "muted": false,
-      "solo": false,
-      "effects": {
-        "delay": {
-          "wet": 0.5,
-          "feedback": 0.5,
-          "delayTime": 0.25
-        },
-        "reverb": {
-          "wet": 0.6,
-          "roomSize": 0.95
-        }
-      }
-    },
+    "kick": { "volume": -20, "pan": 0 },
+    "bass": { "volume": -16, "pan": 0 },
+    "hihat": { "volume": -26, "pan": 0.2, "muted": true },
+    "perc": { "volume": -22, "pan": -0.2 },
     "drone": {
       "volume": -8,
-      "muted": false,
-      "solo": false,
+      "pan": 0,
       "effects": {
-        "delay": {
-          "wet": 0.6,
-          "feedback": 0.5,
-          "delayTime": 0.5
-        },
-        "reverb": {
-          "wet": 0.7,
-          "roomSize": 0.98
-        }
-      }
+        "delay": { "wet": 0.55, "feedback": 0.5, "delayTime": 0.5 },
+        "reverb": { "wet": 0.7, "roomSize": 0.98 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.4 }]
     },
     "pad": {
       "volume": -10,
-      "muted": false,
-      "solo": false,
+      "pan": 0,
       "effects": {
-        "delay": {
-          "wet": 0.6,
-          "feedback": 0.5,
-          "delayTime": 0.5
-        },
-        "reverb": {
-          "wet": 0.7,
-          "roomSize": 0.98
-        }
-      }
-    },
-    "perc": {
-      "volume": -12,
-      "muted": false,
-      "solo": false,
-      "effects": {
-        "delay": {
-          "wet": 0.4,
-          "feedback": 0.4,
-          "delayTime": 0.25
-        },
-        "reverb": {
-          "wet": 0.5,
-          "roomSize": 0.9
-        }
-      }
+        "delay": { "wet": 0.5, "feedback": 0.45, "delayTime": 0.5 },
+        "reverb": { "wet": 0.7, "roomSize": 0.98 }
+      },
+      "sends": [
+        { "busId": "reverb-bus", "amount": 0.35 },
+        { "busId": "delay-bus", "amount": 0.2 }
+      ]
     },
     "lead": {
-      "volume": -14,
-      "muted": false,
-      "solo": false,
+      "volume": -16,
+      "pan": 0.25,
       "effects": {
-        "delay": {
-          "wet": 0.5,
-          "feedback": 0.4,
-          "delayTime": 0.25
-        },
-        "reverb": {
-          "wet": 0.6,
-          "roomSize": 0.95
-        }
+        "delay": { "wet": 0.5, "feedback": 0.45, "delayTime": 0.5 },
+        "reverb": { "wet": 0.65, "roomSize": 0.95 }
+      }
+    },
+    "track-08": {
+      "volume": -18,
+      "pan": -0.25,
+      "effects": {
+        "reverb": { "wet": 0.55, "roomSize": 0.95 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.35 }]
+    },
+    "track-09": {
+      "volume": -24,
+      "pan": 0.3
+    }
+  },
+  "patterns": {
+    "kick": "x...............",
+    "bass": "x.......x.......",
+    "hihat": "................",
+    "perc": "........x.......",
+    "track-08": "....x.......x...",
+    "track-09": "........x......."
+  },
+  "scenes": {
+    "umbral": { "seed": 3201 },
+    "deriva": {
+      "seed": 3202,
+      "patterns": {
+        "bass": "....x.......x...",
+        "perc": "................"
+      }
+    },
+    "pulso": {
+      "seed": 3203,
+      "patterns": {
+        "kick": "x.......x......."
+      }
+    },
+    "caos": {
+      "seed": 3204,
+      "patterns": {
+        "bass": "....x.......x...",
+        "perc": "............x..."
       }
     }
   }
 }
-

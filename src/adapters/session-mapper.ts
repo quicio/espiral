@@ -35,6 +35,7 @@ import type {
 } from '../domain/modulation';
 import type { GenerativePort, SessionCodec } from '../domain/ports';
 import {
+  emptyStepValues,
   emptyTrackLocks,
   isValidPattern,
   toPattern,
@@ -42,7 +43,8 @@ import {
   type Pattern,
   type PatternLocks,
   type PatternState,
-  type PatternSteps
+  type PatternSteps,
+  type StepValues
 } from '../domain/pattern';
 import type { SceneCollection, SceneSnapshot } from '../domain/scene';
 
@@ -90,6 +92,9 @@ export interface SessionPatternDto {
     string,
     readonly (readonly { insertId: string; paramId: string; value: number }[])[]
   >;
+  readonly velocity?: Record<string, readonly number[]>;
+  readonly probability?: Record<string, readonly number[]>;
+  readonly ratchets?: Record<string, readonly number[]>;
 }
 
 export interface SessionSceneDto {
@@ -126,6 +131,9 @@ export interface SessionDto {
   readonly frozen: Record<string, boolean>;
   readonly patterns: Record<string, readonly number[]>;
   readonly locks?: SessionPatternDto['locks'];
+  readonly velocity?: SessionPatternDto['velocity'];
+  readonly probability?: SessionPatternDto['probability'];
+  readonly ratchets?: SessionPatternDto['ratchets'];
   readonly selected: string;
   readonly bpm: number;
   readonly master: number;
@@ -168,6 +176,9 @@ export class SessionMapper implements SessionCodec {
         Object.entries(state.pattern.steps).map(([key, steps]) => [key, [...steps]])
       ),
       locks: toLocksDto(state.pattern),
+      velocity: cloneValuesDto(state.pattern.velocity),
+      probability: cloneValuesDto(state.pattern.probability),
+      ratchets: cloneValuesDto(state.pattern.ratchets),
       selected: state.selected,
       bpm: state.transport.bpm,
       master: state.masterVolume,
@@ -208,6 +219,28 @@ export class SessionMapper implements SessionCodec {
     const pulses = readPulses(data.pulses, current.pattern.pulses);
     const frozen = readFrozen(data.frozen, current.pattern.frozen);
     const locks = readLocks(data.locks, current.pattern.locks);
+    const velocity = readStepValues(
+      data.velocity,
+      current.pattern.velocity,
+      1,
+      0,
+      1
+    );
+    const probability = readStepValues(
+      data.probability,
+      current.pattern.probability,
+      1,
+      0,
+      1
+    );
+    const ratchets = readStepValues(
+      data.ratchets,
+      current.pattern.ratchets,
+      1,
+      1,
+      4,
+      true
+    );
     const patterns = { ...current.pattern.steps };
 
     const kit =
@@ -225,7 +258,7 @@ export class SessionMapper implements SessionCodec {
     }
 
     const patternState = alignPatternToKit(
-      { steps: patterns, pulses, frozen, locks },
+      { steps: patterns, pulses, frozen, locks, velocity, probability, ratchets },
       kit
     );
     const selected =
@@ -243,7 +276,10 @@ export class SessionMapper implements SessionCodec {
         steps: patternState.steps,
         pulses: patternState.pulses,
         frozen: patternState.frozen,
-        locks: patternState.locks
+        locks: patternState.locks,
+        velocity: patternState.velocity,
+        probability: patternState.probability,
+        ratchets: patternState.ratchets
       },
       automation,
       modulation,
@@ -335,6 +371,14 @@ function toLocksDto(pattern: PatternState): SessionPatternDto['locks'] {
   );
 }
 
+function cloneValuesDto(
+  values: Record<string, StepValues>
+): Record<string, readonly number[]> {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, steps]) => [key, [...steps]])
+  );
+}
+
 function toSceneDto(snapshot: SceneSnapshot): SessionSceneDto {
   return {
     id: snapshot.id,
@@ -423,7 +467,10 @@ function readPatternState(raw: unknown, fallback: PatternState): PatternState {
     steps,
     pulses: readPulses(data.pulses, fallback.pulses),
     frozen: readFrozen(data.frozen, fallback.frozen),
-    locks: readLocks(data.locks, fallback.locks)
+    locks: readLocks(data.locks, fallback.locks),
+    velocity: readStepValues(data.velocity, fallback.velocity, 1, 0, 1),
+    probability: readStepValues(data.probability, fallback.probability, 1, 0, 1),
+    ratchets: readStepValues(data.ratchets, fallback.ratchets, 1, 1, 4, true)
   };
 }
 
@@ -880,6 +927,38 @@ function cloneLocks(locks: PatternLocks): PatternLocks {
   );
 }
 
+function readStepValues(
+  raw: unknown,
+  fallback: Record<string, StepValues>,
+  defaultValue: number,
+  min: number,
+  max: number,
+  integer = false
+): Record<string, StepValues> {
+  const data = asRecord(raw);
+  const next: Record<string, StepValues> = Object.fromEntries(
+    Object.entries(fallback).map(([key, steps]) => [key, [...steps]])
+  );
+  if (!data) return next;
+
+  const keys = new Set([...Object.keys(fallback), ...Object.keys(data)]);
+  keys.forEach(key => {
+    const values = data[key];
+    if (!Array.isArray(values)) return;
+    const steps = Array.from({ length: PATTERN_LENGTH }, (_, index) => {
+      const rawValue = values[index];
+      const value =
+        typeof rawValue === 'number' && Number.isFinite(rawValue)
+          ? rawValue
+          : defaultValue;
+      const clamped = clamp(value, min, max);
+      return integer ? Math.round(clamped) : clamped;
+    });
+    next[key] = steps;
+  });
+  return next;
+}
+
 function emptyPattern(): Pattern {
   return Array.from({ length: 16 }, () => 0 as const);
 }
@@ -894,13 +973,19 @@ function alignPatternToKit(pattern: PatternState, kit: KitState): PatternState {
   const pulses: Record<string, number> = {};
   const frozen: Record<string, boolean> = {};
   const locks: PatternLocks = {};
+  const velocity: Record<string, StepValues> = {};
+  const probability: Record<string, StepValues> = {};
+  const ratchets: Record<string, StepValues> = {};
   ids.forEach(id => {
     steps[id] = pattern.steps[id] ?? emptyPattern();
     pulses[id] = pattern.pulses[id] ?? 4;
     frozen[id] = pattern.frozen[id] ?? false;
     locks[id] = pattern.locks[id] ?? emptyTrackLocks();
+    velocity[id] = pattern.velocity[id] ?? emptyStepValues(1);
+    probability[id] = pattern.probability[id] ?? emptyStepValues(1);
+    ratchets[id] = pattern.ratchets[id] ?? emptyStepValues(1);
   });
-  return { steps, pulses, frozen, locks };
+  return { steps, pulses, frozen, locks, velocity, probability, ratchets };
 }
 
 function isSceneId(value: unknown, generative: GenerativePort): value is SceneId {

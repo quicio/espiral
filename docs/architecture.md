@@ -84,6 +84,13 @@ Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parám
 los aplica en el timestamp del paso activo mediante `AudioEnginePort.setInsertParam` y
 restaura el valor base en el paso siguiente o al detener el transporte.
 
+La dinámica por paso vive junto al patrón (`velocity`, `probability`, `ratchets`). Playback
+usa esos valores para escalar la ganancia, omitir pasos de forma determinista y subdividir
+el disparo en hasta cuatro ratchets.
+
+Los presets musicales incluyen BPM, mezcla, pan, sends, armonía y patrones por escena. El
+`PresetMapper` los convierte en un snapshot completo que reemplaza el estado musical actual.
+
 La calidad de audio se verifica con `npm run test:audio`: renderiza 8 compases en un
 `OfflineAudioContext` real y falla si hay clipping, NaN, DC o silencio.
 
@@ -121,6 +128,6 @@ otro adapter y se cambia únicamente en `main.ts`.
   y se sincroniza desde `GenerativePort`.
 - La UI es DOM directo. Se puede migrar vista por vista a un framework sin tocar las capas internas.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
-  La UI se genera desde el kit, permite crear/eliminar tracks de usuario, editar routing,
-  modulación a control-rate y parameter locks; los destinos AudioParam a audio-rate son el
-  siguiente corte de Fase 3.
+  La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
+  a control-rate, parameter locks y dinámica por paso. Los presets son musicales y por
+  género. Los macros por track y los destinos AudioParam a audio-rate son el siguiente corte.

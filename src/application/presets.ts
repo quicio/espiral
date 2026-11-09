@@ -26,19 +26,33 @@ export class PresetService {
     try {
       const raw = await this.repository.load(id);
       const config = this.mapper.fromDto(raw, this.store.getState());
-      this.store.update(state => ({
-        ...state,
-        transport: { ...state.transport, bpm: config.bpm },
+      const next = {
+        ...this.store.getState(),
+        transport: {
+          ...this.store.getState().transport,
+          bpm: config.bpm
+        },
         kit: config.kit,
-        masterVolume: config.masterVolume
-      }));
+        masterVolume: config.masterVolume,
+        pattern: config.pattern ?? this.store.getState().pattern,
+        harmony: config.harmony ?? this.store.getState().harmony,
+        seed: config.seed ?? this.store.getState().seed,
+        params: config.params ?? this.store.getState().params,
+        scenes: config.scenes ?? this.store.getState().scenes,
+        scene: config.scene ?? this.store.getState().scene,
+        selected: config.selected ?? this.store.getState().selected,
+        history: [],
+        clipboard: null
+      };
+      this.store.update(() => next);
       this.playback.setBpm(config.bpm);
-      this.mix.syncAll(this.store.getState(), true);
-      this.status.session('Mezcla cargada.');
+      this.playback.resetHarmony();
+      this.mix.syncAll(next, true);
+      this.status.session('Preset musical cargado.');
       this.status.error('');
     } catch (error) {
       console.error(error);
-      this.status.error('No se pudo cargar la mezcla.');
+      this.status.error('No se pudo cargar el preset.');
     }
   }
 }

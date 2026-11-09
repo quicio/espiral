@@ -80,7 +80,7 @@ async function boot(): Promise<void> {
   const presets = new PresetService(
     new HttpPresetRepository(),
     store,
-    new PresetMapper(),
+    new PresetMapper(generative),
     mix,
     playback,
     status

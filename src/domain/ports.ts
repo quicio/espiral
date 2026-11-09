@@ -11,6 +11,7 @@ import type { PluginDefinition } from './plugin';
 import type {
   ChannelSeed,
   GenerativeParams,
+  HarmonyState,
   InstrumentState,
   ProgressionDefinition,
   ProgressionId,
@@ -20,7 +21,8 @@ import type {
   SceneDefinition,
   SceneId
 } from './models';
-import type { Pattern } from './pattern';
+import type { Pattern, PatternState } from './pattern';
+import type { SceneCollection } from './scene';
 
 export type StepListener = (time: number, stepCount: number) => void;
 
@@ -35,6 +37,7 @@ export interface AudioEnginePort {
   removeTrack(trackId: string): void;
   trigger(event: SoundEvent): void;
   setChannelVolume(trackId: string, db: number, time?: number): void;
+  setChannelPan(trackId: string, pan: number, time?: number): void;
   setChannelMute(trackId: string, muted: boolean): void;
   setTrackSend(
     trackId: string,
@@ -144,6 +147,13 @@ export interface PresetConfig {
   readonly bpm: number;
   readonly masterVolume: number;
   readonly kit: KitState;
+  readonly pattern?: PatternState;
+  readonly harmony?: HarmonyState;
+  readonly seed?: number;
+  readonly params?: GenerativeParams;
+  readonly scenes?: SceneCollection;
+  readonly scene?: SceneId;
+  readonly selected?: string;
 }
 
 export interface PresetCodec {

@@ -3,6 +3,7 @@ import { createUserTrack } from '../domain/default-kit';
 import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
 import {
+  emptyStepValues,
   emptyTrackLocks,
   type Pattern,
   type PatternState,
@@ -45,7 +46,13 @@ export class TrackService {
         steps: { ...state.pattern.steps, [track.id]: empty },
         pulses: { ...state.pattern.pulses, [track.id]: 4 },
         frozen: { ...state.pattern.frozen, [track.id]: false },
-        locks: { ...state.pattern.locks, [track.id]: emptyTrackLocks() }
+        locks: { ...state.pattern.locks, [track.id]: emptyTrackLocks() },
+        velocity: { ...state.pattern.velocity, [track.id]: emptyStepValues(1) },
+        probability: {
+          ...state.pattern.probability,
+          [track.id]: emptyStepValues(1)
+        },
+        ratchets: { ...state.pattern.ratchets, [track.id]: emptyStepValues(1) }
       },
       scenes: mapScenes(state, scene => addTrackToScene(scene, track, empty)),
       selected: track.id,
@@ -137,7 +144,13 @@ function addTrackToScene(
       steps: { ...scene.pattern.steps, [track.id]: [...pattern] },
       pulses: { ...scene.pattern.pulses, [track.id]: 4 },
       frozen: { ...scene.pattern.frozen, [track.id]: false },
-      locks: { ...scene.pattern.locks, [track.id]: emptyTrackLocks() }
+      locks: { ...scene.pattern.locks, [track.id]: emptyTrackLocks() },
+      velocity: { ...scene.pattern.velocity, [track.id]: emptyStepValues(1) },
+      probability: {
+        ...scene.pattern.probability,
+        [track.id]: emptyStepValues(1)
+      },
+      ratchets: { ...scene.pattern.ratchets, [track.id]: emptyStepValues(1) }
     }
   };
 }
@@ -165,7 +178,10 @@ function removeTrackFromPattern(
     steps,
     pulses: omit(pattern.pulses, trackId),
     frozen: omit(pattern.frozen, trackId),
-    locks: omit(pattern.locks, trackId)
+    locks: omit(pattern.locks, trackId),
+    velocity: omit(pattern.velocity, trackId),
+    probability: omit(pattern.probability, trackId),
+    ratchets: omit(pattern.ratchets, trackId)
   };
 }
 

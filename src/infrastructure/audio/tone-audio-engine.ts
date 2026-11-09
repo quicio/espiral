@@ -102,7 +102,12 @@ export class ToneAudioEngine implements AudioEnginePort {
       case 'kick': {
         const channel = this.channels.get('kick');
         if (channel?.synth instanceof Tone.MembraneSynth) {
-          channel.synth.triggerAttackRelease('C1', '8n', event.time);
+          channel.synth.triggerAttackRelease(
+            'C1',
+            '8n',
+            event.time,
+            event.velocity ?? 1
+          );
         }
         return;
       }
@@ -133,6 +138,11 @@ export class ToneAudioEngine implements AudioEnginePort {
   setChannelVolume(trackId: string, db: number, time?: number): void {
     const target = this.channels.get(trackId as ChannelKey);
     target?.volume.volume.rampTo(db, 0.05, time ?? Tone.now());
+  }
+
+  setChannelPan(trackId: string, pan: number, time?: number): void {
+    const target = this.channels.get(trackId as ChannelKey);
+    target?.panner.pan.rampTo(pan, 0.05, time ?? Tone.now());
   }
 
   setChannelMute(trackId: string, muted: boolean): void {

@@ -1,0 +1,93 @@
+{
+  "name": "Techno",
+  "description": "Cuatro por cuatro, hats offbeat y bajo rodante",
+  "scene": "umbral",
+  "bpm": 132,
+  "masterVolume": -4,
+  "harmony": {
+    "root": 0,
+    "scale": "minor",
+    "progression": "menor",
+    "sustain": 0.42
+  },
+  "params": {
+    "density": 0.55,
+    "complexity": 0.35,
+    "variation": 0.15,
+    "stability": 0.8,
+    "randomness": 0.25
+  },
+  "channels": {
+    "kick": { "volume": -4, "pan": 0 },
+    "bass": { "volume": -8, "pan": 0 },
+    "hihat": {
+      "volume": -14,
+      "pan": 0.12,
+      "effects": {
+        "delay": { "wet": 0.18, "feedback": 0.25, "delayTime": 0.125 },
+        "reverb": { "wet": 0.2, "roomSize": 0.55 }
+      }
+    },
+    "perc": { "volume": -10, "pan": -0.15 },
+    "drone": { "volume": -16, "pan": 0 },
+    "pad": {
+      "volume": -18,
+      "pan": 0,
+      "effects": {
+        "reverb": { "wet": 0.35, "roomSize": 0.8 }
+      }
+    },
+    "lead": { "volume": -22, "pan": 0.2 },
+    "track-08": {
+      "volume": -16,
+      "pan": 0.25,
+      "effects": {
+        "reverb": { "wet": 0.25, "roomSize": 0.7 }
+      },
+      "sends": [{ "busId": "reverb-bus", "amount": 0.18 }]
+    },
+    "track-09": {
+      "volume": -20,
+      "pan": -0.3
+    },
+    "track-10": {
+      "volume": -22,
+      "pan": 0.35
+    }
+  },
+  "patterns": {
+    "kick": "x...x...x...x...",
+    "bass": "..x...x...x...x.",
+    "hihat": "..x...x...x...x.",
+    "perc": "....x.......x...",
+    "track-08": "x.x.x.x.x.x.x.x.",
+    "track-09": "....x.......x...",
+    "track-10": "x.......x......."
+  },
+  "scenes": {
+    "umbral": { "seed": 1201 },
+    "deriva": {
+      "seed": 1202,
+      "patterns": {
+        "bass": "..x..x....x..x..",
+        "perc": "....x.......x..x"
+      }
+    },
+    "pulso": {
+      "seed": 1203,
+      "patterns": {
+        "bass": "x..x..x...x..x..",
+        "hihat": "x.x.x.x.x.x.x.x."
+      }
+    },
+    "caos": {
+      "seed": 1204,
+      "patterns": {
+        "kick": "x...x..x.x..x...",
+        "bass": "..x.x..x..x.x..x",
+        "hihat": "x.xxx.x.xxx.x.xx",
+        "perc": "..x.x..x.x..x.x."
+      }
+    }
+  }
+}

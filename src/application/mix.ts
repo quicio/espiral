@@ -39,6 +39,12 @@ export class MixService {
     this.engine.setChannelVolume(trackId, volumeDb);
   }
 
+  setChannelPan(trackId: string, pan: number): void {
+    const value = clamp(pan, -1, 1);
+    this.updateTrack(trackId, track => ({ ...track, pan: value }));
+    this.engine.setChannelPan(trackId, value);
+  }
+
   setInsertParam(trackId: string, insertId: string, param: string, value: number): void {
     const state = this.store.getState();
     const track = state.kit.tracks[trackId];
@@ -162,10 +168,12 @@ export class MixService {
     Object.values(state.kit.tracks).forEach(track => {
       if (this.engine.supportsInserts) {
         this.engine.setChannelVolume(track.id, track.gainDb);
+        this.engine.setChannelPan(track.id, track.pan);
         this.engine.setChannelMute(track.id, kitEffectiveMute(state.kit, track.id));
         if (syncChains) void this.engine.setTrackInserts(track.id, track.inserts);
       } else if (isChannelKey(track.role)) {
         this.engine.setChannelVolume(track.role, track.gainDb);
+        this.engine.setChannelPan(track.role, track.pan);
         this.engine.setChannelMute(track.role, kitEffectiveMute(state.kit, track.id));
         this.syncLegacyEffects(track.role, track);
       }

@@ -80,4 +80,17 @@ describe('PatternService', () => {
     expect(store.getState().pattern.steps.kick).toEqual(frozenKick);
     expect(store.getState().seed).toBe(1234);
   });
+
+  it('updates velocity, probability and ratchets for a step', () => {
+    const { store, patterns } = setup();
+
+    patterns.setStepVelocity('kick', 2, 0.4);
+    patterns.setStepProbability('kick', 2, 0.25);
+    patterns.setStepRatchets('kick', 2, 3);
+
+    const state = store.getState();
+    expect(state.pattern.velocity.kick?.[2]).toBe(0.4);
+    expect(state.pattern.probability.kick?.[2]).toBe(0.25);
+    expect(state.pattern.ratchets.kick?.[2]).toBe(3);
+  });
 });

@@ -14,16 +14,24 @@ export interface ParamLock {
 export type StepLocks = readonly ParamLock[];
 export type TrackLocks = readonly StepLocks[];
 export type PatternLocks = Record<string, TrackLocks>;
+export type StepValues = readonly number[];
 
 export interface PatternState {
   readonly steps: PatternSteps;
   readonly pulses: Record<string, number>;
   readonly frozen: Record<string, boolean>;
   readonly locks: PatternLocks;
+  readonly velocity: Record<string, StepValues>;
+  readonly probability: Record<string, StepValues>;
+  readonly ratchets: Record<string, StepValues>;
 }
 
 export function emptyTrackLocks(): TrackLocks {
   return Array.from({ length: PATTERN_LENGTH }, () => []);
+}
+
+export function emptyStepValues(value: number): StepValues {
+  return Array.from({ length: PATTERN_LENGTH }, () => value);
 }
 
 export function clonePatternState(state: PatternState): PatternState {
@@ -38,8 +46,19 @@ export function clonePatternState(state: PatternState): PatternState {
         key,
         steps.map(locks => locks.map(lock => ({ ...lock })))
       ])
-    )
+    ),
+    velocity: cloneValues(state.velocity),
+    probability: cloneValues(state.probability),
+    ratchets: cloneValues(state.ratchets)
   };
+}
+
+function cloneValues(
+  values: Record<string, StepValues>
+): Record<string, StepValues> {
+  return Object.fromEntries(
+    Object.entries(values).map(([key, steps]) => [key, [...steps]])
+  );
 }
 
 function fromValues(...values: number[]): Pattern {

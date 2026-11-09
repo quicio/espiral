@@ -198,6 +198,22 @@ export function renderSound(
         </select>`
         : '<span class="sound-none">rack no disponible en motor legacy</span>';
 
+      const sends =
+        mixService.supportsRouting && state.kit.buses.length > 0
+          ? `<div class="sound-sends">${state.kit.buses
+              .map(bus => {
+                const ref = `${track.id}:${bus.id}`;
+                const send = track.sends.find(entry => entry.busId === bus.id);
+                const amount = Math.round((send?.amount ?? 0) * 100);
+                return `<label class="sound-send">
+                  <span>${bus.name}</span>
+                  <input type="range" min="0" max="100" step="1" value="${amount}" data-sound-send="${ref}" aria-label="Enviar ${track.name} a ${bus.name}">
+                  <output data-sound-send-value="${ref}">${amount}%</output>
+                </label>`;
+              })
+              .join('')}</div>`
+          : '';
+
       return `<div class="sound-channel${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
       <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span></div>
       <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
@@ -207,7 +223,13 @@ export function renderSound(
         <button class="small-toggle${track.solo ? ' is-active' : ''}" type="button" data-sound-solo="${track.id}" aria-label="Aislar ${track.name}" aria-pressed="${track.solo}">S</button>
         ${track.hasPattern ? `<button class="small-toggle${state.pattern.frozen[track.id] ? ' is-active' : ''}" type="button" data-sound-freeze="${track.id}" aria-label="Congelar ${track.name}" aria-pressed="${state.pattern.frozen[track.id] ?? false}">F</button>` : ''}
       </div>
+      <div class="sound-pan">
+        <span>Pan</span>
+        <input type="range" min="-1" max="1" step="0.01" value="${track.pan}" data-sound-pan="${track.id}" aria-label="Paneo de ${track.name}">
+        <output data-sound-pan-value="${track.id}">${formatPan(track.pan)}</output>
+      </div>
       <div class="sound-effects">
+        ${sends}
         <div class="insert-rack">${rack}</div>
         ${add}
       </div>
@@ -390,11 +412,16 @@ export function updatePatternClasses(state: InstrumentState, catalog: Catalog): 
     const active = key !== null && statePattern(state, key)[index] === 1;
     const lockCount =
       key !== null ? state.pattern.locks[key]?.[index]?.length ?? 0 : 0;
+    const ratchets =
+      key !== null ? state.pattern.ratchets[key]?.[index] ?? 1 : 1;
     element.classList.toggle('is-active', active);
     element.classList.toggle('is-current', index === current);
     element.classList.toggle('has-locks', lockCount > 0);
+    element.classList.toggle('has-ratchets', ratchets > 1);
     if (lockCount > 0) element.setAttribute('data-lock-count', String(lockCount));
     else element.removeAttribute('data-lock-count');
+    if (ratchets > 1) element.setAttribute('data-ratchets', String(ratchets));
+    else element.removeAttribute('data-ratchets');
     if (element.tagName === 'BUTTON') {
       element.setAttribute('aria-pressed', active ? 'true' : 'false');
     }
@@ -483,6 +510,15 @@ export function syncMixValues(
   Object.values(state.kit.tracks).forEach(track => {
     const volume = q(`[data-sound-value="${track.id}"]`);
     if (volume) volume.textContent = `${track.gainDb.toFixed(1)} dB`;
+    const pan = q(`[data-sound-pan-value="${track.id}"]`);
+    if (pan) pan.textContent = formatPan(track.pan);
+    track.sends.forEach(send => {
+      const ref = `${track.id}:${send.busId}`;
+      const output = q(`[data-sound-send-value="${ref}"]`);
+      if (output) output.textContent = `${Math.round(send.amount * 100)}%`;
+      const input = q<HTMLInputElement>(`[data-sound-send="${ref}"]`);
+      if (input) input.value = String(Math.round(send.amount * 100));
+    });
   });
 
   const master = q('#master-volume-value');
@@ -662,6 +698,63 @@ export function syncRouting(
     const output = q(`[data-bus-value="${busId}"]`);
     if (output) output.textContent = `${bus.returnDb.toFixed(1)} dB`;
   });
+}
+
+export function syncDynamics(state: InstrumentState): void {
+  const step = dynStepValue();
+  const trackId = state.selected;
+  const track = state.kit.tracks[trackId];
+  const values = {
+    velocity: state.pattern.velocity[trackId]?.[step],
+    probability: state.pattern.probability[trackId]?.[step],
+    ratchets: state.pattern.ratchets[trackId]?.[step]
+  };
+  const supported =
+    track !== undefined &&
+    values.velocity !== undefined &&
+    values.probability !== undefined &&
+    values.ratchets !== undefined;
+
+  const velocity = values.velocity ?? 1;
+  const probability = values.probability ?? 1;
+  const ratchets = values.ratchets ?? 1;
+
+  const velocityInput = q<HTMLInputElement>('#dyn-velocity');
+  const probabilityInput = q<HTMLInputElement>('#dyn-probability');
+  const ratchetsInput = q<HTMLInputElement>('#dyn-ratchets');
+  if (velocityInput) {
+    velocityInput.disabled = !supported;
+    velocityInput.value = String(Math.round(velocity * 100));
+  }
+  if (probabilityInput) {
+    probabilityInput.disabled = !supported;
+    probabilityInput.value = String(Math.round(probability * 100));
+  }
+  if (ratchetsInput) {
+    ratchetsInput.disabled = !supported;
+    ratchetsInput.value = String(ratchets);
+  }
+
+  const velocityOut = q('#dyn-velocity-value');
+  const probabilityOut = q('#dyn-probability-value');
+  const ratchetsOut = q('#dyn-ratchets-value');
+  if (velocityOut) velocityOut.textContent = `${Math.round(velocity * 100)}%`;
+  if (probabilityOut) probabilityOut.textContent = `${Math.round(probability * 100)}%`;
+  if (ratchetsOut) ratchetsOut.textContent = String(ratchets);
+
+  const readout = q('#dyn-readout');
+  if (readout) {
+    readout.textContent = supported
+      ? `Paso ${String(step + 1).padStart(2, '0')} · ${track.name} · V ${Math.round(velocity * 100)} · P ${Math.round(probability * 100)} · R ${ratchets}`
+      : 'Seleccioná un track con patrón';
+  }
+}
+
+function dynStepValue(): number {
+  const value = Number(q<HTMLSelectElement>('#dyn-step')?.value ?? 1);
+  return Number.isFinite(value)
+    ? Math.max(0, Math.min(PATTERN_LENGTH - 1, value - 1))
+    : 0;
 }
 
 export interface LockDescriptor {
@@ -1049,6 +1142,7 @@ export function renderAll(
   renderRouting(state, mixService);
   renderModulation(state, mixService);
   renderLocks(state, mixService);
+  syncDynamics(state);
   syncTrackManagement(state, mixService.supportsTrackManagement);
   syncParams(state);
   syncSeed(state);
@@ -1086,6 +1180,11 @@ function statePattern(state: InstrumentState, key: string): Pattern {
 
 function trackName(state: InstrumentState, id: string): string {
   return state.kit.tracks[id]?.name ?? id;
+}
+
+function formatPan(pan: number): string {
+  if (Math.abs(pan) < 0.005) return 'C';
+  return `${pan < 0 ? 'L' : 'R'} ${Math.round(Math.abs(pan) * 100)}`;
 }
 
 export function q<T extends Element = HTMLElement>(selector: string, root: ParentNode = document): T | null {

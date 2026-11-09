@@ -70,10 +70,12 @@ en la vista Sound de la app. Pendiente: plugins de terceros y UI custom.
 
 **Estado:** `TrackState`/`KitState`, `PatternState` y `SceneState` implementados. El kit
 por defecto tiene 16 tracks y la UI de Performance, Sequencer, Sound, Routing y Mod se
-genera desde el kit; tracks de usuario, routing, modulación a control-rate y parameter
-locks ya funcionan. El grafo se construye desde el kit, las escenas son snapshots y las
-sesiones v2 persisten kit, patrón, escenas, buses, sends, modulación y locks con migración
-v1. Pendiente: destinos AudioParam a audio-rate.
+genera desde el kit; tracks de usuario, routing, modulación a control-rate, parameter
+locks y dinámica por paso ya funcionan. Hay presets musicales por género con escenas,
+pan por track, sends rápidos, Tremolo/Bitcrusher y samples variados en tracks de usuario.
+El grafo se construye desde el kit, las escenas son snapshots y las sesiones v2 persisten
+kit, patrón, escenas, buses, sends, modulación, locks y dinámica con migración v1.
+Pendiente: macros por track y destinos AudioParam a audio-rate.
 
 **Entrega:** instrumento de 16 tracks con kits, patrones y escenas.
 

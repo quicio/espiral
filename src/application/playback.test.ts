@@ -180,6 +180,67 @@ describe('PlaybackService', () => {
     expect(engine.params.at(-1)?.value).toBe(1200);
   });
 
+  it('applies velocity, probability and ratchets to pattern hits', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => ({
+      ...state,
+      pattern: {
+        ...state.pattern,
+        velocity: {
+          ...state.pattern.velocity,
+          kick: state.pattern.velocity.kick!.map((value, index) =>
+            index === 0 ? 0.5 : value
+          )
+        },
+        probability: {
+          ...state.pattern.probability,
+          kick: state.pattern.probability.kick!.map((_value, index) =>
+            index === 0 ? 1 : 0
+          )
+        },
+        ratchets: {
+          ...state.pattern.ratchets,
+          kick: state.pattern.ratchets.kick!.map((value, index) =>
+            index === 0 ? 3 : value
+          )
+        }
+      }
+    }));
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+    clock.fire(1.125, 1);
+
+    const kicks = engine.events.filter(event => event.type === 'kick');
+    expect(kicks).toHaveLength(3);
+    expect(kicks.every(event => event.type === 'kick' && event.velocity === 0.5)).toBe(
+      true
+    );
+  });
+
+  it('skips a step when probability is zero', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => ({
+      ...state,
+      pattern: {
+        ...state.pattern,
+        probability: {
+          ...state.pattern.probability,
+          kick: state.pattern.probability.kick!.map((value, index) =>
+            index === 0 ? 0 : value
+          )
+        }
+      }
+    }));
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    expect(engine.events.some(event => event.type === 'kick')).toBe(false);
+  });
+
   it('does not trigger silent steps', async () => {
     const { playback, clock, engine } = setup();
     await playback.start();

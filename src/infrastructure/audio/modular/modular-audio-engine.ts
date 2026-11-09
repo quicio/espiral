@@ -106,7 +106,12 @@ export class ModularAudioEngine implements AudioEnginePort {
       case 'kick': {
         const source = this.sources.get('kick');
         if (source?.kind === 'membrane') {
-          source.synth.triggerAttackRelease('C1', '8n', event.time);
+          source.synth.triggerAttackRelease(
+            'C1',
+            '8n',
+            event.time,
+            event.velocity ?? 1
+          );
         }
         return;
       }
@@ -141,6 +146,10 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   setChannelVolume(trackId: string, db: number): void {
     this.tracks.get(trackId)?.setVolume(db);
+  }
+
+  setChannelPan(trackId: string, pan: number): void {
+    this.tracks.get(trackId)?.setPan(pan);
   }
 
   setChannelMute(trackId: string, muted: boolean): void {

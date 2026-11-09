@@ -5,7 +5,7 @@ export type EffectKind = 'delay' | 'reverb';
 export type NoteDuration = '16n' | '8n' | '4n' | '2n' | '1m' | '2m';
 
 export type SoundEvent =
-  | { readonly type: 'kick'; readonly time: number }
+  | { readonly type: 'kick'; readonly time: number; readonly velocity?: number }
   | {
       readonly type: 'synth';
       readonly channel: SynthChannel;

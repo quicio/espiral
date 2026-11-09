@@ -5,7 +5,11 @@ import type {
   ProgressionId,
   ScaleId
 } from '../domain/models';
-import type { Pattern, PatternSteps } from '../domain/pattern';
+import {
+  normalizeStep,
+  type Pattern,
+  type PatternSteps
+} from '../domain/pattern';
 import type { GenerativePort, PatternEvolver, StatusPort } from '../domain/ports';
 import type { PlaybackRuntime } from './runtime';
 import type { Store } from './store';
@@ -267,6 +271,45 @@ export class PatternService implements PatternEvolver {
         pulses: { ...current.pattern.pulses, [state.selected]: pulses }
       }
     }));
+  }
+
+  setStepVelocity(trackId: string, step: number, value: number): void {
+    this.setStepValue('velocity', trackId, step, clamp(value, 0, 1));
+  }
+
+  setStepProbability(trackId: string, step: number, value: number): void {
+    this.setStepValue('probability', trackId, step, clamp(value, 0, 1));
+  }
+
+  setStepRatchets(trackId: string, step: number, value: number): void {
+    this.setStepValue(
+      'ratchets',
+      trackId,
+      step,
+      clamp(Math.round(value), 1, 4)
+    );
+  }
+
+  private setStepValue(
+    field: 'velocity' | 'probability' | 'ratchets',
+    trackId: string,
+    step: number,
+    value: number
+  ): void {
+    const index = normalizeStep(step);
+    this.store.update(current => {
+      const values = current.pattern[field][trackId];
+      if (!values) return current;
+      const next = [...values];
+      next[index] = value;
+      return {
+        ...current,
+        pattern: {
+          ...current.pattern,
+          [field]: { ...current.pattern[field], [trackId]: next }
+        }
+      };
+    });
   }
 
   setParam(key: keyof GenerativeParams, value: number): void {

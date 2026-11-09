@@ -129,6 +129,10 @@ export function createDefaultBuses(): readonly BusState[] {
 
 export function createUserTrack(index: number): TrackState {
   const label = String(index).padStart(2, '0');
+  const sample =
+    index % 3 === 0
+      ? PERC_FILE
+      : HIHAT_FILES[(index - 8) % HIHAT_FILES.length] ?? PERC_FILE;
   return {
     id: `track-${label}`,
     name: `Track ${label}`,
@@ -136,7 +140,7 @@ export function createUserTrack(index: number): TrackState {
     hasPattern: true,
     machine: {
       kind: 'sampler',
-      samples: [SAMPLE_PATH + PERC_FILE],
+      samples: [SAMPLE_PATH + sample],
       voices: 1,
       fadeIn: 0.004,
       fadeOut: 0.08

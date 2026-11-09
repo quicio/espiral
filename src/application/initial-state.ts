@@ -8,11 +8,13 @@ import { createDefaultKit } from '../domain/default-kit';
 import { cloneKit, kitTracks } from '../domain/kit';
 import { createDefaultModulation } from '../domain/modulation';
 import {
+  emptyStepValues,
   emptyTrackLocks,
   INITIAL_PATTERNS,
   type Pattern,
   type PatternLocks,
-  type PatternSteps
+  type PatternSteps,
+  type StepValues
 } from '../domain/pattern';
 import type { InstrumentState, SceneId } from '../domain/models';
 import type { GenerativePort } from '../domain/ports';
@@ -67,7 +69,10 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
             frozen: { ...frozen },
             locks: Object.fromEntries(
               patternTracks.map(key => [key, emptyTrackLocks()])
-            ) as PatternLocks
+            ) as PatternLocks,
+            velocity: patternValues(patternTracks, 1),
+            probability: patternValues(patternTracks, 1),
+            ratchets: patternValues(patternTracks, 1)
           },
           harmony: { ...scene.harmony },
           seed: INITIAL_SEED,
@@ -110,4 +115,13 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     evolveCount: 0,
     evolve: false
   };
+}
+
+function patternValues(
+  tracks: readonly string[],
+  value: number
+): Record<string, StepValues> {
+  return Object.fromEntries(
+    tracks.map(trackId => [trackId, emptyStepValues(value)])
+  );
 }

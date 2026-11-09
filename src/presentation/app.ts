@@ -291,6 +291,7 @@ export class EspiralApp {
     this.bindRouting();
     this.bindModulation();
     this.bindLocks();
+    this.bindDynamics();
     this.bindChannelActions();
     this.bindSessionActions();
     this.bindViewControls();
@@ -476,6 +477,42 @@ export class EspiralApp {
     });
   }
 
+  private bindDynamics(): void {
+    const { patterns } = this.deps;
+    const stepSelect = view.must<HTMLSelectElement>('#dyn-step');
+
+    stepSelect.addEventListener('change', () => {
+      view.syncDynamics(this.deps.store.getState());
+    });
+
+    view.must<HTMLInputElement>('#dyn-velocity').addEventListener('input', event => {
+      const state = this.deps.store.getState();
+      const step = Number(stepSelect.value) - 1;
+      const value = Number(inputValue(event)) / 100;
+      patterns.setStepVelocity(state.selected, step, value);
+      const output = view.q('#dyn-velocity-value');
+      if (output) output.textContent = `${Math.round(value * 100)}%`;
+    });
+
+    view.must<HTMLInputElement>('#dyn-probability').addEventListener('input', event => {
+      const state = this.deps.store.getState();
+      const step = Number(stepSelect.value) - 1;
+      const value = Number(inputValue(event)) / 100;
+      patterns.setStepProbability(state.selected, step, value);
+      const output = view.q('#dyn-probability-value');
+      if (output) output.textContent = `${Math.round(value * 100)}%`;
+    });
+
+    view.must<HTMLInputElement>('#dyn-ratchets').addEventListener('input', event => {
+      const state = this.deps.store.getState();
+      const step = Number(stepSelect.value) - 1;
+      const value = Number(inputValue(event));
+      patterns.setStepRatchets(state.selected, step, value);
+      const output = view.q('#dyn-ratchets-value');
+      if (output) output.textContent = String(Math.round(value));
+    });
+  }
+
   private bindAutomationLane(): void {
     const { automation } = this.deps;
     const lane = view.must('#automation-lane');
@@ -606,6 +643,8 @@ export class EspiralApp {
 
     view.must('#sound-channels').addEventListener('input', event => {
       const fader = attr(event, 'data-sound-fader');
+      const pan = attr(event, 'data-sound-pan');
+      const send = attr(event, 'data-sound-send');
       const value = inputValue(event);
 
       if (fader && value !== null) {
@@ -613,6 +652,29 @@ export class EspiralApp {
         mix.setChannelVolume(fader, db);
         const output = view.q(`[data-sound-value="${fader}"]`);
         if (output) output.textContent = `${db.toFixed(1)} dB`;
+        return;
+      }
+
+      if (pan && value !== null) {
+        const amount = Number(value);
+        mix.setChannelPan(pan, amount);
+        const output = view.q(`[data-sound-pan-value="${pan}"]`);
+        if (output) {
+          output.textContent =
+            Math.abs(amount) < 0.005
+              ? 'C'
+              : `${amount < 0 ? 'L' : 'R'} ${Math.round(Math.abs(amount) * 100)}`;
+        }
+        return;
+      }
+
+      if (send && value !== null) {
+        const target = parseRouteRef(send);
+        if (!target) return;
+        const amount = Number(value) / 100;
+        this.deps.routing.setSend(target.trackId, target.busId, amount);
+        const output = view.q(`[data-sound-send-value="${send}"]`);
+        if (output) output.textContent = `${Math.round(amount * 100)}%`;
       }
     });
 

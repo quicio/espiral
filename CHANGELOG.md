@@ -65,7 +65,14 @@
 - Los locks se aplican en el timestamp del paso activo y se restauran al paso siguiente o al detener.
 - Las marcas de lock aparecen en el anillo, la matriz y la fila de Performance.
 - Los locks persisten en escenas y sesión.
-- 68 tests unitarios.
+- Presets musicales por género: Techno, Dub, Ambient y Breaks.
+- Cada preset define escenas con patrones, armonía, seed, mezcla, pan y sends.
+- Los presets cargan contenido en tracks de usuario.
+- Pan por track y sends rápidos por track en la vista Sound.
+- Velocity, probabilidad y ratchets por paso con editor de dinámica.
+- Nuevos plugins Tremolo y Bitcrusher.
+- Los tracks de usuario usan samples variados de percusión y hi-hats.
+- 72 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
 
 ## 0.1.1 — 2026-11-06

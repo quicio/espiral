@@ -1,9 +1,10 @@
 import type { PresetRepositoryPort, PresetSummary } from '../../domain/ports';
 
 const PRESETS: readonly (PresetSummary & { readonly file: string })[] = [
-  { id: 'default', name: 'Techno Ambiental', file: './presets/default.json' },
-  { id: 'minimal', name: 'Minimal', file: './presets/minimal.json' },
-  { id: 'ambient', name: 'Ambient', file: './presets/ambient.json' }
+  { id: 'techno', name: 'Techno', file: './presets/techno.json' },
+  { id: 'dub', name: 'Dub', file: './presets/dub.json' },
+  { id: 'ambient', name: 'Ambient', file: './presets/ambient.json' },
+  { id: 'breaks', name: 'Breaks', file: './presets/breaks.json' }
 ];
 
 export class HttpPresetRepository implements PresetRepositoryPort {

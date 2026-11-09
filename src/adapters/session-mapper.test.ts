@@ -42,6 +42,24 @@ describe('SessionMapper', () => {
               ? [{ insertId: 'drive', paramId: 'drive', value: 0.7 }]
               : locks
           )
+        },
+        velocity: {
+          ...state.pattern.velocity,
+          kick: state.pattern.velocity.kick!.map((value, index) =>
+            index === 2 ? 0.4 : value
+          )
+        },
+        probability: {
+          ...state.pattern.probability,
+          kick: state.pattern.probability.kick!.map((value, index) =>
+            index === 2 ? 0.3 : value
+          )
+        },
+        ratchets: {
+          ...state.pattern.ratchets,
+          kick: state.pattern.ratchets.kick!.map((value, index) =>
+            index === 2 ? 3 : value
+          )
         }
       },
       selected: 'track-08',
@@ -129,6 +147,9 @@ describe('SessionMapper', () => {
     expect(restored.pattern.locks.kick?.[2]).toEqual([
       { insertId: 'drive', paramId: 'drive', value: 0.7 }
     ]);
+    expect(restored.pattern.velocity.kick?.[2]).toBe(0.4);
+    expect(restored.pattern.probability.kick?.[2]).toBe(0.3);
+    expect(restored.pattern.ratchets.kick?.[2]).toBe(3);
     expect(restored.kit.tracks['track-08']?.gainDb).toBe(-13);
     expect(restored.kit.tracks['track-08']?.sends).toEqual([
       { busId: 'reverb-bus', amount: 0.35, preFader: true }

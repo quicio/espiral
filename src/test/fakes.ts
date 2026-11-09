@@ -202,6 +202,7 @@ export class FakeAudioEngine implements AudioEnginePort {
     value: number;
   }[] = [];
   readonly volumes: { channel: ChannelKey; db: number }[] = [];
+  readonly pans: { trackId: string; pan: number }[] = [];
   readonly mutes: { channel: ChannelKey; muted: boolean }[] = [];
   readonly effects: { channel: ChannelKey; effect: EffectKind; wet: number }[] = [];
   readonly delays: { channel: ChannelKey; settings: DelaySettings }[] = [];
@@ -284,6 +285,10 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setChannelVolume(channel: ChannelKey, db: number): void {
     this.volumes.push({ channel, db });
+  }
+
+  setChannelPan(trackId: string, pan: number): void {
+    this.pans.push({ trackId, pan });
   }
 
   setChannelMute(channel: ChannelKey, muted: boolean): void {

@@ -70,6 +70,29 @@ const COMPRESSOR: PluginDefinition = {
   ]
 };
 
+const TREMOLO: PluginDefinition = {
+  id: 'tremolo',
+  name: 'Tremolo',
+  version: 1,
+  kind: 'effect',
+  params: [
+    { id: 'rate', label: 'Rate', min: 0.1, max: 20, defaultValue: 4, unit: 'hz', curve: 'log' },
+    { id: 'depth', label: 'Depth', min: 0, max: 1, defaultValue: 0.5, unit: '%' },
+    { id: 'wet', label: 'Mix', min: 0, max: 1, defaultValue: 0.5, unit: '%' }
+  ]
+};
+
+const BITCRUSHER: PluginDefinition = {
+  id: 'bitcrusher',
+  name: 'Bitcrusher',
+  version: 1,
+  kind: 'effect',
+  params: [
+    { id: 'bits', label: 'Bits', min: 1, max: 16, defaultValue: 6, unit: 'none' },
+    { id: 'wet', label: 'Mix', min: 0, max: 1, defaultValue: 0.5, unit: '%' }
+  ]
+};
+
 export const filterPlugin: PluginFactory = {
   definition: FILTER,
   create() {
@@ -193,6 +216,57 @@ export const compressorPlugin: PluginFactory = {
   }
 };
 
+export const tremoloPlugin: PluginFactory = {
+  definition: TREMOLO,
+  create() {
+    const tremolo = new Tone.Tremolo({
+      frequency: 4,
+      depth: 0.5,
+      wet: 0.5,
+      spread: 180
+    }).start();
+    return {
+      input: tremolo,
+      output: tremolo,
+      setParam(id, value, time = Tone.now()) {
+        if (id === 'rate') tremolo.frequency.rampTo(value, 0.05, time);
+        else if (id === 'depth') tremolo.depth.rampTo(value, 0.05, time);
+        else if (id === 'wet') tremolo.wet.rampTo(value, 0.05, time);
+      },
+      getParam(id) {
+        if (id === 'rate') return Number(tremolo.frequency.value);
+        if (id === 'depth') return Number(tremolo.depth.value);
+        return Number(tremolo.wet.value);
+      },
+      dispose() {
+        tremolo.dispose();
+      }
+    };
+  }
+};
+
+export const bitcrusherPlugin: PluginFactory = {
+  definition: BITCRUSHER,
+  create() {
+    const crusher = new Tone.BitCrusher(6);
+    crusher.wet.value = 0.5;
+    return {
+      input: crusher,
+      output: crusher,
+      setParam(id, value, time = Tone.now()) {
+        if (id === 'bits') crusher.bits.rampTo(value, 0.05, time);
+        else if (id === 'wet') crusher.wet.rampTo(value, 0.05, time);
+      },
+      getParam(id) {
+        return id === 'bits' ? Number(crusher.bits.value) : Number(crusher.wet.value);
+      },
+      dispose() {
+        crusher.dispose();
+      }
+    };
+  }
+};
+
 export function createBuiltinPluginHost(): PluginHost {
   return new PluginHost()
     .register(filterPlugin)
@@ -200,6 +274,8 @@ export function createBuiltinPluginHost(): PluginHost {
     .register(reverbPlugin)
     .register(drivePlugin)
     .register(compressorPlugin)
+    .register(tremoloPlugin)
+    .register(bitcrusherPlugin)
     .register(workletDrivePlugin);
 }
 
@@ -209,5 +285,7 @@ export const builtinPlugins = [
   reverbPlugin,
   drivePlugin,
   compressorPlugin,
+  tremoloPlugin,
+  bitcrusherPlugin,
   workletDrivePlugin
 ] as const;

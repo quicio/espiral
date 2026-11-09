@@ -9,6 +9,8 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Routing matrix track × bus con envíos PRE/POST, retorno por bus y dos buses por defecto.
 - Mod matrix con LFO, macros y paso, aplicada a parámetros de plugins a control-rate.
 - Parameter locks por paso con marcas en el secuenciador y persistencia en sesión.
+- Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
+- Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Performances por escenas: `Umbral`, `Deriva`, `Pulso`, `Caos contenido`.
 - Semilla reproducible, Euclid, densidad, mutación, freeze y evolución.
 - Tonalidad: 12 raíces, 7 escalas y 4 progresiones.

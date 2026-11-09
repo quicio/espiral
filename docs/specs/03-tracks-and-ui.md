@@ -27,6 +27,12 @@
 - Hecho: parameter locks por track y paso sobre parámetros de inserts, con marcas en la grilla.
 - Hecho: los locks se aplican cuando el paso está activo y se restauran al paso siguiente o al detener.
 - Hecho: los locks persisten en escenas y sesión.
+- Hecho: presets musicales por género (Techno, Dub, Ambient, Breaks) con escenas, patrones, armonía, mezcla, pan y sends.
+- Hecho: velocity, probabilidad y ratchets por paso, con editor de dinámica en Sequencer.
+- Hecho: paneo por track y sends rápidos en la vista Sound.
+- Hecho: plugins Tremolo y Bitcrusher; tracks de usuario con samples variados.
+- Hecho: los presets cargan contenido en tracks de usuario.
+- Pendiente: macros por track.
 - Pendiente: destinos AudioParam a audio-rate.
 - Pendiente: locks sobre parámetros que no sean de plugins.
 
@@ -163,4 +169,8 @@ Requisitos:
 - [x] Matriz de routing.
 - [x] Matriz de modulación (control-rate).
 - [x] Editor de parameter locks.
+- [x] Velocity, probabilidad y ratchets por paso.
+- [x] Presets musicales por género con escenas.
+- [x] Pan y sends rápidos por track.
+- [ ] Macros por track.
 - [ ] Destinos AudioParam a audio-rate.

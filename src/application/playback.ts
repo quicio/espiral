@@ -238,33 +238,39 @@ export class PlaybackService {
   private triggerStep(state: InstrumentState, time: number, stepCount: number): void {
     const quarter = stepCount % 4 === 0;
 
-    if (patternStep(state.pattern.steps, 'kick', stepCount)) {
-      this.engine.trigger({ type: 'kick', time: time + timingOffset(state, this.generative, 'kick', stepCount) });
-    }
+    this.eachPatternHit(state, 'kick', stepCount, time, (at, velocity) => {
+      this.engine.trigger({ type: 'kick', time: at, velocity });
+    });
 
-    if (patternStep(state.pattern.steps, 'bass', stepCount)) {
-      const voice = bassVoice(state, this.generative, stepCount, this.runtime.currentChordDegree);
+    const bass = bassVoice(
+      state,
+      this.generative,
+      stepCount,
+      this.runtime.currentChordDegree
+    );
+    this.eachPatternHit(state, 'bass', stepCount, time, (at, velocity) => {
       this.engine.trigger({
         type: 'sample',
         channel: 'bass',
-        time: time + timingOffset(state, this.generative, 'bass', stepCount),
-        sampleIndex: voice.sampleIndex,
-        playbackRate: voice.playbackRate,
+        time: at,
+        sampleIndex: bass.sampleIndex,
+        playbackRate: bass.playbackRate,
+        gainDb: velocityGainDb(velocity),
         duration: noteDuration('bass', state.harmony.sustain)
       });
-    }
+    });
 
-    if (patternStep(state.pattern.steps, 'hihat', stepCount)) {
-      const voice = hihatVoice(state, this.generative, stepCount, 8);
+    const hihat = hihatVoice(state, this.generative, stepCount, 8);
+    this.eachPatternHit(state, 'hihat', stepCount, time, (at, velocity) => {
       this.engine.trigger({
         type: 'sample',
         channel: 'hihat',
-        time: time + timingOffset(state, this.generative, 'hihat', stepCount),
-        sampleIndex: voice.sampleIndex,
-        playbackRate: voice.playbackRate,
-        gainDb: voice.gainDb
+        time: at,
+        sampleIndex: hihat.sampleIndex,
+        playbackRate: hihat.playbackRate,
+        gainDb: hihat.gainDb + velocityGainDb(velocity)
       });
-    }
+    });
 
     if (quarter) {
       this.runtime.droneStep += 1;
@@ -294,28 +300,32 @@ export class PlaybackService {
       }
     }
 
-    if (patternStep(state.pattern.steps, 'perc', stepCount)) {
+    const percRate = percPlaybackRate(state, this.generative, stepCount);
+    this.eachPatternHit(state, 'perc', stepCount, time, (at, velocity) => {
       this.engine.trigger({
         type: 'sample',
         channel: 'perc',
-        time: time + timingOffset(state, this.generative, 'perc', stepCount),
-        playbackRate: percPlaybackRate(state, this.generative, stepCount),
+        time: at,
+        playbackRate: percRate,
+        gainDb: velocityGainDb(velocity),
         duration: '2n'
       });
-    }
+    });
 
     Object.values(state.kit.tracks).forEach(track => {
       if (track.role !== 'user' || !track.hasPattern) return;
       if (track.machine.kind !== 'sampler') return;
-      if (!patternStep(state.pattern.steps, track.id, stepCount)) return;
-      this.engine.trigger({
-        type: 'sample',
-        channel: 'perc',
-        trackId: track.id,
-        time: time + timingOffset(state, this.generative, track.id, stepCount),
-        sampleIndex: 0,
-        playbackRate: 1,
-        duration: '8n'
+      this.eachPatternHit(state, track.id, stepCount, time, (at, velocity) => {
+        this.engine.trigger({
+          type: 'sample',
+          channel: 'perc',
+          trackId: track.id,
+          time: at,
+          sampleIndex: 0,
+          playbackRate: 1,
+          gainDb: velocityGainDb(velocity),
+          duration: '8n'
+        });
       });
     });
 
@@ -338,6 +348,52 @@ export class PlaybackService {
       }
     }
   }
+
+  private eachPatternHit(
+    state: InstrumentState,
+    trackId: string,
+    stepCount: number,
+    time: number,
+    callback: (time: number, velocity: number) => void
+  ): void {
+    if (!patternStep(state.pattern.steps, trackId, stepCount)) return;
+
+    const step = normalizeStep(stepCount);
+    const probability = state.pattern.probability[trackId]?.[step] ?? 1;
+    if (probability <= 0) return;
+    if (
+      probability < 1 &&
+      this.generative.hash01(state.seed, `${trackId}-prob`, stepCount, 31) >
+        probability
+    ) {
+      return;
+    }
+
+    const velocity = clamp(
+      state.pattern.velocity[trackId]?.[step] ?? 1,
+      0,
+      1
+    );
+    if (velocity <= 0) return;
+
+    const ratchets = clamp(
+      Math.round(state.pattern.ratchets[trackId]?.[step] ?? 1),
+      1,
+      4
+    );
+    const offset = timingOffset(state, this.generative, trackId, stepCount);
+    const stepSeconds = 60 / Math.max(state.transport.bpm, 1) / 4;
+
+    for (let index = 0; index < ratchets; index += 1) {
+      callback(time + offset + (index * stepSeconds) / ratchets, velocity);
+    }
+  }
+}
+
+function velocityGainDb(velocity: number): number {
+  return velocity >= 0.999
+    ? 0
+    : 20 * Math.log10(Math.max(0.02, velocity));
 }
 
 function lockKey(trackId: string, insertId: string, paramId: string): string {
