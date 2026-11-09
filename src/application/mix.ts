@@ -37,6 +37,10 @@ export class MixService {
     return this.engine.listPlugins();
   }
 
+  listInstruments(): readonly PluginDefinition[] {
+    return this.engine.listInstruments();
+  }
+
   setChannelVolume(trackId: string, db: number): void {
     const volumeDb = clamp(db, -60, 6);
     this.updateTrack(trackId, track => ({ ...track, gainDb: volumeDb }));

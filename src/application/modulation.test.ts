@@ -54,6 +54,29 @@ describe('ModulationService', () => {
     expect(store.getState().modulation.sources[2]?.value).toBe(1);
   });
 
+  it('applies a track macro as a modulation source', () => {
+    const { store, engine, modulation } = setup();
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          kick: {
+            ...state.kit.tracks.kick!,
+            macros: [1, 0.5]
+          }
+        }
+      }
+    }));
+    modulation.addRoute('track-macro:kick:0', cutoffTarget, 0.1, false);
+    modulation.setEnabled(true);
+
+    modulation.tick(0);
+
+    expect(engine.params.at(-1)?.value).toBeCloseTo(3198, 0);
+  });
+
   it('restores the base value when modulation is disabled', () => {
     const { engine, modulation } = setup();
     modulation.addRoute('macro-1', cutoffTarget, 0.5, false);

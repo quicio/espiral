@@ -61,6 +61,31 @@ describe('TrackService', () => {
     expect(engine.machines.at(-1)?.machine.kind).toBe('mono');
   });
 
+  it('adds a user track from an instrument plugin', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.addTrack('plugin-fm-synth');
+
+    const track = store.getState().kit.tracks['track-17'];
+    expect(track?.machineId).toBe('plugin-fm-synth');
+    expect(track?.machine.kind).toBe('plugin');
+    expect(track?.machine.pluginId).toBe('fm-synth');
+    expect(track?.machine.params).toEqual({ harmonicity: 2 });
+    expect(track?.noteSource.kind).toBe('scale-degree');
+    expect(engine.added.at(-1)?.machine.kind).toBe('plugin');
+  });
+
+  it('edits plugin instrument parameters', () => {
+    const { store, engine, tracks } = setup();
+    tracks.addTrack('plugin-fm-synth');
+
+    tracks.setMachineParam('track-17', 'harmonicity', 4.5);
+
+    const machine = store.getState().kit.tracks['track-17']?.machine;
+    expect(machine?.params?.harmonicity).toBe(4.5);
+    expect(engine.machines.at(-1)?.machine.params?.harmonicity).toBe(4.5);
+  });
+
   it('changes a machine parameter and rebuilds the source', () => {
     const { store, engine, tracks } = setup();
     tracks.addTrack('analog-pad');
@@ -90,6 +115,38 @@ describe('TrackService', () => {
     tracks.setMachine('kick', 'pluck');
 
     expect(store.getState().kit.tracks.kick?.machine.kind).toBe('membrane');
+  });
+
+  it('updates and clamps track macros', () => {
+    const { store, tracks } = setup();
+
+    tracks.setTrackMacro('track-08', 0, 0.75);
+    tracks.setTrackMacro('track-08', 1, 2);
+
+    expect(store.getState().kit.tracks['track-08']?.macros).toEqual([0.75, 1]);
+  });
+
+  it('removes track-macro modulation routes when deleting the track', () => {
+    const { store, tracks } = setup();
+    store.update(state => ({
+      ...state,
+      modulation: {
+        ...state.modulation,
+        routes: [
+          {
+            id: 'route-1',
+            sourceId: 'track-macro:track-09:0',
+            target: { trackId: 'track-09', insertId: 'delay', paramId: 'wet' },
+            amount: 0.5,
+            bipolar: false
+          }
+        ]
+      }
+    }));
+
+    tracks.removeTrack('track-09');
+
+    expect(store.getState().modulation.routes).toEqual([]);
   });
 
   it('removes a user track from the kit, patterns and every scene', () => {

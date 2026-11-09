@@ -1,6 +1,7 @@
 import type { ChannelKey } from './channels';
 
-export type MachineKind = 'membrane' | 'poly' | 'mono' | 'pluck' | 'sampler';
+export type MachineKind = 'membrane' | 'poly' | 'mono' | 'pluck' | 'sampler' | 'plugin';
+export type MachinePluginState = Readonly<Record<string, number>>;
 
 export interface EnvelopeConfig {
   readonly attack: number;
@@ -28,6 +29,8 @@ export interface MachineConfig {
     readonly resonance: number;
     readonly release: number;
   };
+  readonly pluginId?: string;
+  readonly params?: MachinePluginState;
 }
 
 export interface InsertConfig {

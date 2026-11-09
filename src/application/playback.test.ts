@@ -294,6 +294,51 @@ describe('PlaybackService', () => {
     );
   });
 
+  it('triggers an instrument plugin note for a user track', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const track = state.kit.tracks['track-09']!;
+      return {
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: {
+            ...state.kit.tracks,
+            'track-09': {
+              ...track,
+              machineId: 'plugin-fm-synth',
+              machine: {
+                kind: 'plugin',
+                pluginId: 'fm-synth',
+                params: { harmonicity: 2 }
+              },
+              noteSource: { kind: 'scale-degree', degree: 0, octave: 4 }
+            }
+          }
+        },
+        pattern: {
+          ...state.pattern,
+          steps: {
+            ...state.pattern.steps,
+            'track-09': state.pattern.steps['track-09']!.map((value, index) =>
+              index === 0 ? 1 : value
+            )
+          }
+        }
+      };
+    });
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    expect(
+      engine.events.some(
+        entry => entry.type === 'synth' && entry.trackId === 'track-09'
+      )
+    ).toBe(true);
+  });
+
   it('does not trigger silent steps', async () => {
     const { playback, clock, engine } = setup();
     await playback.start();

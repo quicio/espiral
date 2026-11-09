@@ -82,6 +82,16 @@ type NoteSource =
 - En Performance, el alta de track permite elegir la máquina inicial.
 - El nombre del track nuevo incorpora la máquina: `Analog Pad 17`, `Bass Synth 18`, etc.
 
+## Instrument plugins
+
+- `InstrumentPluginFactory` define `definition`, `create()` y opcional `load()`.
+- `InstrumentPluginInstance` expone `trigger()`, `release()`, `setParam()`, `getParam()` y `dispose()`.
+- `InstrumentPluginHost` registra instrumentos por `id`.
+- Built-in `FM Synth` (`fm-synth`) como referencia.
+- `MachineConfig.kind: 'plugin'` guarda `pluginId` y `params`.
+- El motor modular crea el instrumento, lo conecta al track y lo dispara con `trigger()`.
+- Los parámetros del instrumento aparecen en el editor de máquina de Sound.
+
 ## Persistencia
 
 - La sesión v2 guarda `machineId`, `machine` y `noteSource`.
@@ -107,5 +117,5 @@ type NoteSource =
 - [x] Selector de máquina al crear track.
 - [x] Persistencia de máquina y fuente de notas.
 - [x] Editor de parámetros de máquina en Sound.
-- [ ] Instrument plugins de terceros.
+- [x] Instrument plugins de terceros.
 - [ ] Máquinas por preset/escena.

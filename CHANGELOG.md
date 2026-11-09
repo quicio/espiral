@@ -39,8 +39,11 @@
 - Motor modular con `MonoSynth` y `PluckSynth`; cambio de máquina en caliente.
 - Selector de máquina en Sound y al crear un track.
 - Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.
+- Instrument plugins: `InstrumentPluginHost`, instancia con trigger/release y `FM Synth` built-in.
+- Las máquinas `plugin` guardan `pluginId`, estado de parámetros y se editan en Sound.
+- Dos macros por track como fuentes de modulación (`track-macro:*`).
 - Persistencia de máquina y fuente de notas en sesión y escenas.
-- 76 tests unitarios.
+- 87 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
 
 ## 0.2.0 — 2026-11-08

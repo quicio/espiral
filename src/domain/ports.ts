@@ -55,6 +55,7 @@ export interface AudioEnginePort {
   setMasterVolume(db: number, time?: number): void;
   getMasterLevel(): number;
   listPlugins(): readonly PluginDefinition[];
+  listInstruments(): readonly PluginDefinition[];
   setTrackInserts(trackId: string, inserts: readonly InsertConfig[]): Promise<void>;
   setInsertParam(
     trackId: string,

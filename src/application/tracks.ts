@@ -1,6 +1,11 @@
 import { PATTERN_LENGTH } from '../domain/channels';
 import { createUserTrack } from '../domain/default-kit';
-import { machinePreset } from '../domain/machines';
+import {
+  instrumentMachinePreset,
+  MACHINE_PRESETS,
+  machinePreset,
+  type MachinePreset
+} from '../domain/machines';
 import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
 import {
@@ -35,7 +40,8 @@ export class TrackService {
       return;
     }
 
-    const track = createUserTrack(nextTrackIndex(state.kit), machineId);
+    const preset = this.resolvePreset(machineId) ?? machinePreset('sampler');
+    const track = createUserTrack(nextTrackIndex(state.kit), preset.id, preset);
     const empty = emptyPattern();
     const next: InstrumentState = {
       ...state,
@@ -82,8 +88,16 @@ export class TrackService {
       return;
     }
 
-    const preset = machinePreset(machineId);
-    const created = createUserTrack(trackNumber(track.id, state.kit), preset.id);
+    const preset = this.resolvePreset(machineId);
+    if (!preset) {
+      this.status.generative(`Máquina desconocida: ${machineId}.`);
+      return;
+    }
+    const created = createUserTrack(
+      trackNumber(track.id, state.kit),
+      preset.id,
+      preset
+    );
     const next: InstrumentState = {
       ...state,
       kit: {
@@ -106,6 +120,24 @@ export class TrackService {
     this.status.generative(`${track.name} · ${preset.name}.`);
   }
 
+  setTrackMacro(trackId: string, index: number, value: number): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || index < 0 || index >= 2) return;
+    const macros = [...track.macros];
+    macros[index] = clamp(value, 0, 1);
+    this.store.update(current => ({
+      ...current,
+      kit: {
+        ...current.kit,
+        tracks: {
+          ...current.kit.tracks,
+          [trackId]: { ...track, macros }
+        }
+      }
+    }));
+  }
+
   setMachineParam(
     trackId: string,
     paramId: string,
@@ -116,7 +148,8 @@ export class TrackService {
     if (!track || track.role !== 'user') return;
     if (!this.engine.supportsMachineChange) return;
 
-    const preset = machinePreset(track.machineId);
+    const preset =
+      this.resolvePreset(track.machineId) ?? machinePreset(track.machineId);
     const param = preset.params.find(entry => entry.id === paramId);
     if (!param) return;
 
@@ -132,6 +165,18 @@ export class TrackService {
       }
     }));
     this.engine.setTrackMachine(trackId, machine);
+  }
+
+  private resolvePreset(machineId: string): MachinePreset | null {
+    const preset = MACHINE_PRESETS[machineId];
+    if (preset) return preset;
+    const pluginId = machineId.startsWith('plugin-')
+      ? machineId.slice('plugin-'.length)
+      : machineId;
+    const definition = this.engine
+      .listInstruments()
+      .find(entry => entry.id === pluginId);
+    return definition ? instrumentMachinePreset(definition) : null;
   }
 
   removeTrack(trackId: string): void {
@@ -169,7 +214,9 @@ export class TrackService {
       modulation: {
         ...state.modulation,
         routes: state.modulation.routes.filter(
-          route => route.target.trackId !== trackId
+          route =>
+            route.target.trackId !== trackId &&
+            !route.sourceId.startsWith(`track-macro:${trackId}:`)
         )
       },
       selected,
@@ -269,4 +316,8 @@ function omit<T>(record: Readonly<Record<string, T>>, key: string): Record<strin
   return Object.fromEntries(
     Object.entries(record).filter(([id]) => id !== key)
   );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }

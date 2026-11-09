@@ -65,6 +65,7 @@ export interface SessionTrackDto {
   readonly machineId: string;
   readonly machine: MachineConfig;
   readonly noteSource: NoteSource;
+  readonly macros: readonly number[];
   readonly gainDb: number;
   readonly pan: number;
   readonly muted: boolean;
@@ -329,6 +330,7 @@ function toKitDto(kit: KitState): SessionKitDto {
       machineId: track.machineId,
       machine: track.machine,
       noteSource: track.noteSource,
+      macros: [...track.macros],
       gainDb: track.gainDb,
       pan: track.pan,
       muted: track.muted,
@@ -519,6 +521,7 @@ function readKit(raw: unknown, current: KitState): KitState {
       trackData.noteSource,
       currentTrack?.noteSource ?? { kind: 'fixed', note: 'C4' }
     );
+    const macros = readMacros(trackData.macros, currentTrack?.macros ?? [0.5, 0.5]);
 
     tracks[id] = {
       id,
@@ -528,6 +531,7 @@ function readKit(raw: unknown, current: KitState): KitState {
       machineId,
       machine,
       noteSource,
+      macros,
       gainDb: clamp(numberOr(trackData.gainDb, currentTrack?.gainDb ?? 0), -60, 6),
       pan: clamp(numberOr(trackData.pan, currentTrack?.pan ?? 0), -1, 1),
       muted:
@@ -577,6 +581,13 @@ function readNoteSource(raw: unknown, fallback: NoteSource): NoteSource {
   }
 
   return fallback;
+}
+
+function readMacros(raw: unknown, fallback: readonly number[]): readonly number[] {
+  if (!Array.isArray(raw)) return fallback;
+  return [0, 1].map(index =>
+    clamp(numberOr(raw[index], fallback[index] ?? 0.5), 0, 1)
+  );
 }
 
 function readBuses(
@@ -688,15 +699,27 @@ function readMachine(raw: unknown): MachineConfig | null {
     kind !== 'poly' &&
     kind !== 'mono' &&
     kind !== 'pluck' &&
-    kind !== 'sampler'
+    kind !== 'sampler' &&
+    kind !== 'plugin'
   ) {
     return null;
   }
 
   const filter = asRecord(data.filter);
   const pluck = asRecord(data.pluck);
+  const pluginParams = asRecord(data.params);
   const machine: MachineConfig = {
     kind,
+    ...(typeof data.pluginId === 'string' ? { pluginId: data.pluginId } : {}),
+    ...(pluginParams
+      ? {
+          params: Object.fromEntries(
+            Object.entries(pluginParams)
+              .filter(([, value]) => typeof value === 'number' && Number.isFinite(value))
+              .map(([key, value]) => [key, value as number])
+          )
+        }
+      : {}),
     ...(typeof data.oscillator === 'string'
       ? { oscillator: data.oscillator as MachineConfig['oscillator'] }
       : {}),

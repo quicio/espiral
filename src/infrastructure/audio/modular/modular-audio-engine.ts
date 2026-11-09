@@ -14,6 +14,9 @@ import {
 import type { PluginDefinition } from '../../../domain/plugin';
 import type { AudioEnginePort } from '../../../domain/ports';
 import { createBuiltinPluginHost } from '../plugins/builtins';
+import { createBuiltinInstrumentHost } from '../plugins/instruments';
+import { InstrumentPluginHost } from '../plugins/instrument-host';
+import type { InstrumentPluginInstance } from '../plugins/types';
 import type { PluginHost } from '../plugins/plugin-host';
 import { isOfflineContext } from '../context';
 import { SampleVoicePool } from '../sample-voice-pool';
@@ -26,6 +29,7 @@ type TrackSource =
   | { readonly kind: 'poly'; readonly synth: Tone.PolySynth }
   | { readonly kind: 'mono'; readonly synth: Tone.MonoSynth }
   | { readonly kind: 'pluck'; readonly synth: Tone.PluckSynth }
+  | { readonly kind: 'instrument'; readonly instance: InstrumentPluginInstance }
   | { readonly kind: 'sampler'; readonly pools: readonly SampleVoicePool[] };
 
 export class ModularAudioEngine implements AudioEnginePort {
@@ -34,6 +38,7 @@ export class ModularAudioEngine implements AudioEnginePort {
   readonly supportsRouting = true;
   readonly supportsMachineChange = true;
   private readonly pluginHost: PluginHost;
+  private readonly instrumentHost: InstrumentPluginHost;
   private readonly master: MasterBus;
   private readonly tracks = new Map<string, Track>();
   private readonly buses = new Map<string, Bus>();
@@ -41,11 +46,16 @@ export class ModularAudioEngine implements AudioEnginePort {
   private readonly latencyPlan: LatencyPlan;
   private prepared = false;
 
-  constructor(config: GraphConfig, pluginHost: PluginHost = createBuiltinPluginHost()) {
+  constructor(
+    config: GraphConfig,
+    pluginHost: PluginHost = createBuiltinPluginHost(),
+    instrumentHost: InstrumentPluginHost = createBuiltinInstrumentHost()
+  ) {
     const errors = validateGraph(config);
     if (errors.length > 0) throw new Error(`Grafo inválido: ${errors.join('; ')}`);
 
     this.pluginHost = pluginHost;
+    this.instrumentHost = instrumentHost;
     this.latencyPlan = planLatency(config);
     this.master = new MasterBus(config.master);
     config.buses.forEach(bus => this.addBus(bus));
@@ -103,7 +113,12 @@ export class ModularAudioEngine implements AudioEnginePort {
     if (!isOfflineContext()) await Tone.start();
     await Promise.all([
       ...Array.from(this.tracks.values(), track => track.prepare()),
-      ...Array.from(this.buses.values(), bus => bus.prepare())
+      ...Array.from(this.buses.values(), bus => bus.prepare()),
+      ...Array.from(this.sources.values()).flatMap(source =>
+        source.kind === 'instrument' && source.instance.prepare
+          ? [source.instance.prepare()]
+          : []
+      )
     ]);
     await Tone.loaded();
     this.prepared = true;
@@ -148,6 +163,8 @@ export class ModularAudioEngine implements AudioEnginePort {
           );
         } else if (source.kind === 'pluck') {
           source.synth.triggerAttack(notes[0] ?? 'C4', event.time);
+        } else if (source.kind === 'instrument') {
+          source.instance.trigger(notes, event.duration, event.time, velocity);
         }
         return;
       }
@@ -167,6 +184,10 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   listPlugins(): readonly PluginDefinition[] {
     return this.pluginHost.list();
+  }
+
+  listInstruments(): readonly PluginDefinition[] {
+    return this.instrumentHost.list();
   }
 
   async preparePlugin(pluginId: string): Promise<void> {
@@ -389,6 +410,18 @@ export class ModularAudioEngine implements AudioEnginePort {
       return { kind: 'pluck', synth };
     }
 
+    if (machine.kind === 'plugin') {
+      if (!machine.pluginId) {
+        return { kind: 'sampler', pools: [] };
+      }
+      const instance = this.instrumentHost.create(
+        machine.pluginId,
+        machine.params ?? {}
+      );
+      instance.output.connect(input);
+      return { kind: 'instrument', instance };
+    }
+
     const pools = (machine.samples ?? []).map(
       url =>
         new SampleVoicePool(
@@ -409,12 +442,14 @@ function stopSource(source: TrackSource | undefined): void {
   else if (source.kind === 'poly') source.synth.releaseAll();
   else if (source.kind === 'mono') source.synth.triggerRelease();
   else if (source.kind === 'pluck') source.synth.triggerRelease();
+  else if (source.kind === 'instrument') source.instance.release();
   else source.pools.forEach(pool => pool.stop());
 }
 
 function disposeSource(source: TrackSource | undefined): void {
   if (!source) return;
   if (source.kind === 'sampler') source.pools.forEach(pool => pool.dispose());
+  else if (source.kind === 'instrument') source.instance.dispose();
   else source.synth.dispose();
 }
 

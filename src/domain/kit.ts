@@ -18,6 +18,7 @@ export interface TrackState {
   readonly machineId: string;
   readonly machine: MachineConfig;
   readonly noteSource: NoteSource;
+  readonly macros: readonly number[];
   readonly gainDb: number;
   readonly pan: number;
   readonly muted: boolean;

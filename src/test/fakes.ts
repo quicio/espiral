@@ -240,6 +240,24 @@ export class FakeAudioEngine implements AudioEnginePort {
       ]
     }
   ];
+  instrumentDefinitions: readonly PluginDefinition[] = [
+    {
+      id: 'fm-synth',
+      name: 'FM Synth',
+      version: 1,
+      kind: 'instrument',
+      params: [
+        {
+          id: 'harmonicity',
+          label: 'Harmonicity',
+          min: 0.5,
+          max: 8,
+          defaultValue: 2,
+          unit: 'none'
+        }
+      ]
+    }
+  ];
 
   async prepare(): Promise<void> {
     this.prepared += 1;
@@ -323,6 +341,10 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   listPlugins(): readonly PluginDefinition[] {
     return this.pluginDefinitions;
+  }
+
+  listInstruments(): readonly PluginDefinition[] {
+    return this.instrumentDefinitions;
   }
 
   async setTrackInserts(channel: ChannelKey, inserts: readonly InsertConfig[]): Promise<void> {

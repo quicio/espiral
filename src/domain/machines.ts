@@ -1,4 +1,9 @@
 import type { MachineConfig } from './graph';
+import {
+  defaultPluginState,
+  type PluginDefinition,
+  type PluginParamUnit
+} from './plugin';
 
 export type NoteSource =
   | { readonly kind: 'fixed'; readonly note: string }
@@ -30,7 +35,7 @@ export interface MachineParam {
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
-  readonly unit?: 's' | 'hz' | 'q' | '%' | 'none';
+  readonly unit?: PluginParamUnit;
   readonly options?: readonly { readonly value: string; readonly label: string }[];
   readonly get: (machine: MachineConfig) => number | string;
   readonly set: (machine: MachineConfig, value: number | string) => MachineConfig;
@@ -317,8 +322,11 @@ export function formatMachineParam(
   if (param.unit === 's') {
     return numeric < 1 ? `${Math.round(numeric * 1000)} ms` : `${numeric.toFixed(2)} s`;
   }
+  if (param.unit === 'ms') return `${numeric.toFixed(1)} ms`;
+  if (param.unit === 'db') return `${numeric.toFixed(1)} dB`;
   if (param.unit === '%') return `${Math.round(numeric * 100)}%`;
   if (param.unit === 'q') return numeric.toFixed(2);
+  if (param.unit === 'ratio') return `${numeric.toFixed(1)}:1`;
   return numeric.toFixed(2);
 }
 
@@ -331,4 +339,36 @@ export const USER_MACHINE_IDS = [
 
 export function machinePreset(id: string): MachinePreset {
   return MACHINE_PRESETS[id] ?? MACHINE_PRESETS.sampler!;
+}
+
+export function instrumentMachinePreset(
+  definition: PluginDefinition
+): MachinePreset {
+  const params: MachineParam[] = definition.params.map(param => ({
+    id: param.id,
+    label: param.label,
+    kind: 'range',
+    min: param.min,
+    max: param.max,
+    step: param.step ?? (param.unit === 'hz' ? 1 : 0.01),
+    unit: param.unit,
+    get: machine => machine.params?.[param.id] ?? param.defaultValue,
+    set: (machine, value) => ({
+      ...machine,
+      params: { ...machine.params, [param.id]: Number(value) }
+    })
+  }));
+
+  return {
+    id: `plugin-${definition.id}`,
+    name: definition.name,
+    description: 'Instrument plugin',
+    machine: {
+      kind: 'plugin',
+      pluginId: definition.id,
+      params: defaultPluginState(definition)
+    },
+    noteSource: { kind: 'scale-degree', degree: 0, octave: 4 },
+    params
+  };
 }

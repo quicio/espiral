@@ -83,7 +83,10 @@ export class ModulationService {
     bipolar = false
   ): void {
     const state = this.store.getState();
-    if (!modulationSource(state.modulation, sourceId)) return;
+    if (!modulationSource(state.modulation, sourceId)) {
+      const macro = parseTrackMacroSource(sourceId);
+      if (!macro || !state.kit.tracks[macro.trackId]) return;
+    }
     if (!target.trackId || !target.insertId || !target.paramId) return;
 
     const key = modulationTargetKey(target);
@@ -210,17 +213,25 @@ export class ModulationService {
     const range = max - min;
     let offset = 0;
     routes.forEach(route => {
-      const source = modulationSource(state.modulation, route.sourceId);
-      const value = modulationSourceValue(
-        source,
-        time,
-        state.transport.currentStep
-      );
+      const value = this.sourceValue(state, route.sourceId, time);
       const signed = route.bipolar ? value * 2 - 1 : value;
       offset += route.amount * range * signed;
     });
 
     return clamp(base + offset, min, max);
+  }
+
+  private sourceValue(
+    state: InstrumentState,
+    sourceId: string,
+    time: number
+  ): number {
+    const macro = parseTrackMacroSource(sourceId);
+    if (macro) {
+      return clamp(state.kit.tracks[macro.trackId]?.macros[macro.index] ?? 0.5, 0, 1);
+    }
+    const source = modulationSource(state.modulation, sourceId);
+    return modulationSourceValue(source, time, state.transport.currentStep);
   }
 
   private targetDescriptor(
@@ -260,6 +271,16 @@ export class ModulationService {
       descriptor.base
     );
   }
+}
+
+function parseTrackMacroSource(
+  sourceId: string
+): { trackId: string; index: number } | null {
+  const [prefix, trackId, rawIndex] = sourceId.split(':');
+  if (prefix !== 'track-macro' || !trackId) return null;
+  const index = Number(rawIndex);
+  if (index !== 0 && index !== 1) return null;
+  return { trackId, index };
 }
 
 function nextRouteId(

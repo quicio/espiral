@@ -96,7 +96,18 @@ describe('SessionMapper', () => {
               maxPolyphony: 8
             },
             noteSource: { kind: 'fixed', note: 'A3' },
+            macros: [0.2, 0.8],
             sends: [{ busId: 'reverb-bus', amount: 0.35, preFader: true }]
+          },
+          'track-09': {
+            ...state.kit.tracks['track-09']!,
+            machineId: 'plugin-fm-synth',
+            machine: {
+              kind: 'plugin',
+              pluginId: 'fm-synth',
+              params: { harmonicity: 3.5 }
+            },
+            noteSource: { kind: 'scale-degree', degree: 0, octave: 4 }
           }
         },
         buses: state.kit.buses.map(bus =>
@@ -164,6 +175,12 @@ describe('SessionMapper', () => {
     expect(restored.kit.tracks['track-08']?.noteSource).toEqual({
       kind: 'fixed',
       note: 'A3'
+    });
+    expect(restored.kit.tracks['track-08']?.macros).toEqual([0.2, 0.8]);
+    expect(restored.kit.tracks['track-09']?.machine.kind).toBe('plugin');
+    expect(restored.kit.tracks['track-09']?.machine.pluginId).toBe('fm-synth');
+    expect(restored.kit.tracks['track-09']?.machine.params).toEqual({
+      harmonicity: 3.5
     });
     expect(restored.kit.tracks['track-08']?.sends).toEqual([
       { busId: 'reverb-bus', amount: 0.35, preFader: true }

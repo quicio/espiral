@@ -8,7 +8,7 @@ import {
 } from './channels';
 import type { MachineConfig } from './graph';
 import type { BusState, KitState, TrackState } from './kit';
-import { machinePreset, type NoteSource } from './machines';
+import { machinePreset, type MachinePreset, type NoteSource } from './machines';
 
 export const SAMPLE_PATH = './audio/';
 
@@ -94,6 +94,7 @@ export function createDefaultKit(): KitState {
         machineId: `core-${key}`,
         machine: MACHINES[key],
         noteSource: coreNoteSource(key),
+        macros: [0.5, 0.5],
         gainDb: mix.volumeDb,
         pan: 0,
         muted: mix.muted,
@@ -130,9 +131,13 @@ export function createDefaultBuses(): readonly BusState[] {
   ];
 }
 
-export function createUserTrack(index: number, machineId = 'sampler'): TrackState {
+export function createUserTrack(
+  index: number,
+  machineId = 'sampler',
+  presetOverride?: MachinePreset
+): TrackState {
   const label = String(index).padStart(2, '0');
-  const preset = machinePreset(machineId);
+  const preset = presetOverride ?? machinePreset(machineId);
   const samplerSample =
     index % 3 === 0
       ? PERC_FILE
@@ -156,6 +161,7 @@ export function createUserTrack(index: number, machineId = 'sampler'): TrackStat
     machineId: preset.id,
     machine,
     noteSource: preset.noteSource,
+    macros: [0.5, 0.5],
     gainDb: -10,
     pan: 0,
     muted: false,

@@ -203,6 +203,10 @@ export class ToneAudioEngine implements AudioEnginePort {
     return [];
   }
 
+  listInstruments(): readonly PluginDefinition[] {
+    return [];
+  }
+
   async setTrackInserts(): Promise<void> {
     // El motor legacy solo soporta delay/reverb fijos.
   }

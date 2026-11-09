@@ -617,7 +617,7 @@ export class EspiralApp {
   }
 
   private bindChannelActions(): void {
-    const { patterns, mix } = this.deps;
+    const { patterns, mix, tracks } = this.deps;
 
     view.must('#activity-list').addEventListener('click', event => {
       const select = attr(event, 'data-select');
@@ -652,7 +652,19 @@ export class EspiralApp {
       const send = attr(event, 'data-sound-send');
       const machineParam = attr(event, 'data-machine-param');
       const machineTrack = attr(event, 'data-machine-track');
+      const trackMacro = attr(event, 'data-track-macro');
       const value = inputValue(event);
+
+      if (trackMacro && value !== null) {
+        const [trackId, rawIndex] = trackMacro.split(':');
+        const index = Number(rawIndex);
+        if (!trackId || (index !== 0 && index !== 1)) return;
+        const amount = Number(value) / 100;
+        tracks.setTrackMacro(trackId, index, amount);
+        const output = view.q(`[data-track-macro-value="${trackMacro}"]`);
+        if (output) output.textContent = `${Math.round(amount * 100)}%`;
+        return;
+      }
 
       if (machineParam && machineTrack) {
         const track = this.deps.store.getState().kit.tracks[machineTrack];
@@ -981,7 +993,7 @@ function isMixValueChange(a: InstrumentState, b: InstrumentState): boolean {
       const left = a.kit.tracks[id];
       const right = b.kit.tracks[id];
       return left?.muted !== right?.muted || left?.solo !== right?.solo;
-    }) || insertStructureChanged(a, b);
+    }) || insertStructureChanged(a, b) || machineChanged(a, b);
 
   return (
     !structuralMix &&
@@ -1062,6 +1074,18 @@ function insertStructureChanged(a: InstrumentState, b: InstrumentState): boolean
         insert.bypass !== other.bypass
       );
     });
+  });
+}
+
+function machineChanged(a: InstrumentState, b: InstrumentState): boolean {
+  return Object.keys(a.kit.tracks).some(id => {
+    const left = a.kit.tracks[id];
+    const right = b.kit.tracks[id];
+    return (
+      left !== undefined &&
+      right !== undefined &&
+      (left.machineId !== right.machineId || left.machine !== right.machine)
+    );
   });
 }
 

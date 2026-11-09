@@ -335,7 +335,8 @@ export class PlaybackService {
       if (
         track.machine.kind !== 'poly' &&
         track.machine.kind !== 'mono' &&
-        track.machine.kind !== 'pluck'
+        track.machine.kind !== 'pluck' &&
+        track.machine.kind !== 'plugin'
       ) {
         return;
       }
@@ -351,7 +352,10 @@ export class PlaybackService {
         track.machine.kind,
         state.harmony.sustain
       );
-      const channel = track.machine.kind === 'poly' ? 'pad' : 'lead';
+      const channel =
+        track.machine.kind === 'poly' || track.machine.kind === 'plugin'
+          ? 'pad'
+          : 'lead';
       this.eachPatternHit(state, track.id, stepCount, time, (at, velocity) => {
         this.engine.trigger({
           type: 'synth',
@@ -469,11 +473,12 @@ function notesForTrack(
 }
 
 function machineNoteDuration(
-  kind: 'poly' | 'mono' | 'pluck',
+  kind: 'poly' | 'mono' | 'pluck' | 'plugin',
   sustain: number
 ): NoteDuration {
   if (kind === 'mono') return noteDuration('bass', sustain);
   if (kind === 'pluck') return '8n';
+  if (kind === 'plugin') return noteDuration('lead', sustain);
   return noteDuration('pad', sustain);
 }
 

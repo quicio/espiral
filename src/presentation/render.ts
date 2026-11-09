@@ -8,6 +8,7 @@ import {
 import { kitHasSolo, kitTracks, type TrackState } from '../domain/kit';
 import {
   formatMachineParam,
+  instrumentMachinePreset,
   MACHINE_PRESETS,
   USER_MACHINE_IDS
 } from '../domain/machines';
@@ -221,19 +222,33 @@ export function renderSound(
 
       const machineControl =
         track.role === 'user'
-          ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${USER_MACHINE_IDS.map(
-              id => {
-                const preset = MACHINE_PRESETS[id];
-                if (!preset) return '';
-                return `<option value="${id}"${track.machineId === id ? ' selected' : ''}>${preset.name}</option>`;
-              }
-            ).join('')}</select>`
+          ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
+              mixService
+            )
+              .map(
+                option =>
+                  `<option value="${option.id}"${track.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
+              )
+              .join('')}</select>`
           : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
 
       const machineParams =
         track.role === 'user'
-          ? renderMachineParams(track, mixService.supportsMachineChange)
+          ? renderMachineParams(track, mixService)
           : '';
+
+      const macroEnabled = mixService.supportsRouting;
+      const trackMacros = track.macros
+        .map((value, index) => {
+          const ref = `${track.id}:${index}`;
+          const percent = Math.round(value * 100);
+          return `<label class="track-macro">
+            <span>M${index + 1}</span>
+            <input type="range" min="0" max="100" step="1" value="${percent}" data-track-macro="${ref}" aria-label="Macro ${index + 1} de ${track.name}"${macroEnabled ? '' : ' disabled'}>
+            <output data-track-macro-value="${ref}">${percent}%</output>
+          </label>`;
+        })
+        .join('');
 
       return `<div class="sound-channel${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
       <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span>${machineControl}</div>
@@ -249,6 +264,7 @@ export function renderSound(
         <input type="range" min="-1" max="1" step="0.01" value="${track.pan}" data-sound-pan="${track.id}" aria-label="Paneo de ${track.name}">
         <output data-sound-pan-value="${track.id}">${formatPan(track.pan)}</output>
       </div>
+      <div class="track-macros">${trackMacros}</div>
       <div class="machine-params" data-machine-params="${track.id}">${machineParams}</div>
       <div class="sound-effects">
         ${sends}
@@ -534,6 +550,13 @@ export function syncMixValues(
     if (volume) volume.textContent = `${track.gainDb.toFixed(1)} dB`;
     const pan = q(`[data-sound-pan-value="${track.id}"]`);
     if (pan) pan.textContent = formatPan(track.pan);
+    track.macros.forEach((value, index) => {
+      const ref = `${track.id}:${index}`;
+      const input = q<HTMLInputElement>(`[data-track-macro="${ref}"]`);
+      if (input) input.value = String(Math.round(value * 100));
+      const output = q(`[data-track-macro-value="${ref}"]`);
+      if (output) output.textContent = `${Math.round(value * 100)}%`;
+    });
     track.sends.forEach(send => {
       const ref = `${track.id}:${send.busId}`;
       const output = q(`[data-sound-send-value="${ref}"]`);
@@ -579,17 +602,17 @@ export function syncInsertValues(
 
 export function syncTrackManagement(
   state: InstrumentState,
-  supportsTrackManagement: boolean
+  mixService: MixService
 ): void {
+  const supportsTrackManagement = mixService.supportsTrackManagement;
   const count = q('#track-count');
   if (count) count.textContent = String(Object.keys(state.kit.tracks).length);
 
   const machineSelect = q<HTMLSelectElement>('#add-track-machine');
   if (machineSelect && machineSelect.options.length === 0) {
-    machineSelect.innerHTML = USER_MACHINE_IDS.map(id => {
-      const preset = MACHINE_PRESETS[id];
-      return preset ? `<option value="${id}">${preset.name}</option>` : '';
-    }).join('');
+    machineSelect.innerHTML = machineOptions(mixService)
+      .map(option => `<option value="${option.id}">${option.name}</option>`)
+      .join('');
   }
   if (machineSelect) machineSelect.disabled = !supportsTrackManagement;
 
@@ -1003,10 +1026,17 @@ export function renderModulation(
   const targets = modulationTargets(state, mixService);
   const sourceSelect = q<HTMLSelectElement>('#mod-source-select');
   if (sourceSelect) {
-    sourceSelect.innerHTML = state.modulation.sources
+    const options = [
+      ...state.modulation.sources.map(source => ({
+        id: source.id,
+        name: source.name
+      })),
+      ...trackMacroSources(state)
+    ];
+    sourceSelect.innerHTML = options
       .map(
-        source =>
-          `<option value="${source.id}">${source.name}</option>`
+        option =>
+          `<option value="${option.id}">${option.name}</option>`
       )
       .join('');
     sourceSelect.disabled = !supports;
@@ -1033,9 +1063,7 @@ export function renderModulation(
         ? '<p class="mod-empty">Sin rutas. Elegí fuente y destino, y agregá una ruta.</p>'
         : state.modulation.routes
             .map(route => {
-              const source =
-                state.modulation.sources.find(entry => entry.id === route.sourceId)?.name ??
-                route.sourceId;
+              const source = modulationSourceLabel(state, route.sourceId);
               const target =
                 targets.find(entry => entry.value === routeTargetValue(route))?.label ??
                 `${route.target.trackId} · ${route.target.insertId} · ${route.target.paramId}`;
@@ -1133,6 +1161,31 @@ export function syncModulation(
   });
 }
 
+function trackMacroSources(
+  state: InstrumentState
+): readonly { readonly id: string; readonly name: string }[] {
+  return kitTracks(state.kit).flatMap(track =>
+    [0, 1].map(index => ({
+      id: `track-macro:${track.id}:${index}`,
+      name: `${track.name} M${index + 1}`
+    }))
+  );
+}
+
+function modulationSourceLabel(
+  state: InstrumentState,
+  sourceId: string
+): string {
+  const source = state.modulation.sources.find(entry => entry.id === sourceId);
+  if (source) return source.name;
+  const [prefix, trackId, rawIndex] = sourceId.split(':');
+  if (prefix === 'track-macro' && trackId) {
+    const track = state.kit.tracks[trackId];
+    if (track) return `${track.name} M${Number(rawIndex) + 1}`;
+  }
+  return sourceId;
+}
+
 function modulationTargets(
   state: InstrumentState,
   mixService: MixService
@@ -1174,7 +1227,7 @@ export function renderAll(
   renderModulation(state, mixService);
   renderLocks(state, mixService);
   syncDynamics(state);
-  syncTrackManagement(state, mixService.supportsTrackManagement);
+  syncTrackManagement(state, mixService);
   syncParams(state);
   syncSeed(state);
   syncHarmony(state, catalog);
@@ -1219,9 +1272,39 @@ function machineLabel(machineId: string): string {
   return machineId.replace(/^core-/, '');
 }
 
-function renderMachineParams(track: TrackState, enabled: boolean): string {
-  const preset = MACHINE_PRESETS[track.machineId];
+function machineOptions(
+  mixService: MixService
+): readonly { readonly id: string; readonly name: string }[] {
+  const options = USER_MACHINE_IDS.flatMap(id => {
+    const preset = MACHINE_PRESETS[id];
+    return preset ? [{ id, name: preset.name }] : [];
+  });
+  const instruments = mixService.listInstruments().map(definition => ({
+    id: `plugin-${definition.id}`,
+    name: definition.name
+  }));
+  return [...options, ...instruments];
+}
+
+function presetForTrack(
+  track: TrackState,
+  mixService: MixService
+) {
+  const catalog = MACHINE_PRESETS[track.machineId];
+  if (catalog) return catalog;
+  if (track.machine.kind === 'plugin' && track.machine.pluginId) {
+    const definition = mixService
+      .listInstruments()
+      .find(entry => entry.id === track.machine.pluginId);
+    return definition ? instrumentMachinePreset(definition) : null;
+  }
+  return null;
+}
+
+function renderMachineParams(track: TrackState, mixService: MixService): string {
+  const preset = presetForTrack(track, mixService);
   if (!preset || preset.params.length === 0) return '';
+  const enabled = mixService.supportsMachineChange;
 
   return preset.params
     .map(param => {
