@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-11-09
 
 - Parameter locks sobre gain y pan del track, además de parámetros de inserts.
 - Los locks de track se programan en el timestamp del paso y se restauran al siguiente o al detener.
