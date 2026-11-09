@@ -492,6 +492,26 @@
       <button id="load-session" class="line-action" type="button">Cargar</button>
       <button id="export-session" class="line-action" type="button">Exportar</button>
       <button id="export-audio" class="line-action" type="button">Exportar WAV</button>
+      <label class="export-field">Escena
+        <select id="export-scene"><option value="">Actual</option></select>
+      </label>
+      <label class="export-field">Compases
+        <select id="export-bars">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+          <option value="8" selected>8</option>
+          <option value="16">16</option>
+        </select>
+      </label>
+      <label class="export-field">Cola
+        <select id="export-tail">
+          <option value="0">0 s</option>
+          <option value="1">1 s</option>
+          <option value="2" selected>2 s</option>
+          <option value="4">4 s</option>
+        </select>
+      </label>
       <button id="import-session" class="line-action" type="button">Importar</button>
       <input id="import-file" class="sr-only" type="file" accept="application/json,.json" tabindex="-1">
     </div>

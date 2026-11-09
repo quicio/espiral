@@ -225,6 +225,15 @@ export class EspiralApp {
         )
         .join('');
     }
+
+    const exportScene = view.q<HTMLSelectElement>('#export-scene');
+    if (exportScene) {
+      exportScene.innerHTML =
+        '<option value="">Actual</option>' +
+        this.deps.catalog.scenes
+          .map(scene => `<option value="${scene.id}">${scene.label}</option>`)
+          .join('');
+    }
   }
 
   private renderPresets(): void {
@@ -859,10 +868,24 @@ export class EspiralApp {
     view.must('#export-session').addEventListener('click', () => sessions.export());
     const exportAudio = view.must<HTMLButtonElement>('#export-audio');
     exportAudio.addEventListener('click', () => {
+      const sceneValue =
+        view.q<HTMLSelectElement>('#export-scene')?.value ?? '';
+      const bars = Number(
+        view.q<HTMLSelectElement>('#export-bars')?.value ?? 8
+      );
+      const tailSeconds = Number(
+        view.q<HTMLSelectElement>('#export-tail')?.value ?? 2
+      );
       exportAudio.disabled = true;
-      void exportService.exportWav().finally(() => {
-        exportAudio.disabled = false;
-      });
+      void exportService
+        .exportWav({
+          bars,
+          tailSeconds,
+          scene: sceneValue ? (sceneValue as SceneId) : null
+        })
+        .finally(() => {
+          exportAudio.disabled = false;
+        });
     });
     view.must('#import-session').addEventListener('click', () =>
       view.must<HTMLInputElement>('#import-file').click()

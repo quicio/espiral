@@ -3,10 +3,11 @@
 ## Unreleased
 
 - Export WAV offline desde el estado actual: 8 compases + 2 s de cola.
+- Selector de escena, compases y cola para el export WAV.
 - Renderer offline reutiliza `ModularAudioEngine` y `PlaybackService`.
 - Codificador WAV PCM 16-bit y descarga binaria.
 - Botón `Exportar WAV` con estados de render/exportación.
-- 102 tests unitarios.
+- 103 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

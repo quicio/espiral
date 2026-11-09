@@ -2194,6 +2194,29 @@ body.instrument-page .page-title {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem 1.4rem;
+  align-items: center;
+}
+
+.export-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.export-field select {
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 0.2rem 0.3rem;
+  color-scheme: dark;
 }
 
 .session-status {
