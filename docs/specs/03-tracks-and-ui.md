@@ -32,7 +32,9 @@
 - Hecho: paneo por track y sends rápidos en la vista Sound.
 - Hecho: plugins Tremolo y Bitcrusher; tracks de usuario con samples variados.
 - Hecho: los presets cargan contenido en tracks de usuario.
-- Pendiente: macros por track.
+- Hecho: catálogo de máquinas, instrument plugins y editores de parámetros.
+- Hecho: dos macros por track como fuentes del mod matrix.
+- Hecho: presets y escenas pueden definir máquinas por track.
 - Pendiente: destinos AudioParam a audio-rate.
 - Pendiente: locks sobre parámetros que no sean de plugins.
 
@@ -172,5 +174,5 @@ Requisitos:
 - [x] Velocity, probabilidad y ratchets por paso.
 - [x] Presets musicales por género con escenas.
 - [x] Pan y sends rápidos por track.
-- [ ] Macros por track.
+- [x] Macros por track.
 - [ ] Destinos AudioParam a audio-rate.
