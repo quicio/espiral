@@ -1,4 +1,3 @@
-import { findInsertByPlugin, isChannelKey, type ChannelKey } from '../domain/channels';
 import type { EffectKind } from '../domain/audio';
 import type { InsertConfig } from '../domain/graph';
 import { kitEffectiveMute, type TrackState } from '../domain/kit';
@@ -159,6 +158,14 @@ export class MixService {
     return this.engine.getBusLevel(busId);
   }
 
+  getAudioStats(): {
+    readonly underruns: number;
+    readonly underrunDuration: number;
+    readonly totalDuration: number;
+  } | null {
+    return this.engine.getAudioStats();
+  }
+
   setMasterVolume(db: number): void {
     const masterVolume = clamp(db, -60, 0);
     this.store.update(state => ({ ...state, masterVolume }));
@@ -187,56 +194,28 @@ export class MixService {
 
   syncAll(state: InstrumentState = this.store.getState(), syncChains = false): void {
     Object.values(state.kit.tracks).forEach(track => {
-      if (this.engine.supportsInserts) {
-        this.engine.setChannelVolume(track.id, track.gainDb);
-        this.engine.setChannelPan(track.id, track.pan);
-        this.engine.setChannelMute(track.id, kitEffectiveMute(state.kit, track.id));
-        if (syncChains) void this.engine.setTrackInserts(track.id, track.inserts);
-      } else if (isChannelKey(track.role)) {
-        this.engine.setChannelVolume(track.role, track.gainDb);
-        this.engine.setChannelPan(track.role, track.pan);
-        this.engine.setChannelMute(track.role, kitEffectiveMute(state.kit, track.id));
-        this.syncLegacyEffects(track.role, track);
-      }
+      this.engine.setChannelVolume(track.id, track.gainDb);
+      this.engine.setChannelPan(track.id, track.pan);
+      this.engine.setChannelMute(track.id, kitEffectiveMute(state.kit, track.id));
+      if (syncChains) void this.engine.setTrackInserts(track.id, track.inserts);
     });
 
-    if (this.engine.supportsRouting) {
-      state.kit.buses.forEach(bus => {
-        this.engine.setBusReturn(bus.id, bus.returnDb);
-        if (syncChains) void this.engine.setBusInserts(bus.id, bus.inserts);
+    state.kit.buses.forEach(bus => {
+      this.engine.setBusReturn(bus.id, bus.returnDb);
+      if (syncChains) void this.engine.setBusInserts(bus.id, bus.inserts);
+    });
+    Object.values(state.kit.tracks).forEach(track => {
+      track.sends.forEach(send => {
+        this.engine.setTrackSend(
+          track.id,
+          send.busId,
+          send.amount,
+          send.preFader
+        );
       });
-      Object.values(state.kit.tracks).forEach(track => {
-        track.sends.forEach(send => {
-          this.engine.setTrackSend(
-            track.id,
-            send.busId,
-            send.amount,
-            send.preFader
-          );
-        });
-      });
-    }
+    });
 
     this.engine.setMasterVolume(state.masterVolume);
-  }
-
-  private syncLegacyEffects(channel: ChannelKey, track: TrackState): void {
-    const delay = findInsertByPlugin(track.inserts, 'delay');
-    if (delay) {
-      this.engine.setDelaySettings(channel, {
-        wet: delay.params.wet ?? 0.3,
-        feedback: delay.params.feedback ?? 0.35,
-        time: delay.params.time ?? 0.25
-      });
-    }
-
-    const reverb = findInsertByPlugin(track.inserts, 'reverb');
-    if (reverb) {
-      this.engine.setReverbSettings(channel, {
-        wet: reverb.params.wet ?? 0.5,
-        decay: reverb.params.decay ?? 4
-      });
-    }
   }
 
   private commitInserts(trackId: string, inserts: readonly InsertConfig[]): void {
@@ -274,11 +253,7 @@ export class MixService {
 
   private syncMutes(state: InstrumentState): void {
     Object.values(state.kit.tracks).forEach(track => {
-      if (this.engine.supportsInserts) {
-        this.engine.setChannelMute(track.id, kitEffectiveMute(state.kit, track.id));
-      } else if (isChannelKey(track.role)) {
-        this.engine.setChannelMute(track.role, kitEffectiveMute(state.kit, track.id));
-      }
+      this.engine.setChannelMute(track.id, kitEffectiveMute(state.kit, track.id));
     });
   }
 }

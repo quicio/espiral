@@ -70,6 +70,11 @@
           <span class="master-meter__track"><span id="master-meter-fill" class="master-meter__fill"></span></span>
           <button id="master-clip" class="master-meter__clip" type="button" aria-label="Reset indicador de clip" aria-pressed="false">CLIP</button>
         </div>
+        <div class="master-meter cpu-meter" title="Estimación del hilo principal y underruns de audio" aria-label="Carga de CPU estimada">
+          <span class="master-meter__label">CPU</span>
+          <span class="master-meter__track"><span id="cpu-meter-fill" class="master-meter__fill"></span></span>
+          <output id="cpu-value" class="master-meter__value">0%</output>
+        </div>
       </div>
 
       <p id="instrument-error" class="instrument-error" role="alert"></p>

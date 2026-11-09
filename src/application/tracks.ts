@@ -30,7 +30,7 @@ export class TrackService {
 
   addTrack(machineId = 'sampler'): void {
     if (!this.engine.supportsTrackManagement) {
-      this.status.generative('Crear tracks no está disponible en el motor legacy.');
+      this.status.generative('Crear tracks no está disponible en este motor.');
       return;
     }
 
@@ -84,7 +84,7 @@ export class TrackService {
       return;
     }
     if (!this.engine.supportsMachineChange) {
-      this.status.generative('Cambiar máquinas no está disponible en el motor legacy.');
+      this.status.generative('Cambiar máquinas no está disponible en este motor.');
       return;
     }
 
@@ -181,7 +181,7 @@ export class TrackService {
 
   removeTrack(trackId: string): void {
     if (!this.engine.supportsTrackManagement) {
-      this.status.generative('Eliminar tracks no está disponible en el motor legacy.');
+      this.status.generative('Eliminar tracks no está disponible en este motor.');
       return;
     }
 

@@ -1,6 +1,5 @@
 import * as Tone from 'tone';
 import type { EffectKind, SoundEvent } from '../../../domain/audio';
-import type { ChannelKey, DelaySettings, ReverbSettings } from '../../../domain/channels';
 import {
   planLatency,
   validateGraph,
@@ -224,21 +223,6 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.tracks.get(trackId)?.findInsertByPlugin(effect)?.setParam('wet', wet, time);
   }
 
-  setDelaySettings(channel: ChannelKey, settings: DelaySettings): void {
-    const insert = this.tracks.get(channel)?.findInsertByPlugin('delay');
-    if (!insert) return;
-    insert.setParam('wet', settings.wet);
-    insert.setParam('feedback', settings.feedback);
-    insert.setParam('time', settings.time);
-  }
-
-  setReverbSettings(channel: ChannelKey, settings: ReverbSettings): void {
-    const insert = this.tracks.get(channel)?.findInsertByPlugin('reverb');
-    if (!insert) return;
-    insert.setParam('wet', settings.wet);
-    insert.setParam('decay', settings.decay);
-  }
-
   setMasterVolume(db: number): void {
     this.master.setVolume(db);
   }
@@ -253,6 +237,27 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   getBusLevel(busId: string): number {
     return this.buses.get(busId)?.getLevel() ?? -Infinity;
+  }
+
+  getAudioStats(): {
+    readonly underruns: number;
+    readonly underrunDuration: number;
+    readonly totalDuration: number;
+  } | null {
+    const raw = Tone.getContext().rawContext as AudioContext & {
+      playbackStats?: {
+        underrunEvents?: number;
+        underrunDuration?: number;
+        totalDuration?: number;
+      };
+    };
+    const stats = raw.playbackStats;
+    if (!stats) return null;
+    return {
+      underruns: stats.underrunEvents ?? 0,
+      underrunDuration: stats.underrunDuration ?? 0,
+      totalDuration: stats.totalDuration ?? 0
+    };
   }
 
   setTrackSend(

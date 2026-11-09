@@ -43,7 +43,7 @@ Servicios de aplicación ──► Store (estado inmutable)
 AudioEnginePort / ClockPort   UI
   ▲
   │ implementados por
-ToneAudioEngine / ToneClock
+ModularAudioEngine / ToneClock
 ```
 
 - El estado de la aplicación es la fuente de verdad. El motor de audio no guarda la mezcla:
@@ -54,20 +54,19 @@ ToneAudioEngine / ToneClock
 
 ## Cadena de audio actual
 
-`ToneAudioEngine` conserva los 7 canales fijos, pero ya está detrás del puerto:
+`ModularAudioEngine` construye tracks, buses y master desde el kit:
 
 ```
-fuente → delay/reverb opcional → Tone.Volume → Gain de mute ─┐
-                                                             ├→ master
+fuente → insert chain → Tone.Volume → Pan → Mute ─┐
+                                                 ├→ master
 master: Tone.Volume → HPF(25Hz) → Compressor (glue) → Limiter(-2) → Safety clip(0.8) → Destination
 ```
 
-La UI no conoce esta cadena. El próximo motor modular puede reemplazarla sin tocar
+La UI no conoce esta cadena. El motor es reemplazable detrás de `AudioEnginePort` sin tocar
 `application` ni `presentation`.
 
-El composition root elige el motor: `ModularAudioEngine` por defecto y
-`ToneAudioEngine` con `VITE_ENGINE=tone` como fallback legacy. El motor modular ya tiene
-tracks, buses, inserts, sends, PDC y el mismo contrato de eventos.
+El composition root usa `ModularAudioEngine`. Tiene tracks, buses, inserts, sends, PDC,
+instrument plugins y modulación audio-rate.
 
 El estado guarda un `KitState` con `TrackState` por track (máquina, inserts, gain, pan,
 mute, solo, sends, `hasPattern`) y un `PatternState` (pasos, pulsos, freeze). El kit por

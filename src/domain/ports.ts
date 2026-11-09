@@ -1,9 +1,6 @@
 import type { EffectKind, SoundEvent } from './audio';
 import type {
-  ChannelKey,
-  DelaySettings,
-  PatternChannel,
-  ReverbSettings
+  PatternChannel
 } from './channels';
 import type { InsertConfig, MachineConfig, TrackConfig } from './graph';
 import type { KitState } from './kit';
@@ -51,12 +48,15 @@ export interface AudioEnginePort {
   setBusReturn(busId: string, db: number): void;
   setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void>;
   setEffectWet(trackId: string, effect: EffectKind, wet: number, time?: number): void;
-  setDelaySettings(channel: ChannelKey, settings: DelaySettings): void;
-  setReverbSettings(channel: ChannelKey, settings: ReverbSettings): void;
   setMasterVolume(db: number, time?: number): void;
   getMasterLevel(): number;
   getTrackLevel(trackId: string): number;
   getBusLevel(busId: string): number;
+  getAudioStats(): {
+    readonly underruns: number;
+    readonly underrunDuration: number;
+    readonly totalDuration: number;
+  } | null;
   listPlugins(): readonly PluginDefinition[];
   listInstruments(): readonly PluginDefinition[];
   setTrackInserts(trackId: string, inserts: readonly InsertConfig[]): Promise<void>;

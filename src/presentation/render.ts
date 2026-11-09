@@ -203,7 +203,7 @@ export function renderSound(
           <option value="">+ insert</option>
           ${plugins.map(plugin => `<option value="${plugin.id}">${plugin.name}</option>`).join('')}
         </select>`
-        : '<span class="sound-none">rack no disponible en motor legacy</span>';
+        : '<span class="sound-none">rack no disponible</span>';
 
       const sends =
         mixService.supportsRouting && state.kit.buses.length > 0
@@ -626,7 +626,7 @@ export function syncTrackManagement(
     add.disabled = !supportsTrackManagement;
     add.title = supportsTrackManagement
       ? 'Crear un track de usuario'
-      : 'No disponible en el motor legacy';
+      : 'No disponible';
   }
 
   const remove = q<HTMLButtonElement>('#remove-track');
@@ -720,7 +720,7 @@ export function syncRouting(
   if (status) {
     status.textContent = supports
       ? `${active} ${active === 1 ? 'send activo' : 'sends activos'} · ${state.kit.buses.length} buses`
-      : 'routing no disponible en motor legacy';
+      : 'routing no disponible';
   }
 
   qa<HTMLInputElement>('[data-route-amount]').forEach(input => {
@@ -868,7 +868,7 @@ export function renderLocks(
   if (targetSelect) {
     const previous = targetSelect.value;
     targetSelect.innerHTML = !supports
-      ? '<option value="">Locks no disponibles en motor legacy</option>'
+      ? '<option value="">Locks no disponibles</option>'
       : targets.length === 0
         ? '<option value="">Sin inserts en el track</option>'
         : targets
@@ -1224,7 +1224,7 @@ export function syncModulation(
   if (status) {
     status.textContent = supports
       ? `${modulation.routes.length} ${modulation.routes.length === 1 ? 'ruta' : 'rutas'} · ${modulation.enabled ? 'activa' : 'apagada'}`
-      : 'modulación no disponible en motor legacy';
+      : 'modulación no disponible';
   }
 
   qa<HTMLInputElement>('[data-mod-rate], [data-mod-macro]').forEach(input => {

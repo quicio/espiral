@@ -1,9 +1,7 @@
 import type { EffectKind, SoundEvent } from '../domain/audio';
 import type {
   ChannelKey,
-  DelaySettings,
-  PatternChannel,
-  ReverbSettings
+  PatternChannel
 } from '../domain/channels';
 import type { InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
 import type {
@@ -218,13 +216,16 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly pans: { trackId: string; pan: number }[] = [];
   readonly mutes: { channel: ChannelKey; muted: boolean }[] = [];
   readonly effects: { channel: ChannelKey; effect: EffectKind; wet: number }[] = [];
-  readonly delays: { channel: ChannelKey; settings: DelaySettings }[] = [];
-  readonly reverbs: { channel: ChannelKey; settings: ReverbSettings }[] = [];
   readonly inserts: { channel: ChannelKey; inserts: readonly InsertConfig[] }[] = [];
   readonly master: number[] = [];
   masterLevel = -60;
   readonly trackLevels: Record<string, number> = {};
   readonly busLevels: Record<string, number> = {};
+  audioStats: {
+    underruns: number;
+    underrunDuration: number;
+    totalDuration: number;
+  } | null = null;
   pluginDefinitions: readonly PluginDefinition[] = [
     {
       id: 'filter',
@@ -336,14 +337,6 @@ export class FakeAudioEngine implements AudioEnginePort {
     this.effects.push({ channel, effect, wet });
   }
 
-  setDelaySettings(channel: ChannelKey, settings: DelaySettings): void {
-    this.delays.push({ channel, settings });
-  }
-
-  setReverbSettings(channel: ChannelKey, settings: ReverbSettings): void {
-    this.reverbs.push({ channel, settings });
-  }
-
   setMasterVolume(db: number): void {
     this.master.push(db);
   }
@@ -358,6 +351,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   getBusLevel(busId: string): number {
     return this.busLevels[busId] ?? -Infinity;
+  }
+
+  getAudioStats(): {
+    underruns: number;
+    underrunDuration: number;
+    totalDuration: number;
+  } | null {
+    return this.audioStats;
   }
 
   listPlugins(): readonly PluginDefinition[] {

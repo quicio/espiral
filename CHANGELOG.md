@@ -9,9 +9,11 @@
 - Clip latch por nodo con reset individual.
 - Test Playwright de integración de la app principal (`npm run test:integration`).
 - El workflow de audio ejecuta también la integración.
-- Audio check ampliado a 8 escenarios: initial, automation, ambient, max, solo+mute y scene change.
+- Audio check ampliado a 6 escenarios: initial, automation, ambient, max, solo+mute y scene change.
 - Cada escenario reporta `renderMs`; baseline offline documentado.
-- 93 tests unitarios.
+- Motor modular único: `ToneAudioEngine`, `VITE_ENGINE`, `dev:tone` y el A/B offline fueron retirados.
+- Medidor de CPU estimada en la UI (jitter del hilo principal + underruns de audio).
+- 97 tests unitarios.
 
 ## 0.5.0 — 2026-11-09
 

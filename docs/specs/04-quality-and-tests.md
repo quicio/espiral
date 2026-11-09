@@ -12,12 +12,11 @@
 - Fades en `Tone.Player`.
 - Reverb con `decay` real y presets con `feedback`/`delayTime`/`decay`.
 - PDC por track/send en el motor modular.
-- Harness offline `npm run test:audio`: 8 compases y 8 escenarios — inicial, automatización,
+- Harness offline `npm run test:audio`: 8 compases y 6 escenarios — inicial, automatización,
   Ambient, todo al máximo, solo+mute y cambio de escena a mitad del render.
   Verifica peak ≤ −1 dBFS, sin NaN, DC < 0.001 y que el render no sea silencio.
 - Cada escenario reporta `renderMs` para detectar regresiones de performance.
-- A/B formal con tolerancia de 6 dB en peak/RMS. En las corridas locales el RMS difiere
-  < 0.3 dB y el peak entre 0.1 y 1.0 dB, porque la IR de reverb de Tone usa ruido aleatorio.
+- Motor modular único; el A/B contra el motor legacy quedó obsoleto al retirarlo.
 - Workflow de CI `Audio check` con Chromium.
 - Tests de casos de uso y adapters.
 
@@ -48,6 +47,8 @@ Reglas:
 
 **Implementado:** medidores de track en Sound, medidores de bus en Routing y clip latch
 por nodo con reset individual. El master mantiene su meter y latch existentes.
+La UI muestra una **CPU estimada** combinando jitter del hilo principal y underruns de
+`AudioContext.playbackStats` cuando el navegador los expone.
 
 ## Test offline determinista
 
@@ -114,14 +115,12 @@ por nodo con reset individual. El master mantiene su meter y latch existentes.
 **Baseline offline local** (Chromium headless, macOS arm64, 2026-11-09):
 
 ```text
-tone-initial         2384 ms
-modular-initial      2436 ms
-tone-automation      2371 ms
-modular-automation   2476 ms
-modular-ambient      5498 ms
-modular-max          2678 ms
-modular-solo-mute    2574 ms
-modular-scene-change 2787 ms
+modular-initial      4312 ms
+modular-automation   4474 ms
+modular-ambient      8959 ms
+modular-max          4164 ms
+modular-solo-mute    4314 ms
+modular-scene-change 6026 ms
 ```
 
 El audio check imprime `Render baseline (ms)` en cada corrida. El valor no es un
@@ -142,9 +141,10 @@ grandes entre corridas.
 - [x] Script de render + métricas.
 - [x] Test Playwright offline.
 - [x] Job de CI de audio.
-- [x] A/B formal entre motores.
+- [x] A/B formal entre motores (retirado junto al motor legacy).
 - [x] Test Playwright de integración de la app principal.
 - [x] Medidores por track/bus.
 - [x] Clip latch por nodo.
 - [x] Baseline de performance offline.
+- [x] Medidor de CPU estimada en la UI.
 - [x] Escenarios adicionales: preset `ambient`, todo al máximo, solo+mute combinados y cambio de escena.

@@ -6,8 +6,6 @@
   "description": "Espiral — instrumento generativo de ritmos, escalas y automatización.",
   "scripts": {
     "dev": "vite",
-    "dev:modular": "VITE_ENGINE=modular vite",
-    "dev:tone": "VITE_ENGINE=tone vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

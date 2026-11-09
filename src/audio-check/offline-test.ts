@@ -6,7 +6,6 @@ import { PlaybackService } from '../application/playback';
 import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
 import type { AudioEnginePort, ClockPort, StepListener, StatusPort } from '../domain/ports';
-import { ToneAudioEngine } from '../infrastructure/audio/tone-audio-engine';
 import { ModularAudioEngine } from '../infrastructure/audio/modular/modular-audio-engine';
 import { createEspiralGraph } from '../infrastructure/audio/modular/espiral-graph';
 import { UmbralGenerative } from '../infrastructure/generative/umbral-generative';
@@ -15,11 +14,8 @@ const BARS = 8;
 const BPM = 120;
 const TAIL_SECONDS = 6;
 
-type EngineKind = 'tone' | 'modular';
-
 interface Scenario {
   readonly name: string;
-  readonly engine: EngineKind;
   readonly bpm?: number;
   readonly setup?: (store: Store) => void | Promise<void>;
   readonly onStep?: (store: Store, step: number) => void;
@@ -27,7 +23,7 @@ interface Scenario {
 
 interface Metrics {
   readonly name: string;
-  readonly engine: EngineKind;
+  readonly engine: 'modular';
   readonly peak: number;
   readonly peakDb: number;
   readonly rmsDb: number;
@@ -97,10 +93,9 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
 
     const state = store.getState();
     const runtime = new PlaybackRuntime();
-    const engine: AudioEnginePort =
-      scenario.engine === 'tone'
-        ? new ToneAudioEngine(state.kit, state.masterVolume)
-        : new ModularAudioEngine(createEspiralGraph(state.kit, state.masterVolume));
+    const engine: AudioEnginePort = new ModularAudioEngine(
+      createEspiralGraph(state.kit, state.masterVolume)
+    );
     engineRef = engine;
 
     const clock = new OfflineClock();
@@ -171,7 +166,7 @@ function measure(
 
   return {
     name: scenario.name,
-    engine: scenario.engine,
+    engine: 'modular',
     peak,
     peakDb: peak > 0 ? 20 * Math.log10(peak) : -120,
     rmsDb: rms > 0 ? 20 * Math.log10(rms) : -120,
@@ -263,14 +258,12 @@ async function run(): Promise<void> {
   };
 
   const scenarios: Scenario[] = [
-    { name: 'tone-initial', engine: 'tone' },
-    { name: 'modular-initial', engine: 'modular' },
-    { name: 'tone-automation', engine: 'tone', setup: enableAutomation },
-    { name: 'modular-automation', engine: 'modular', setup: enableAutomation },
-    { name: 'modular-ambient', engine: 'modular', bpm: 90, setup: loadAmbient },
-    { name: 'modular-max', engine: 'modular', setup: everythingMax },
-    { name: 'modular-solo-mute', engine: 'modular', setup: soloAndMute },
-    { name: 'modular-scene-change', engine: 'modular', onStep: sceneMidway }
+    { name: 'modular-initial' },
+    { name: 'modular-automation', setup: enableAutomation },
+    { name: 'modular-ambient', bpm: 90, setup: loadAmbient },
+    { name: 'modular-max', setup: everythingMax },
+    { name: 'modular-solo-mute', setup: soloAndMute },
+    { name: 'modular-scene-change', onStep: sceneMidway }
   ];
 
   const results: Metrics[] = [];

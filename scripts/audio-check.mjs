@@ -46,9 +46,7 @@ try {
   }
 
   const expected = [
-    'tone-initial',
     'modular-initial',
-    'tone-automation',
     'modular-automation',
     'modular-ambient',
     'modular-max',
@@ -78,26 +76,6 @@ try {
     'Render baseline (ms): ' +
       metrics.map(metric => `${metric.name} ${metric.renderMs.toFixed(0)}`).join(' · ')
   );
-
-  for (const mode of ['initial', 'automation']) {
-    const tone = metrics.find(metric => metric.name === `tone-${mode}`);
-    const modular = metrics.find(metric => metric.name === `modular-${mode}`);
-    if (!tone || !modular) {
-      throw new Error(`Faltan métricas A/B para el escenario ${mode}.`);
-    }
-
-    const peakDelta = Math.abs(tone.peakDb - modular.peakDb);
-    const rmsDelta = Math.abs(tone.rmsDb - modular.rmsDb);
-    console.log(
-      `A/B ${mode}: peak Δ ${peakDelta.toFixed(2)} dB · RMS Δ ${rmsDelta.toFixed(2)} dB`
-    );
-    if (peakDelta > 6) {
-      throw new Error(`A/B ${mode}: diferencia de peak ${peakDelta.toFixed(2)} dB > 6 dB.`);
-    }
-    if (rmsDelta > 6) {
-      throw new Error(`A/B ${mode}: diferencia de RMS ${rmsDelta.toFixed(2)} dB > 6 dB.`);
-    }
-  }
 
   console.log(JSON.stringify(metrics, null, 2));
   console.log('Audio check OK');

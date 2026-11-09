@@ -3,7 +3,7 @@
 - **Fase:** 1
 - **Depende de:** base 0.2.0
 - **Reemplaza a:** `ToneAudioEngine` como implementación de `AudioEnginePort`
-- **Estado:** diseño
+- **Estado:** implementado; motor legacy retirado
 
 ## Objetivo
 
@@ -11,22 +11,19 @@ Implementar un motor de grafo que soporte tracks, buses, inserts y sends, manten
 contrato de eventos actual. La aplicación sigue produciendo `SoundEvent`; el motor nuevo
 los enruta a tracks.
 
-## Estado de implementación (0.2.0)
+## Estado de implementación
 
 - Hecho: `GraphConfig` + `validateGraph`.
 - Hecho: `Track`, `Bus`, `MasterBus`, `InsertSlot` con bypass por crossfade.
 - Hecho: `ModularAudioEngine` con `AudioEnginePort` y métodos de tracks/buses/sends.
 - Hecho: demo `/modular.html` con 2 tracks, 1 bus de reverb, 1 filtro y 1 send.
-- Hecho: `createEspiralGraph` con los 7 tracks y sus inserts de delay/reverb.
-- Hecho: feature flag `VITE_ENGINE=tone` para el fallback legacy en `main.ts`.
-- Hecho: smoke de la app principal con el motor modular (7 tracks, 16 samples, sin errores).
+- Hecho: `createEspiralGraph` construye el grafo desde el kit.
+- Hecho: smoke de la app principal con el motor modular.
 - Hecho: PDC por track/send con delays de compensación.
 - Hecho: crossfade de inserts (`InsertChain` + fade de 30 ms) y rampas en sends.
-- Hecho: harness de audio offline con Playwright, CI y A/B formal contra `ToneAudioEngine`.
-- A/B medido: peak Δ 0.1–1.0 dB y RMS Δ < 0.3 dB (la IR de reverb es aleatoria).
-- Hecho: `ModularAudioEngine` es el default; `ToneAudioEngine` queda detrás de
-  `VITE_ENGINE=tone` para la transición.
-- Pendiente: escucha A/B humana y borrar el engine legacy.
+- Hecho: harness de audio offline con Playwright y CI.
+- Hecho: `ModularAudioEngine` es el único motor; `ToneAudioEngine` fue eliminado.
+- Hecho: modulación audio-rate, instrument plugins y medidores por nodo.
 
 ## No objetivos
 
@@ -154,9 +151,7 @@ para mantener compatibilidad con la app actual.
 - [x] Implementar `ModularAudioEngine` con prototipo de 2 tracks.
 - [x] Tests de grafo y del demo.
 - [x] Migrar los 7 tracks y adaptar `MixService`/`PlaybackService`.
-- [x] Feature flag `VITE_ENGINE=tone` para el fallback legacy en `main.ts`.
 - [x] PDC y tests de audio offline.
 - [x] Crossfade de inserts y rampas en sends.
-- [x] Comparación A/B formal contra `ToneAudioEngine`.
-- [x] Promover el motor modular a default.
-- [ ] Escucha A/B humana y borrar el engine legacy.
+- [x] Promover el motor modular a único motor.
+- [x] Eliminar `ToneAudioEngine`, el flag `VITE_ENGINE` y los scripts legacy.

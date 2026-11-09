@@ -311,6 +311,19 @@ body.instrument-page .page-title {
   opacity: 1;
 }
 
+.master-meter__value {
+  min-width: 2.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-align: right;
+  color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.cpu-meter .master-meter__fill {
+  background: linear-gradient(90deg, var(--umbral-trace), var(--poem-cinnabar, #c0816e));
+}
+
 .instrument-error {
   grid-column: 1 / -1;
   margin: 0;

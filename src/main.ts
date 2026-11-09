@@ -3,7 +3,6 @@ import './espiral.css';
 import { PresetMapper } from './adapters/preset-mapper';
 import { SessionMapper } from './adapters/session-mapper';
 import { AutomationService } from './application/automation';
-import type { AudioEnginePort } from './domain/ports';
 import { createInitialState } from './application/initial-state';
 import { LocksService } from './application/locks';
 import { MixService } from './application/mix';
@@ -17,7 +16,6 @@ import { SceneService } from './application/scenes';
 import { SessionService } from './application/sessions';
 import { Store } from './application/store';
 import { TrackService } from './application/tracks';
-import { ToneAudioEngine } from './infrastructure/audio/tone-audio-engine';
 import { ToneClock } from './infrastructure/audio/tone-clock';
 import { UmbralGenerative } from './infrastructure/generative/umbral-generative';
 import { BrowserFileGateway } from './infrastructure/persistence/browser-file-gateway';
@@ -35,17 +33,13 @@ async function boot(): Promise<void> {
   const runtime = new PlaybackRuntime();
   const status = new DomStatus();
 
-  let engine: AudioEnginePort;
-  if (import.meta.env.VITE_ENGINE === 'tone') {
-    // Motor legacy conservado durante la transición y para escucha A/B.
-    engine = new ToneAudioEngine(initial.kit, initial.masterVolume);
-  } else {
-    const [{ ModularAudioEngine }, { createEspiralGraph }] = await Promise.all([
-      import('./infrastructure/audio/modular/modular-audio-engine'),
-      import('./infrastructure/audio/modular/espiral-graph')
-    ]);
-    engine = new ModularAudioEngine(createEspiralGraph(initial.kit, initial.masterVolume));
-  }
+  const [{ ModularAudioEngine }, { createEspiralGraph }] = await Promise.all([
+    import('./infrastructure/audio/modular/modular-audio-engine'),
+    import('./infrastructure/audio/modular/espiral-graph')
+  ]);
+  const engine = new ModularAudioEngine(
+    createEspiralGraph(initial.kit, initial.masterVolume)
+  );
 
   const clock = new ToneClock(initial.transport.bpm);
   const patterns = new PatternService(store, generative, status, runtime);

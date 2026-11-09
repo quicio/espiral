@@ -11,6 +11,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Parameter locks por paso con marcas en el secuenciador y persistencia en sesión.
 - Locks sobre parámetros de inserts y sobre gain/pan de cada track.
 - Medidores y clip latch por track/bus, además del master.
+- Medidor de CPU estimada y motor modular único, sin fallback legacy.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
@@ -34,15 +35,11 @@ npm run dev
 Abrir la URL que imprime Vite. La app usa TypeScript, `@quicio/umbral-tone/generative`
 para las reglas musicales y el motor modular de 16 tracks por defecto.
 
-### Motores
+### Motor
 
-El motor modular es el default. `ToneAudioEngine` queda como fallback legacy durante
-la transición y para escucha A/B:
-
-```bash
-npm run dev:tone
-VITE_ENGINE=tone npm run build
-```
+El motor modular es el único motor. Implementa `AudioEnginePort` y vive en
+`src/infrastructure/audio/modular/`. Incluye tracks, buses, inserts, PDC, instrument
+plugins y modulación audio-rate.
 
 También se puede abrir `/modular.html` con `npm run dev`: es el experimento aislado de
 2 tracks + 1 bus + 1 insert, con selector de plugins, parámetros generados desde el
@@ -58,7 +55,7 @@ npm run test:audio
 npm run test:integration
 ```
 
-`test:audio` renderiza 8 escenarios en un `OfflineAudioContext` real y verifica peak,
+`test:audio` renderiza 6 escenarios en un `OfflineAudioContext` real y verifica peak,
 NaN, DC, silencio y tiempos de render. `test:integration` levanta Vite, reproduce la app
 y verifica tracks, transporte, presets, samples y errores de consola. La primera vez requiere:
 
@@ -86,9 +83,8 @@ specs del roadmap en [`docs/specs/`](docs/specs/).
 - `src/base.css` — base tipográfica, color y shell de la página.
 - `public/audio/` — samples de batería y bajo.
 
-El motor actual es `ToneAudioEngine` (implementa `AudioEnginePort`). Para reemplazarlo
-por un motor modular con tracks, buses y plugins solo hay que crear otro adapter y
-cambiarlo en `src/main.ts`.
+El motor modular implementa `AudioEnginePort`. Para reemplazarlo por otro motor solo hay
+que crear otro adapter y cambiarlo en `src/main.ts`.
 
 ## Licencia
 
