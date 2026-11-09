@@ -1,6 +1,6 @@
 {
   "name": "@quicio/espiral",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Espiral — instrumento generativo de ritmos, escalas y automatización.",
