@@ -4,6 +4,7 @@ import { formatMachineParam, machinePreset } from '../domain/machines';
 import { denormalizePluginParam } from '../domain/plugin';
 import type { StatusPort } from '../domain/ports';
 import type { AutomationService } from '../application/automation';
+import type { ExportService } from '../application/export';
 import type { MixService } from '../application/mix';
 import type { LocksService } from '../application/locks';
 import type { ModulationService } from '../application/modulation';
@@ -35,6 +36,7 @@ interface PresentationDependencies {
   readonly routing: RoutingService;
   readonly modulation: ModulationService;
   readonly locks: LocksService;
+  readonly exportService: ExportService;
   readonly status: StatusPort;
 }
 
@@ -851,10 +853,17 @@ export class EspiralApp {
   }
 
   private bindSessionActions(): void {
-    const { sessions } = this.deps;
+    const { sessions, exportService } = this.deps;
     view.must('#save-session').addEventListener('click', () => sessions.save());
     view.must('#load-session').addEventListener('click', () => sessions.load());
     view.must('#export-session').addEventListener('click', () => sessions.export());
+    const exportAudio = view.must<HTMLButtonElement>('#export-audio');
+    exportAudio.addEventListener('click', () => {
+      exportAudio.disabled = true;
+      void exportService.exportWav().finally(() => {
+        exportAudio.disabled = false;
+      });
+    });
     view.must('#import-session').addEventListener('click', () =>
       view.must<HTMLInputElement>('#import-file').click()
     );

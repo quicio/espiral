@@ -3,6 +3,7 @@ import './espiral.css';
 import { PresetMapper } from './adapters/preset-mapper';
 import { SessionMapper } from './adapters/session-mapper';
 import { AutomationService } from './application/automation';
+import { ExportService } from './application/export';
 import { createInitialState } from './application/initial-state';
 import { LocksService } from './application/locks';
 import { MixService } from './application/mix';
@@ -17,6 +18,7 @@ import { SessionService } from './application/sessions';
 import { Store } from './application/store';
 import { TrackService } from './application/tracks';
 import { ToneClock } from './infrastructure/audio/tone-clock';
+import { ToneOfflineRenderer } from './infrastructure/audio/offline-renderer';
 import { UmbralGenerative } from './infrastructure/generative/umbral-generative';
 import { BrowserFileGateway } from './infrastructure/persistence/browser-file-gateway';
 import { HttpPresetRepository } from './infrastructure/persistence/http-preset-repository';
@@ -61,14 +63,21 @@ async function boot(): Promise<void> {
   const modulation = new ModulationService(store, engine, new IntervalTicker());
   const locks = new LocksService(store, engine);
   const sessionMapper = new SessionMapper(generative);
+  const files = new BrowserFileGateway();
   const sessions = new SessionService(
     store,
     new LocalSessionRepository(),
-    new BrowserFileGateway(),
+    files,
     sessionMapper,
     mix,
     playback,
     runtime,
+    status
+  );
+  const exportService = new ExportService(
+    store,
+    new ToneOfflineRenderer(),
+    files,
     status
   );
   const presets = new PresetService(
@@ -96,6 +105,7 @@ async function boot(): Promise<void> {
     routing,
     modulation,
     locks,
+    exportService,
     status
   });
   app.mount();

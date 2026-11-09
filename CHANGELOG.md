@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Export WAV offline desde el estado actual: 8 compases + 2 s de cola.
+- Renderer offline reutiliza `ModularAudioEngine` y `PlaybackService`.
+- Codificador WAV PCM 16-bit y descarga binaria.
+- Botón `Exportar WAV` con estados de render/exportación.
+- 102 tests unitarios.
+
 ## 0.6.0 — 2026-11-09
 
 - Parameter locks sobre gain y pan del track, además de parámetros de inserts.

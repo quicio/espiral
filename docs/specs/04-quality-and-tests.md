@@ -115,12 +115,12 @@ La UI muestra una **CPU estimada** combinando jitter del hilo principal y underr
 **Baseline offline local** (Chromium headless, macOS arm64, 2026-11-09):
 
 ```text
-modular-initial      4312 ms
-modular-automation   4474 ms
-modular-ambient      8959 ms
-modular-max          4164 ms
-modular-solo-mute    4314 ms
-modular-scene-change 6026 ms
+modular-initial      3673 ms
+modular-automation   4176 ms
+modular-ambient      7874 ms
+modular-max          3407 ms
+modular-solo-mute    3465 ms
+modular-scene-change 3796 ms
 ```
 
 El audio check imprime `Render baseline (ms)` en cada corrida. El valor no es un

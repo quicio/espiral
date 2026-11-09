@@ -188,7 +188,15 @@ export interface PresetRepositoryPort {
 
 export interface FileGatewayPort {
   downloadJson(filename: string, data: unknown): void;
+  downloadBlob(filename: string, blob: Blob): void;
   readJsonFile(file: File): Promise<unknown>;
+}
+
+export interface AudioExportPort {
+  render(
+    state: InstrumentState,
+    options: { readonly bars: number; readonly tailSeconds: number }
+  ): Promise<Blob>;
 }
 
 export interface StatusPort {

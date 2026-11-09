@@ -104,6 +104,9 @@ resuelven desde el estado del track y se persisten en la sesión.
 La calidad de audio se verifica con `npm run test:audio`: renderiza 8 compases en un
 `OfflineAudioContext` real y falla si hay clipping, NaN, DC o silencio.
 
+El export WAV reutiliza ese camino offline: `ToneOfflineRenderer` renderiza el estado actual,
+`encodeWav` lo convierte a PCM 16-bit y `BrowserFileGateway` descarga el archivo.
+
 ## Plugins
 
 - `src/domain/plugin.ts` — contrato de parámetros, definición y normalización.
