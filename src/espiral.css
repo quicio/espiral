@@ -259,6 +259,58 @@ body.instrument-page .page-title {
   font-variant-numeric: tabular-nums;
 }
 
+.master-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.master-meter__label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.master-meter__track {
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  background: var(--umbral-rule);
+}
+
+.master-meter__fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--umbral-trace), var(--umbral-ember));
+  transform: scaleX(var(--level, 0));
+  transform-origin: left center;
+  transition: transform 80ms linear;
+}
+
+.master-meter__clip {
+  padding: 0 0.25rem;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.master-meter__clip.is-clip {
+  border-color: var(--poem-cinnabar, #c0816e);
+  color: var(--poem-cinnabar, #c0816e);
+  opacity: 1;
+}
+
 .instrument-error {
   grid-column: 1 / -1;
   margin: 0;
@@ -389,6 +441,20 @@ body.instrument-page .page-title {
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.track-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.9rem;
+}
+
+.track-count {
+  margin-left: 0.45rem;
+  color: var(--umbral-trace);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1070,6 +1136,268 @@ body.instrument-page .page-title {
   flex-direction: column;
 }
 
+.routing-buses {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.routing-bus {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 5rem;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.routing-bus-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.routing-bus-name strong,
+.routing-track-label {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--umbral-ink);
+  text-align: left;
+}
+
+.routing-bus-name span {
+  font-family: var(--font-mono);
+  font-size: 0.675rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.routing-matrix-block {
+  margin-top: 0.5rem;
+}
+
+.routing-matrix {
+  overflow-x: auto;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.routing-row {
+  display: grid;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 28rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.routing-row--head {
+  padding: 0.5rem 0;
+  border-bottom-color: var(--umbral-rule);
+}
+
+.routing-track-label {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.routing-track-label:hover,
+.routing-track-label[aria-pressed="true"] {
+  color: var(--umbral-trace);
+}
+
+.routing-bus-label {
+  font-family: var(--font-mono);
+  font-size: 0.675rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.routing-cell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.4rem auto;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.routing-range {
+  width: 100%;
+  accent-color: var(--umbral-trace);
+}
+
+.routing-value {
+  font-family: var(--font-mono);
+  font-size: 0.675rem;
+  text-align: right;
+  color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.route-pre {
+  width: auto;
+  min-width: 2.4rem;
+  height: 1.7rem;
+  padding: 0 0.35rem;
+  font-size: 0.6rem;
+}
+
+.mod-head-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mod-sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.5rem 1.2rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--umbral-rule-faint);
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.mod-source {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4rem;
+  grid-template-areas:
+    "name name"
+    "control value";
+  gap: 0.3rem 0.5rem;
+  align-items: center;
+}
+
+.mod-source-name {
+  grid-area: name;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.mod-source-name strong {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--umbral-ink);
+}
+
+.mod-source-name span,
+.mod-source-static {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.mod-source input {
+  grid-area: control;
+}
+
+.mod-source output {
+  grid-area: value;
+}
+
+.mod-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.8rem 1.2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.mod-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 9rem;
+}
+
+.mod-field--wide {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.mod-field--amount {
+  min-width: 11rem;
+}
+
+.mod-field span {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.mod-field select,
+.mod-field input {
+  width: 100%;
+}
+
+.mod-field output {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mod-routes {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.mod-route {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.4fr) minmax(0, 1fr) 3rem auto auto;
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.mod-route-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.mod-route-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--umbral-ink);
+}
+
+.mod-route-info span {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.mod-empty {
+  margin: 0;
+  padding: 1rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--umbral-muted);
+}
+
 .sound-channel {
   display: grid;
   grid-template-columns: 7.5rem minmax(0, 1fr) 4rem auto;
@@ -1201,6 +1529,90 @@ body.instrument-page .page-title {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--umbral-muted);
+}
+
+.insert-rack {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.insert-row {
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.insert-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.insert-head strong {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-ink);
+}
+
+.insert-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.insert-params {
+  padding-top: 0.35rem;
+}
+
+.insert-add {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-width: 8rem;
+  margin-top: 0.35rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.plugin-params {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.plugin-param {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 3.2rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.plugin-param span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.plugin-param input {
+  width: 100%;
+  accent-color: var(--umbral-trace);
+}
+
+.plugin-param output {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-align: right;
+  color: var(--umbral-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Panel generativo ----------------------------------------------------- */

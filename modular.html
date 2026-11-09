@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#060708">
+    <title>Espiral — prototipo modular</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  </head>
+  <body class="modular-demo">
+    <main class="demo-shell">
+      <header class="demo-head">
+        <p class="demo-kicker">Espiral / experimento</p>
+        <h1>Motor modular</h1>
+        <p>2 tracks · 1 bus · 1 insert · 1 send · master con limiter y meter.</p>
+      </header>
+
+      <section class="demo-transport" aria-label="Transporte">
+        <button id="demo-play" class="demo-play" type="button">Reproducir</button>
+        <div class="demo-status">
+          <span id="demo-status">Detenido</span>
+          <span class="demo-step-label">paso <output id="demo-step">00</output></span>
+        </div>
+      </section>
+
+      <section class="demo-grid">
+        <article class="demo-card">
+          <h2>Kick</h2>
+          <p class="demo-meta">membrane · track</p>
+          <label class="demo-field">
+            <span>Volumen</span>
+            <input id="kick-volume" type="range" min="-20" max="0" step="0.5" value="-6">
+            <output id="kick-volume-value">-6.0 dB</output>
+          </label>
+        </article>
+
+        <article class="demo-card">
+          <h2>Bass</h2>
+          <p class="demo-meta">sampler · filter insert · send</p>
+          <label class="demo-field">
+            <span>Volumen</span>
+            <input id="bass-volume" type="range" min="-20" max="0" step="0.5" value="-8">
+            <output id="bass-volume-value">-8.0 dB</output>
+          </label>
+          <label class="demo-field">
+            <span>Insert</span>
+            <select id="bass-plugin"></select>
+          </label>
+          <div id="bass-plugin-params" class="demo-plugin-params"></div>
+          <label class="demo-field">
+            <span>Send Space</span>
+            <input id="bass-send" type="range" min="0" max="1" step="0.01" value="0.35">
+            <output id="bass-send-value">35%</output>
+          </label>
+        </article>
+
+        <article class="demo-card">
+          <h2>Space</h2>
+          <p class="demo-meta">bus · reverb return</p>
+          <label class="demo-field">
+            <span>Return</span>
+            <input id="bus-return" type="range" min="-30" max="0" step="0.5" value="-6">
+            <output id="bus-return-value">-6.0 dB</output>
+          </label>
+          <label class="demo-field">
+            <span>Decay</span>
+            <input id="bus-decay" type="range" min="0.5" max="8" step="0.1" value="4">
+            <output id="bus-decay-value">4.0 s</output>
+          </label>
+        </article>
+      </section>
+
+      <section class="demo-master" aria-label="Master">
+        <span>Master</span>
+        <div class="demo-meter"><span id="master-fill"></span></div>
+        <output id="master-level">-∞ dB</output>
+      </section>
+
+      <p id="demo-error" class="demo-error" role="alert"></p>
+    </main>
+
+    <script type="module" src="/src/modular-demo.ts"></script>
+  </body>
+</html>

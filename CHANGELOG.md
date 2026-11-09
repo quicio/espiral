@@ -1,5 +1,69 @@
 # Changelog
 
+## 0.2.0 — 2026-11-08
+
+- Reescritura arquitectónica en TypeScript con capas `domain`, `application`,
+  `infrastructure`, `adapters` y `presentation`.
+- Composition root único en `src/main.ts` y puertos para audio, reloj, generación,
+  sesiones, presets y archivos.
+- Motor de audio desacoplado: `PlaybackService` produce `SoundEvent` y `ToneAudioEngine`
+  los ejecuta.
+- Master con compresor y limitador de seguridad, fades en samples, reverb con `decay`
+  real de Tone 14 y rampas de volumen.
+- Medidor de master con clip latch en la UI.
+- Presets aplican `feedback`, `delayTime` y `decay`; las sesiones guardan esos parámetros.
+- El drone reintenta cada 16 beats en vez de dejar un hueco de ~8 s.
+- Re-render granular: editar patrones o seleccionar canales no reconstruye la vista Sound.
+- Prototipo de motor modular: `GraphConfig`, `Track`, `Bus`, `MasterBus`, `InsertSlot`
+  con bypass por crossfade y `ModularAudioEngine`.
+- Página de experimento `/modular.html`: 2 tracks, 1 bus de reverb, 1 insert de filtro,
+  1 send y master con meter.
+- Migración de los 7 tracks al motor modular detrás de `VITE_ENGINE=modular`.
+  El default sigue siendo `ToneAudioEngine`; `npm run dev:modular` prueba el motor nuevo.
+- PDC: plan de latencia por track/send y delays de compensación en el motor modular.
+- Crossfade de inserts: `InsertChain` intercambia cadenas con fade de 30 ms.
+  Los sends nuevos/eliminados también rampean.
+- Safety clipper después del limiter (techo 0.8 ≈ −1.94 dBFS) en ambos motores.
+- HPF de master y panner central en `ToneAudioEngine` para paridad con el modular.
+- Harness de audio offline con Playwright: render de 8 compases, peak ≤ −1 dBFS,
+  sin NaN, DC bajo y detección de silencio. Workflow de CI dedicado.
+- A/B offline formal entre `ToneAudioEngine` y `ModularAudioEngine`: diferencias
+  de peak y RMS dentro de tolerancia.
+- `ModularAudioEngine` pasa a ser el motor default. `ToneAudioEngine` queda como
+  fallback legacy con `VITE_ENGINE=tone` / `npm run dev:tone`.
+- Plugin SDK: `PluginDefinition`, `PluginParam`, `PluginHost`, registro de plugins y
+  estado por parámetros.
+- Plugins built-in: filtro, delay, reverb, drive y compresor.
+- Plugin AudioWorklet de ejemplo (`worklet-drive`) con carga lazy.
+- UI genérica de parámetros en `/modular.html` y demo de cambio de plugin en caliente.
+- Rack de inserts en la vista Sound de la app: agregar, quitar, reordenar, bypass y
+  editar parámetros desde el schema del plugin.
+- Los inserts arbitrarios se guardan en el estado y en la sesión; las sesiones viejas
+  siguen cargando con delay/reverb legacy.
+- Fase 3, primer corte: modelo `TrackState`/`KitState` como fuente de verdad del sonido.
+- El motor modular construye el grafo desde el kit, no desde canales hardcodeados.
+- `PatternState`: patrones, pulsos y freeze agrupados y separados del kit.
+- `SceneState`: escenas como snapshots de kit + patrón + armonía + seed + mezcla.
+- Cambiar de escena ahora captura la escena actual y restaura la destino.
+- Sesiones v2 con kit, patrón y escenas; migración automática desde sesiones v1.
+- Kit por defecto de 16 tracks: 7 con rol fijo y 9 tracks de usuario con máquina sampler.
+- `TrackState.hasPattern` separa tracks editables de tracks generativos.
+- Performance, Sequencer y Sound se generan desde el kit, sin listas fijas de canales.
+- Los tracks de usuario tienen patrón, fader, mute/solo, freeze, inserts y disparo de sample.
+- Sesión v2 persiste los patrones de los 16 tracks y la selección de tracks de usuario.
+- Crear y eliminar tracks de usuario desde Performance, sin detener el transporte.
+- La colección de tracks se comparte entre escenas y se persiste en la sesión.
+- El motor legacy deshabilita la gestión de tracks en vez de simularla.
+- Routing matrix track × bus con cantidad 0..1 y PRE/POST por celda.
+- Dos buses por defecto (reverb y delay) con retorno y inserts; el routing se guarda en escenas y sesión.
+- Nueva vista Routing con switches de bus, matriz y retornos; deshabilitada en el motor legacy.
+- Mod matrix con LFO 1/2, Macro 1/2 y Paso apuntando a parámetros de inserts.
+- Modulación a control-rate 60 Hz, con restauración del valor base al apagar o quitar rutas.
+- Nueva vista Mod con fuentes, formulario de ruta, cantidad bipolar y lista de rutas.
+- La modulación persiste en la sesión y se limpia al eliminar tracks o inserts.
+- 62 tests unitarios.
+- Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
+
 ## 0.1.1 — 2026-11-06
 
 - Standalone Vite app, self-contained audio samples and mix presets.

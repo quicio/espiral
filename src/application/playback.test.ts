@@ -1,0 +1,162 @@
+import { describe, expect, it } from 'vitest';
+import { createInitialState } from '../application/initial-state';
+import { PlaybackService } from '../application/playback';
+import { PlaybackRuntime } from '../application/runtime';
+import { Store } from '../application/store';
+import {
+  FakeAudioEngine,
+  FakeAutomation,
+  FakeClock,
+  FakeEvolver,
+  FakeGenerative,
+  FakeStatus
+} from '../test/fakes';
+
+function setup() {
+  const generative = new FakeGenerative();
+  const store = new Store(createInitialState(generative));
+  const runtime = new PlaybackRuntime();
+  const clock = new FakeClock();
+  const engine = new FakeAudioEngine();
+  const status = new FakeStatus();
+  const automation = new FakeAutomation();
+  const evolver = new FakeEvolver();
+  const playback = new PlaybackService(
+    store,
+    clock,
+    engine,
+    generative,
+    status,
+    automation,
+    evolver,
+    runtime
+  );
+  return { store, runtime, clock, engine, status, automation, evolver, playback };
+}
+
+describe('PlaybackService', () => {
+  it('prepares the engine and starts the clock', async () => {
+    const { playback, engine, clock, store } = setup();
+
+    await playback.start();
+
+    expect(engine.prepared).toBe(1);
+    expect(clock.started).toBe(1);
+    expect(store.getState().transport.playing).toBe(true);
+  });
+
+  it('turns the step into sound events and automation', async () => {
+    const { playback, clock, engine, automation, store } = setup();
+    await playback.start();
+
+    clock.fire(1, 0);
+
+    expect(store.getState().transport.currentStep).toBe(0);
+    expect(automation.calls).toEqual([{ step: 0, time: 1 }]);
+    expect(engine.events.some(event => event.type === 'kick')).toBe(true);
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
+    ).toBe(true);
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'drone')
+    ).toBe(true);
+    expect(
+      engine.events.some(event => event.type === 'synth' && event.channel === 'pad')
+    ).toBe(true);
+  });
+
+  it('triggers a user track sample when its step is active', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => ({
+      ...state,
+      pattern: {
+        ...state.pattern,
+        steps: {
+          ...state.pattern.steps,
+          'track-08': state.pattern.steps['track-08']!.map((value, index) =>
+            index === 0 ? 1 : value
+          )
+        }
+      }
+    }));
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    const event = engine.events.find(
+      entry => entry.type === 'sample' && entry.trackId === 'track-08'
+    );
+    expect(event).toEqual(
+      expect.objectContaining({
+        type: 'sample',
+        channel: 'perc',
+        trackId: 'track-08',
+        sampleIndex: 0
+      })
+    );
+  });
+
+  it('does not trigger silent steps', async () => {
+    const { playback, clock, engine } = setup();
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1.125, 1);
+
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'hihat')
+    ).toBe(true);
+    expect(engine.events.some(event => event.type === 'kick')).toBe(false);
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
+    ).toBe(false);
+  });
+
+  it('retriggers the drone every 16 beats to avoid a long gap', async () => {
+    const { playback, clock, engine } = setup();
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(8, 64);
+
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'drone')
+    ).toBe(true);
+  });
+
+  it('evolves every 32 steps when enabled', async () => {
+    const { playback, clock, evolver, store } = setup();
+    await playback.start();
+    store.update(state => ({ ...state, evolve: true }));
+
+    clock.fire(2, 32);
+
+    expect(evolver.count).toBe(1);
+  });
+
+  it('stops the clock and the engine', async () => {
+    const { playback, clock, engine, store } = setup();
+    await playback.start();
+
+    playback.stop();
+
+    expect(clock.stopped).toBe(1);
+    expect(engine.stopped).toBe(1);
+    expect(store.getState().transport.playing).toBe(false);
+    expect(store.getState().transport.currentStep).toBe(-1);
+  });
+
+  it('updates bpm, swing and humanize', () => {
+    const { playback, store, clock } = setup();
+
+    playback.setBpm(140);
+    playback.setSwing(0.3);
+    playback.setHumanize(0.5);
+
+    expect(clock.bpm).toBe(140);
+    expect(store.getState().transport.bpm).toBe(140);
+    expect(store.getState().transport.swing).toBe(0.3);
+    expect(store.getState().transport.humanize).toBe(0.5);
+  });
+});

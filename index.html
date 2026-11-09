@@ -20,7 +20,7 @@
         <a class="espiral-header__home" href="https://kndl.quicio.qzz.io/">KNDL 000 ↗</a>
       </header>
 
-      <p class="espiral-intro">Siete canales para generar, armonizar y automatizar. El transporte y el panel generativo quedan siempre a mano; la escena cambia de superficie sin detener el audio.</p>
+      <p class="espiral-intro">Dieciséis tracks para generar, armonizar y automatizar. El transporte y el panel generativo quedan siempre a mano; la escena cambia de superficie sin detener el audio.</p>
 
 <div id="instrument-app" class="instrument">
   <div class="instrument-dock">
@@ -65,6 +65,11 @@
           <input id="master-volume" type="range" min="-20" max="0" step="0.5" value="-4">
           <output id="master-volume-value" for="master-volume">-4.0 dB</output>
         </div>
+        <div class="master-meter" aria-label="Nivel de master">
+          <span class="master-meter__label">Nivel</span>
+          <span class="master-meter__track"><span id="master-meter-fill" class="master-meter__fill"></span></span>
+          <button id="master-clip" class="master-meter__clip" type="button" aria-label="Reset indicador de clip" aria-pressed="false">CLIP</button>
+        </div>
       </div>
 
       <p id="instrument-error" class="instrument-error" role="alert"></p>
@@ -75,9 +80,11 @@
         <button class="view-tab is-active" id="tab-performance" type="button" role="tab" aria-selected="true" aria-controls="view-performance" data-view="performance">Performance</button>
         <button class="view-tab" id="tab-sequencer" type="button" role="tab" aria-selected="false" aria-controls="view-sequencer" data-view="sequencer">Sequencer</button>
         <button class="view-tab" id="tab-sound" type="button" role="tab" aria-selected="false" aria-controls="view-sound" data-view="sound">Sound</button>
+        <button class="view-tab" id="tab-routing" type="button" role="tab" aria-selected="false" aria-controls="view-routing" data-view="routing">Routing</button>
+        <button class="view-tab" id="tab-modulation" type="button" role="tab" aria-selected="false" aria-controls="view-modulation" data-view="modulation">Mod</button>
       </div>
       <p class="view-keys">
-        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd>
+        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><kbd>5</kbd>
         <span>cambiar contexto</span>
       </p>
     </div>
@@ -94,11 +101,15 @@
 
         <div class="performance-channels">
           <div class="section-head">
-            <p class="section-label">Canales</p>
-            <p id="performance-readout" class="section-meta">Instrumento detenido</p>
+            <p class="section-label">Tracks <span id="track-count" class="track-count">16</span></p>
+            <div class="track-toolbar">
+              <p id="performance-readout" class="section-meta">Instrumento detenido</p>
+              <button id="add-track" class="line-action" type="button">+ track</button>
+              <button id="remove-track" class="line-action" type="button">− track</button>
+            </div>
           </div>
           <div id="activity-list" class="activity-list"></div>
-          <p class="performance-legend">M silencia · F congela · el nombre selecciona el canal para editar.</p>
+          <p class="performance-legend">M silencia · F congela · el nombre selecciona el track para editar.</p>
         </div>
       </section>
 
@@ -110,7 +121,7 @@
             <p class="section-label">Patrón seleccionado</p>
             <p id="sequencer-readout" class="seq-readout">Kick 4/4 · 4 pasos</p>
           </div>
-          <div id="sequencer-channel-list" class="channel-tabs" role="group" aria-label="Canal a editar"></div>
+          <div id="sequencer-channel-list" class="channel-tabs" role="group" aria-label="Track a editar"></div>
         </div>
 
         <div class="seq-grid">
@@ -144,7 +155,7 @@
 
         <div class="seq-matrix-block">
           <div class="section-head">
-            <p class="section-label">Comparar canales</p>
+            <p class="section-label">Comparar tracks</p>
             <p class="section-meta">16 pasos · lectura</p>
           </div>
           <div id="seq-matrix" class="seq-matrix"></div>
@@ -175,7 +186,7 @@
         <div class="sound-head">
           <div>
             <p class="section-label">Mezcla</p>
-            <p class="sound-readout">Nivel, espacio y congelado por canal.</p>
+            <p class="sound-readout">Nivel, espacio y congelado por track.</p>
           </div>
           <div class="mix-preset-field">
             <label for="mix-preset">Preset de mezcla</label>
@@ -186,6 +197,67 @@
         </div>
 
         <div id="sound-channels" class="sound-channels"></div>
+      </section>
+
+      <section class="view" id="view-routing" role="tabpanel" aria-labelledby="tab-routing" tabindex="0" hidden>
+        <h2 class="sr-only">Routing</h2>
+
+        <div class="sound-head">
+          <div>
+            <p class="section-label">Routing</p>
+            <p class="sound-readout">Matriz track × bus. Cada celda define cuánto track llega al bus.</p>
+          </div>
+          <p id="routing-status" class="section-meta">0 sends activos · 2 buses</p>
+        </div>
+
+        <div id="routing-buses" class="routing-buses"></div>
+
+        <div class="routing-matrix-block">
+          <div class="section-head">
+            <p class="section-label">Matriz</p>
+            <p class="section-meta">cantidad · PRE/POST</p>
+          </div>
+          <div id="routing-matrix" class="routing-matrix"></div>
+          <p class="tool-hint">PRE envía la señal antes del fader; POST después. El retorno de cada bus se ajusta arriba.</p>
+        </div>
+      </section>
+
+      <section class="view" id="view-modulation" role="tabpanel" aria-labelledby="tab-modulation" tabindex="0" hidden>
+        <h2 class="sr-only">Modulación</h2>
+
+        <div class="sound-head">
+          <div>
+            <p class="section-label">Modulación</p>
+            <p class="sound-readout">Fuentes de control aplicadas a parámetros de plugins.</p>
+          </div>
+          <div class="mod-head-actions">
+            <p id="mod-status" class="section-meta">0 rutas · apagada</p>
+            <button id="mod-enabled" class="line-action" type="button" aria-pressed="false">Mod activa</button>
+          </div>
+        </div>
+
+        <div id="mod-sources" class="mod-sources"></div>
+
+        <div class="mod-form">
+          <label class="mod-field">
+            <span>Fuente</span>
+            <select id="mod-source-select"></select>
+          </label>
+          <label class="mod-field mod-field--wide">
+            <span>Destino</span>
+            <select id="mod-target-select"></select>
+          </label>
+          <label class="mod-field mod-field--amount">
+            <span>Cantidad</span>
+            <input id="mod-amount" type="range" min="-100" max="100" step="1" value="50">
+            <output id="mod-amount-value" for="mod-amount">50%</output>
+          </label>
+          <button id="mod-bipolar" class="small-toggle route-pre" type="button" aria-pressed="false">BIP</button>
+          <button id="mod-add-route" class="line-action" type="button">+ ruta</button>
+        </div>
+
+        <div id="mod-routes" class="mod-routes"></div>
+        <p class="tool-hint">BIP convierte la fuente en señal bipolar. La cantidad puede invertirse con valores negativos.</p>
       </section>
     </div>
 
@@ -303,10 +375,10 @@
       </div>
 
       <div class="generative-block">
-        <p class="tool-label">Canal <span id="selected-channel-label">Kick 4/4</span></p>
+        <p class="tool-label">Track <span id="selected-channel-label">Kick 4/4</span></p>
         <div class="gen-actions">
-          <button id="mutate-selected" class="line-action" type="button">Mutar canal <kbd>R</kbd></button>
-          <button id="freeze-selected" class="line-action" type="button" aria-pressed="false">Congelar canal <kbd>F</kbd></button>
+          <button id="mutate-selected" class="line-action" type="button">Mutar track <kbd>R</kbd></button>
+          <button id="freeze-selected" class="line-action" type="button" aria-pressed="false">Congelar track <kbd>F</kbd></button>
         </div>
       </div>
 
@@ -343,6 +415,6 @@
 </div>
     </main>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
