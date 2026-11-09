@@ -11,7 +11,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Parameter locks por paso con marcas en el secuenciador y persistencia en sesión.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
-- Máquinas por track: sampler, pad, bajo sintetizado y pluck, con fuente de notas.
+- Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
 - Performances por escenas: `Umbral`, `Deriva`, `Pulso`, `Caos contenido`.
 - Semilla reproducible, Euclid, densidad, mutación, freeze y evolución.
 - Tonalidad: 12 raíces, 7 escalas y 4 progresiones.

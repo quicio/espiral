@@ -38,6 +38,7 @@
 - `NoteSource` por track: nota fija, grado de escala o acorde de la progresión.
 - Motor modular con `MonoSynth` y `PluckSynth`; cambio de máquina en caliente.
 - Selector de máquina en Sound y al crear un track.
+- Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.
 - Persistencia de máquina y fuente de notas en sesión y escenas.
 - 76 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.

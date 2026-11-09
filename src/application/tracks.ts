@@ -106,6 +106,34 @@ export class TrackService {
     this.status.generative(`${track.name} · ${preset.name}.`);
   }
 
+  setMachineParam(
+    trackId: string,
+    paramId: string,
+    value: number | string
+  ): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || track.role !== 'user') return;
+    if (!this.engine.supportsMachineChange) return;
+
+    const preset = machinePreset(track.machineId);
+    const param = preset.params.find(entry => entry.id === paramId);
+    if (!param) return;
+
+    const machine = param.set(track.machine, value);
+    this.store.update(current => ({
+      ...current,
+      kit: {
+        ...current.kit,
+        tracks: {
+          ...current.kit.tracks,
+          [trackId]: { ...track, machine }
+        }
+      }
+    }));
+    this.engine.setTrackMachine(trackId, machine);
+  }
+
   removeTrack(trackId: string): void {
     if (!this.engine.supportsTrackManagement) {
       this.status.generative('Eliminar tracks no está disponible en el motor legacy.');

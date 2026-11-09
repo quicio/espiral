@@ -134,5 +134,5 @@ otro adapter y se cambia únicamente en `main.ts`.
 - La UI es DOM directo. Se puede migrar vista por vista a un framework sin tocar las capas internas.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
   La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
-  a control-rate, parameter locks, dinámica y máquinas de synth. Pendiente: editor de
-  parámetros de máquina, instrument plugins y macros por track.
+  a control-rate, parameter locks, dinámica y máquinas de synth con editor de parámetros.
+  Pendiente: instrument plugins y macros por track.

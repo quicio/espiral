@@ -1,5 +1,6 @@
 import type { GenerativeParams, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import type { ModulationState } from '../domain/modulation';
+import { formatMachineParam, machinePreset } from '../domain/machines';
 import { denormalizePluginParam } from '../domain/plugin';
 import type { StatusPort } from '../domain/ports';
 import type { AutomationService } from '../application/automation';
@@ -649,7 +650,26 @@ export class EspiralApp {
       const fader = attr(event, 'data-sound-fader');
       const pan = attr(event, 'data-sound-pan');
       const send = attr(event, 'data-sound-send');
+      const machineParam = attr(event, 'data-machine-param');
+      const machineTrack = attr(event, 'data-machine-track');
       const value = inputValue(event);
+
+      if (machineParam && machineTrack) {
+        const track = this.deps.store.getState().kit.tracks[machineTrack];
+        if (!track) return;
+        const param = machinePreset(track.machineId).params.find(
+          entry => entry.id === machineParam
+        );
+        if (!param) return;
+        const raw =
+          event.target instanceof HTMLSelectElement ? event.target.value : Number(value);
+        const output =
+          event.target instanceof Element
+            ? event.target.closest('.machine-param')?.querySelector('output')
+            : null;
+        if (output) output.textContent = formatMachineParam(param, raw);
+        return;
+      }
 
       if (fader && value !== null) {
         const db = Number(value);
@@ -686,6 +706,24 @@ export class EspiralApp {
       const trackId = attr(event, 'data-machine');
       if (trackId && event.target instanceof HTMLSelectElement) {
         this.deps.tracks.setMachine(trackId, event.target.value);
+        return;
+      }
+
+      const paramId = attr(event, 'data-machine-param');
+      const paramTrack = attr(event, 'data-machine-track');
+      if (
+        paramId &&
+        paramTrack &&
+        (event.target instanceof HTMLInputElement ||
+          event.target instanceof HTMLSelectElement)
+      ) {
+        this.deps.tracks.setMachineParam(
+          paramTrack,
+          paramId,
+          event.target instanceof HTMLSelectElement
+            ? event.target.value
+            : Number(event.target.value)
+        );
         return;
       }
 

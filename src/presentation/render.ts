@@ -5,8 +5,12 @@ import {
   PATTERN_LENGTH,
   type ChannelKey
 } from '../domain/channels';
-import { kitHasSolo, kitTracks } from '../domain/kit';
-import { MACHINE_PRESETS, USER_MACHINE_IDS } from '../domain/machines';
+import { kitHasSolo, kitTracks, type TrackState } from '../domain/kit';
+import {
+  formatMachineParam,
+  MACHINE_PRESETS,
+  USER_MACHINE_IDS
+} from '../domain/machines';
 import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
 import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
@@ -226,6 +230,11 @@ export function renderSound(
             ).join('')}</select>`
           : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
 
+      const machineParams =
+        track.role === 'user'
+          ? renderMachineParams(track, mixService.supportsMachineChange)
+          : '';
+
       return `<div class="sound-channel${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
       <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span>${machineControl}</div>
       <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
@@ -240,6 +249,7 @@ export function renderSound(
         <input type="range" min="-1" max="1" step="0.01" value="${track.pan}" data-sound-pan="${track.id}" aria-label="Paneo de ${track.name}">
         <output data-sound-pan-value="${track.id}">${formatPan(track.pan)}</output>
       </div>
+      <div class="machine-params" data-machine-params="${track.id}">${machineParams}</div>
       <div class="sound-effects">
         ${sends}
         <div class="insert-rack">${rack}</div>
@@ -1207,6 +1217,32 @@ function machineLabel(machineId: string): string {
   const preset = MACHINE_PRESETS[machineId];
   if (preset) return preset.name;
   return machineId.replace(/^core-/, '');
+}
+
+function renderMachineParams(track: TrackState, enabled: boolean): string {
+  const preset = MACHINE_PRESETS[track.machineId];
+  if (!preset || preset.params.length === 0) return '';
+
+  return preset.params
+    .map(param => {
+      const value = param.get(track.machine);
+      const disabled = enabled ? '' : ' disabled';
+      const control =
+        param.kind === 'select'
+          ? `<select data-machine-param="${param.id}" data-machine-track="${track.id}" aria-label="${param.label} de ${track.name}"${disabled}>${(param.options ?? [])
+              .map(
+                option =>
+                  `<option value="${option.value}"${String(value) === option.value ? ' selected' : ''}>${option.label}</option>`
+              )
+              .join('')}</select>`
+          : `<input type="range" min="${param.min ?? 0}" max="${param.max ?? 1}" step="${param.step ?? 0.01}" value="${value}" data-machine-param="${param.id}" data-machine-track="${track.id}" aria-label="${param.label} de ${track.name}"${disabled}>`;
+      return `<label class="machine-param">
+        <span>${param.label}</span>
+        ${control}
+        <output>${formatMachineParam(param, value)}</output>
+      </label>`;
+    })
+    .join('');
 }
 
 function formatPan(pan: number): string {

@@ -72,6 +72,12 @@ type NoteSource =
 ## UI
 
 - En Sound, cada track de usuario tiene un selector de máquina.
+- Debajo aparecen parámetros editables generados desde el schema de la máquina:
+  - oscilador;
+  - attack, decay, sustain y release;
+  - cutoff y resonancia para bajos;
+  - noise, dampening, resonancia y release para pluck.
+- Los cambios de parámetros reconstruyen la fuente del track en caliente.
 - Los tracks del núcleo muestran su máquina como etiqueta fija.
 - En Performance, el alta de track permite elegir la máquina inicial.
 - El nombre del track nuevo incorpora la máquina: `Analog Pad 17`, `Bass Synth 18`, etc.
@@ -100,6 +106,6 @@ type NoteSource =
 - [x] Selector de máquina en Sound.
 - [x] Selector de máquina al crear track.
 - [x] Persistencia de máquina y fuente de notas.
-- [ ] Editor de parámetros de máquina en Sound.
+- [x] Editor de parámetros de máquina en Sound.
 - [ ] Instrument plugins de terceros.
 - [ ] Máquinas por preset/escena.

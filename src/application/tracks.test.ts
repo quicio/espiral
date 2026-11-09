@@ -61,6 +61,29 @@ describe('TrackService', () => {
     expect(engine.machines.at(-1)?.machine.kind).toBe('mono');
   });
 
+  it('changes a machine parameter and rebuilds the source', () => {
+    const { store, engine, tracks } = setup();
+    tracks.addTrack('analog-pad');
+
+    tracks.setMachineParam('track-17', 'attack', 2.5);
+
+    const machine = store.getState().kit.tracks['track-17']?.machine;
+    expect(machine?.envelope?.attack).toBe(2.5);
+    expect(engine.machines.at(-1)?.trackId).toBe('track-17');
+    expect(engine.machines.at(-1)?.machine.envelope?.attack).toBe(2.5);
+  });
+
+  it('changes synth filter parameters', () => {
+    const { store, tracks } = setup();
+    tracks.setMachine('track-08', 'bass-synth');
+
+    tracks.setMachineParam('track-08', 'filter', 1800);
+
+    expect(store.getState().kit.tracks['track-08']?.machine.filter?.frequency).toBe(
+      1800
+    );
+  });
+
   it('refuses to change the machine of a core track', () => {
     const { store, tracks } = setup();
 
