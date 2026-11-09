@@ -12,9 +12,10 @@
 - Fades en `Tone.Player`.
 - Reverb con `decay` real y presets con `feedback`/`delayTime`/`decay`.
 - PDC por track/send en el motor modular.
-- Harness offline `npm run test:audio`: 8 compases, escenarios inicial y con automatización,
-  para `ToneAudioEngine` y `ModularAudioEngine`.
+- Harness offline `npm run test:audio`: 8 compases y 8 escenarios — inicial, automatización,
+  Ambient, todo al máximo, solo+mute y cambio de escena a mitad del render.
   Verifica peak ≤ −1 dBFS, sin NaN, DC < 0.001 y que el render no sea silencio.
+- Cada escenario reporta `renderMs` para detectar regresiones de performance.
 - A/B formal con tolerancia de 6 dB en peak/RMS. En las corridas locales el RMS difiere
   < 0.3 dB y el peak entre 0.1 y 1.0 dB, porque la IR de reverb de Tone usa ruido aleatorio.
 - Workflow de CI `Audio check` con Chromium.
@@ -110,6 +111,23 @@ por nodo con reset individual. El master mantiene su meter y latch existentes.
 - Cachear IRs de reverb por `decay` y regenerarlas en idle. Hoy cargar el preset
   `ambient` regenera 4 IRs largas y puede demorar el arranque varios segundos.
 
+**Baseline offline local** (Chromium headless, macOS arm64, 2026-11-09):
+
+```text
+tone-initial         2384 ms
+modular-initial      2436 ms
+tone-automation      2371 ms
+modular-automation   2476 ms
+modular-ambient      5498 ms
+modular-max          2678 ms
+modular-solo-mute    2574 ms
+modular-scene-change 2787 ms
+```
+
+El audio check imprime `Render baseline (ms)` en cada corrida. El valor no es un
+criterio de fallo porque depende de la máquina; sirve para detectar regresiones
+grandes entre corridas.
+
 ## Criterios de aceptación
 
 - El render offline de la sesión inicial pasa con peak ≤ −1 dBFS.
@@ -128,5 +146,5 @@ por nodo con reset individual. El master mantiene su meter y latch existentes.
 - [x] Test Playwright de integración de la app principal.
 - [x] Medidores por track/bus.
 - [x] Clip latch por nodo.
-- [ ] Baseline de performance.
-- [ ] Escenarios adicionales: preset `ambient`, todo al máximo, solo+mute combinados.
+- [x] Baseline de performance offline.
+- [x] Escenarios adicionales: preset `ambient`, todo al máximo, solo+mute combinados y cambio de escena.

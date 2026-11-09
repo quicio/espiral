@@ -58,9 +58,9 @@ npm run test:audio
 npm run test:integration
 ```
 
-`test:audio` renderiza la sesión en un `OfflineAudioContext` real y verifica peak,
-NaN, DC y silencio. `test:integration` levanta Vite, reproduce la app y verifica tracks,
-transporte, presets, samples y errores de consola. La primera vez requiere:
+`test:audio` renderiza 8 escenarios en un `OfflineAudioContext` real y verifica peak,
+NaN, DC, silencio y tiempos de render. `test:integration` levanta Vite, reproduce la app
+y verifica tracks, transporte, presets, samples y errores de consola. La primera vez requiere:
 
 ```bash
 npx playwright install chromium

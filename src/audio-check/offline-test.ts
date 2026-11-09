@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { PresetMapper } from '../adapters/preset-mapper';
 import { AutomationService } from '../application/automation';
 import { createInitialState } from '../application/initial-state';
 import { PlaybackService } from '../application/playback';
@@ -19,7 +20,9 @@ type EngineKind = 'tone' | 'modular';
 interface Scenario {
   readonly name: string;
   readonly engine: EngineKind;
-  readonly setup?: (store: Store) => void;
+  readonly bpm?: number;
+  readonly setup?: (store: Store) => void | Promise<void>;
+  readonly onStep?: (store: Store, step: number) => void;
 }
 
 interface Metrics {
@@ -33,6 +36,7 @@ interface Metrics {
   readonly silent: boolean;
   readonly duration: number;
   readonly sampleRate: number;
+  readonly renderMs: number;
 }
 
 class OfflineClock implements ClockPort {
@@ -79,15 +83,17 @@ class NullStatus implements StatusPort {
 }
 
 async function renderScenario(scenario: Scenario): Promise<Metrics> {
-  const stepSeconds = 60 / BPM / 4;
+  const bpm = scenario.bpm ?? BPM;
+  const stepSeconds = 60 / bpm / 4;
   const duration = BARS * 16 * stepSeconds + TAIL_SECONDS;
   let engineRef: AudioEnginePort | undefined;
+  const startedAt = performance.now();
 
   const buffer = await Tone.Offline(async () => {
     const generative = new UmbralGenerative();
     const initial = createInitialState(generative);
     const store = new Store(initial);
-    scenario.setup?.(store);
+    await scenario.setup?.(store);
 
     const state = store.getState();
     const runtime = new PlaybackRuntime();
@@ -98,6 +104,7 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
     engineRef = engine;
 
     const clock = new OfflineClock();
+    clock.bpm = bpm;
     const status = new NullStatus();
     const automation = new AutomationService(store, engine, status);
     const evolver = { evolve(): void {} };
@@ -115,11 +122,13 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
     await playback.start();
 
     for (let step = 0; step < BARS * 16; step += 1) {
+      scenario.onStep?.(store, step);
       clock.fire(step * stepSeconds, step);
     }
   }, duration);
 
-  const metrics = measure(scenario, buffer);
+  const renderMs = performance.now() - startedAt;
+  const metrics = measure(scenario, buffer, renderMs);
   try {
     engineRef?.dispose();
   } catch {
@@ -128,7 +137,11 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
   return metrics;
 }
 
-function measure(scenario: Scenario, buffer: Tone.ToneAudioBuffer): Metrics {
+function measure(
+  scenario: Scenario,
+  buffer: Tone.ToneAudioBuffer,
+  renderMs: number
+): Metrics {
   const audio = buffer.get();
   if (!audio) throw new Error('El buffer offline está vacío.');
   let peak = 0;
@@ -166,7 +179,8 @@ function measure(scenario: Scenario, buffer: Tone.ToneAudioBuffer): Metrics {
     nan,
     silent: peak < 1e-4,
     duration: audio.duration,
-    sampleRate: audio.sampleRate
+    sampleRate: audio.sampleRate,
+    renderMs
   };
 }
 
@@ -178,11 +192,85 @@ async function run(): Promise<void> {
     }));
   };
 
+  const loadAmbient = async (store: Store): Promise<void> => {
+    const response = await fetch('./presets/ambient.json');
+    const raw = (await response.json()) as unknown;
+    const generative = new UmbralGenerative();
+    const config = new PresetMapper(generative).fromDto(raw, store.getState());
+    store.update(state => ({
+      ...state,
+      transport: { ...state.transport, bpm: config.bpm },
+      kit: config.kit,
+      masterVolume: config.masterVolume,
+      pattern: config.pattern ?? state.pattern,
+      harmony: config.harmony ?? state.harmony,
+      seed: config.seed ?? state.seed,
+      params: config.params ?? state.params,
+      scenes: config.scenes ?? state.scenes,
+      scene: config.scene ?? state.scene,
+      selected: config.selected ?? state.selected
+    }));
+  };
+
+  const everythingMax = (store: Store): void => {
+    store.update(state => ({
+      ...state,
+      masterVolume: 0,
+      kit: {
+        ...state.kit,
+        tracks: Object.fromEntries(
+          Object.entries(state.kit.tracks).map(([id, track]) => [
+            id,
+            { ...track, gainDb: 6, muted: false, solo: false }
+          ])
+        )
+      }
+    }));
+  };
+
+  const soloAndMute = (store: Store): void => {
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: Object.fromEntries(
+          Object.entries(state.kit.tracks).map(([id, track]) => [
+            id,
+            {
+              ...track,
+              solo: id === 'kick',
+              muted: track.muted || id === 'bass'
+            }
+          ])
+        )
+      }
+    }));
+  };
+
+  const sceneMidway = (store: Store, step: number): void => {
+    if (step !== 32) return;
+    const target = store.getState().scenes.deriva;
+    store.update(state => ({
+      ...state,
+      scene: 'deriva',
+      kit: target.kit,
+      pattern: target.pattern,
+      harmony: target.harmony,
+      seed: target.seed,
+      params: target.params,
+      masterVolume: target.masterVolume
+    }));
+  };
+
   const scenarios: Scenario[] = [
     { name: 'tone-initial', engine: 'tone' },
     { name: 'modular-initial', engine: 'modular' },
     { name: 'tone-automation', engine: 'tone', setup: enableAutomation },
-    { name: 'modular-automation', engine: 'modular', setup: enableAutomation }
+    { name: 'modular-automation', engine: 'modular', setup: enableAutomation },
+    { name: 'modular-ambient', engine: 'modular', bpm: 90, setup: loadAmbient },
+    { name: 'modular-max', engine: 'modular', setup: everythingMax },
+    { name: 'modular-solo-mute', engine: 'modular', setup: soloAndMute },
+    { name: 'modular-scene-change', engine: 'modular', onStep: sceneMidway }
   ];
 
   const results: Metrics[] = [];

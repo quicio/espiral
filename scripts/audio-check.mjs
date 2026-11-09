@@ -45,6 +45,22 @@ try {
     throw new Error('El audio check no devolvió métricas.');
   }
 
+  const expected = [
+    'tone-initial',
+    'modular-initial',
+    'tone-automation',
+    'modular-automation',
+    'modular-ambient',
+    'modular-max',
+    'modular-solo-mute',
+    'modular-scene-change'
+  ];
+  for (const name of expected) {
+    if (!metrics.some(metric => metric.name === name)) {
+      throw new Error(`Falta el escenario ${name}.`);
+    }
+  }
+
   for (const metric of metrics) {
     if (metric.nan) throw new Error(`${metric.name}: NaN/Infinity en el render.`);
     if (metric.silent) throw new Error(`${metric.name}: el render es silencio.`);
@@ -57,6 +73,11 @@ try {
   }
 
   if (errors.length > 0) throw new Error(`Errores de consola:\n${errors.join('\n')}`);
+
+  console.log(
+    'Render baseline (ms): ' +
+      metrics.map(metric => `${metric.name} ${metric.renderMs.toFixed(0)}`).join(' · ')
+  );
 
   for (const mode of ['initial', 'automation']) {
     const tone = metrics.find(metric => metric.name === `tone-${mode}`);

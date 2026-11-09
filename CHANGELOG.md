@@ -9,6 +9,8 @@
 - Clip latch por nodo con reset individual.
 - Test Playwright de integración de la app principal (`npm run test:integration`).
 - El workflow de audio ejecuta también la integración.
+- Audio check ampliado a 8 escenarios: initial, automation, ambient, max, solo+mute y scene change.
+- Cada escenario reporta `renderMs`; baseline offline documentado.
 - 93 tests unitarios.
 
 ## 0.5.0 — 2026-11-09

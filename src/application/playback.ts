@@ -223,7 +223,7 @@ export class PlaybackService {
         lock.trackId,
         stepCount
       );
-      this.applyLockValue(lock, lock.value, time + offset);
+      this.applyLockValue(lock, lock.value, Math.max(0, time + offset));
       this.activeLocks.set(key, lock);
     });
 
@@ -450,7 +450,10 @@ export class PlaybackService {
     const stepSeconds = 60 / Math.max(state.transport.bpm, 1) / 4;
 
     for (let index = 0; index < ratchets; index += 1) {
-      callback(time + offset + (index * stepSeconds) / ratchets, velocity);
+      callback(
+        Math.max(0, time + offset + (index * stepSeconds) / ratchets),
+        velocity
+      );
     }
   }
 }
