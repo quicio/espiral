@@ -5,7 +5,7 @@ import type {
   PatternChannel,
   ReverbSettings
 } from '../domain/channels';
-import type { InsertConfig, TrackConfig } from '../domain/graph';
+import type { InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
 import type {
   ChannelSeed,
   GenerativeParams,
@@ -178,12 +178,14 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly supportsInserts = true;
   readonly supportsTrackManagement = true;
   readonly supportsRouting = true;
+  readonly supportsMachineChange = true;
   prepared = 0;
   stopped = 0;
   disposed = 0;
   readonly events: SoundEvent[] = [];
   readonly added: TrackConfig[] = [];
   readonly removed: string[] = [];
+  readonly machines: { trackId: string; machine: MachineConfig }[] = [];
   readonly sends: {
     trackId: string;
     busId: string;
@@ -257,6 +259,10 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   removeTrack(trackId: string): void {
     this.removed.push(trackId);
+  }
+
+  setTrackMachine(trackId: string, machine: MachineConfig): void {
+    this.machines.push({ trackId, machine });
   }
 
   setTrackSend(

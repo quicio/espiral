@@ -27,6 +27,7 @@ export class ToneAudioEngine implements AudioEnginePort {
   readonly supportsInserts = false;
   readonly supportsTrackManagement = false;
   readonly supportsRouting = false;
+  readonly supportsMachineChange = false;
   private readonly channels = new Map<ChannelKey, EngineChannel>();
   private readonly reverbs = new Set<Tone.Reverb>();
   private readonly masterVolume: Tone.Volume;
@@ -77,6 +78,10 @@ export class ToneAudioEngine implements AudioEnginePort {
     // El motor legacy tiene canales fijos.
   }
 
+  setTrackMachine(): void {
+    // El motor legacy tiene canales fijos.
+  }
+
   setTrackSend(): void {
     // El motor legacy no tiene buses.
   }
@@ -115,7 +120,12 @@ export class ToneAudioEngine implements AudioEnginePort {
         const channel = this.channels.get(event.channel);
         if (channel?.synth instanceof Tone.PolySynth) {
           const notes = typeof event.notes === 'string' ? event.notes : [...event.notes];
-          channel.synth.triggerAttackRelease(notes, event.duration, event.time);
+          channel.synth.triggerAttackRelease(
+            notes,
+            event.duration,
+            event.time,
+            event.velocity ?? 1
+          );
         }
         return;
       }

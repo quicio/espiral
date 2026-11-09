@@ -6,6 +6,7 @@ import type {
   SendConfig,
   TrackConfig
 } from './graph';
+import type { NoteSource } from './machines';
 
 export type TrackRole = ChannelKey | 'user';
 
@@ -14,7 +15,9 @@ export interface TrackState {
   readonly name: string;
   readonly role: TrackRole;
   readonly hasPattern: boolean;
+  readonly machineId: string;
   readonly machine: MachineConfig;
+  readonly noteSource: NoteSource;
   readonly gainDb: number;
   readonly pan: number;
   readonly muted: boolean;

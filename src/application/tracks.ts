@@ -1,5 +1,6 @@
 import { PATTERN_LENGTH } from '../domain/channels';
 import { createUserTrack } from '../domain/default-kit';
+import { machinePreset } from '../domain/machines';
 import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
 import {
@@ -22,7 +23,7 @@ export class TrackService {
     private readonly status: StatusPort
   ) {}
 
-  addTrack(): void {
+  addTrack(machineId = 'sampler'): void {
     if (!this.engine.supportsTrackManagement) {
       this.status.generative('Crear tracks no está disponible en el motor legacy.');
       return;
@@ -34,7 +35,7 @@ export class TrackService {
       return;
     }
 
-    const track = createUserTrack(nextTrackIndex(state.kit));
+    const track = createUserTrack(nextTrackIndex(state.kit), machineId);
     const empty = emptyPattern();
     const next: InstrumentState = {
       ...state,
@@ -66,6 +67,43 @@ export class TrackService {
 
   removeSelectedTrack(): void {
     this.removeTrack(this.store.getState().selected);
+  }
+
+  setMachine(trackId: string, machineId: string): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track) return;
+    if (track.role !== 'user') {
+      this.status.generative('La máquina solo se puede cambiar en tracks de usuario.');
+      return;
+    }
+    if (!this.engine.supportsMachineChange) {
+      this.status.generative('Cambiar máquinas no está disponible en el motor legacy.');
+      return;
+    }
+
+    const preset = machinePreset(machineId);
+    const created = createUserTrack(trackNumber(track.id, state.kit), preset.id);
+    const next: InstrumentState = {
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          [trackId]: {
+            ...track,
+            machineId: created.machineId,
+            machine: created.machine,
+            noteSource: created.noteSource
+          }
+        }
+      },
+      history: []
+    };
+
+    this.store.update(() => next);
+    this.engine.setTrackMachine(trackId, created.machine);
+    this.status.generative(`${track.name} · ${preset.name}.`);
   }
 
   removeTrack(trackId: string): void {
@@ -123,6 +161,11 @@ function nextTrackIndex(kit: KitState): number {
     if (match) max = Math.max(max, Number(match[1]));
   });
   return max + 1;
+}
+
+function trackNumber(trackId: string, kit: KitState): number {
+  const match = /^track-(\d+)$/.exec(trackId);
+  return match ? Number(match[1]) : Object.keys(kit.tracks).length + 1;
 }
 
 function emptyPattern(): Pattern {

@@ -72,7 +72,12 @@
 - Velocity, probabilidad y ratchets por paso con editor de dinámica.
 - Nuevos plugins Tremolo y Bitcrusher.
 - Los tracks de usuario usan samples variados de percusión y hi-hats.
-- 72 tests unitarios.
+- Catálogo de máquinas de track: Sampler, Analog Pad, Bass Synth y Pluck.
+- `NoteSource` por track: nota fija, grado de escala o acorde de la progresión.
+- Motor modular con `MonoSynth` y `PluckSynth`; cambio de máquina en caliente.
+- Selector de máquina en Sound y al crear un track.
+- Persistencia de máquina y fuente de notas en sesión y escenas.
+- 76 tests unitarios.
 - Tests unitarios de casos de uso, grafos, mapper de sesiones/presets y reglas de voces.
 
 ## 0.1.1 — 2026-11-06

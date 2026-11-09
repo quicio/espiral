@@ -1,6 +1,6 @@
 import type { ChannelKey } from './channels';
 
-export type MachineKind = 'membrane' | 'poly' | 'sampler';
+export type MachineKind = 'membrane' | 'poly' | 'mono' | 'pluck' | 'sampler';
 
 export interface EnvelopeConfig {
   readonly attack: number;
@@ -18,6 +18,16 @@ export interface MachineConfig {
   readonly maxPolyphony?: number;
   readonly fadeIn?: number;
   readonly fadeOut?: number;
+  readonly filter?: {
+    readonly frequency: number;
+    readonly q: number;
+  };
+  readonly pluck?: {
+    readonly attackNoise: number;
+    readonly dampening: number;
+    readonly resonance: number;
+    readonly release: number;
+  };
 }
 
 export interface InsertConfig {

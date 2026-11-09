@@ -8,6 +8,7 @@ import {
 } from './channels';
 import type { MachineConfig } from './graph';
 import type { BusState, KitState, TrackState } from './kit';
+import { machinePreset, type NoteSource } from './machines';
 
 export const SAMPLE_PATH = './audio/';
 
@@ -90,7 +91,9 @@ export function createDefaultKit(): KitState {
         name: channelName(key),
         role: key,
         hasPattern: key === 'kick' || key === 'bass' || key === 'hihat' || key === 'perc',
+        machineId: `core-${key}`,
         machine: MACHINES[key],
+        noteSource: coreNoteSource(key),
         gainDb: mix.volumeDb,
         pan: 0,
         muted: mix.muted,
@@ -127,24 +130,32 @@ export function createDefaultBuses(): readonly BusState[] {
   ];
 }
 
-export function createUserTrack(index: number): TrackState {
+export function createUserTrack(index: number, machineId = 'sampler'): TrackState {
   const label = String(index).padStart(2, '0');
-  const sample =
+  const preset = machinePreset(machineId);
+  const samplerSample =
     index % 3 === 0
       ? PERC_FILE
       : HIHAT_FILES[(index - 8) % HIHAT_FILES.length] ?? PERC_FILE;
+  const machine: MachineConfig =
+    preset.id === 'sampler'
+      ? {
+          kind: 'sampler',
+          samples: [SAMPLE_PATH + samplerSample],
+          voices: 1,
+          fadeIn: 0.004,
+          fadeOut: 0.08
+        }
+      : preset.machine;
+
   return {
     id: `track-${label}`,
-    name: `Track ${label}`,
+    name: preset.id === 'sampler' ? `Track ${label}` : `${preset.name} ${label}`,
     role: 'user',
     hasPattern: true,
-    machine: {
-      kind: 'sampler',
-      samples: [SAMPLE_PATH + sample],
-      voices: 1,
-      fadeIn: 0.004,
-      fadeOut: 0.08
-    },
+    machineId: preset.id,
+    machine,
+    noteSource: preset.noteSource,
     gainDb: -10,
     pan: 0,
     muted: false,
@@ -152,4 +163,13 @@ export function createUserTrack(index: number): TrackState {
     inserts: [],
     sends: []
   };
+}
+
+function coreNoteSource(key: ChannelKey): NoteSource {
+  if (key === 'pad') return { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 };
+  if (key === 'lead') return { kind: 'scale-degree', degree: 4, octave: 4 };
+  if (key === 'drone' || key === 'bass') {
+    return { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 };
+  }
+  return { kind: 'fixed', note: 'C4' };
 }

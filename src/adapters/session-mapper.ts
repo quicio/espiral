@@ -20,9 +20,10 @@ import {
   type TrackState
 } from '../domain/kit';
 import { captureScene } from '../application/scenes';
-import type { InstrumentState } from '../domain/models';
+import type { NoteSource } from '../domain/machines';
 import type {
   GenerativeParams,
+  InstrumentState,
   ProgressionId,
   ScaleId,
   SceneId
@@ -61,7 +62,9 @@ export interface SessionTrackDto {
   readonly name: string;
   readonly role: TrackRole;
   readonly hasPattern: boolean;
+  readonly machineId: string;
   readonly machine: MachineConfig;
+  readonly noteSource: NoteSource;
   readonly gainDb: number;
   readonly pan: number;
   readonly muted: boolean;
@@ -323,7 +326,9 @@ function toKitDto(kit: KitState): SessionKitDto {
       name: track.name,
       role: track.role,
       hasPattern: track.hasPattern,
+      machineId: track.machineId,
       machine: track.machine,
+      noteSource: track.noteSource,
       gainDb: track.gainDb,
       pan: track.pan,
       muted: track.muted,
@@ -505,12 +510,24 @@ function readKit(raw: unknown, current: KitState): KitState {
             ? PATTERN_CHANNELS.includes(role as PatternChannel)
             : role === 'user');
 
+    const machineId =
+      typeof trackData.machineId === 'string'
+        ? trackData.machineId
+        : currentTrack?.machineId ??
+          (role === 'user' ? 'sampler' : `core-${role}`);
+    const noteSource = readNoteSource(
+      trackData.noteSource,
+      currentTrack?.noteSource ?? { kind: 'fixed', note: 'C4' }
+    );
+
     tracks[id] = {
       id,
       name: typeof trackData.name === 'string' ? trackData.name : id,
       role,
       hasPattern,
+      machineId,
       machine,
+      noteSource,
       gainDb: clamp(numberOr(trackData.gainDb, currentTrack?.gainDb ?? 0), -60, 6),
       pan: clamp(numberOr(trackData.pan, currentTrack?.pan ?? 0), -1, 1),
       muted:
@@ -534,6 +551,32 @@ function readKit(raw: unknown, current: KitState): KitState {
     tracks,
     buses: readBuses(data.buses, current.buses)
   };
+}
+
+function readNoteSource(raw: unknown, fallback: NoteSource): NoteSource {
+  const data = asRecord(raw);
+  if (!data) return fallback;
+
+  if (data.kind === 'fixed' && typeof data.note === 'string') {
+    return { kind: 'fixed', note: data.note };
+  }
+  if (data.kind === 'scale-degree') {
+    return {
+      kind: 'scale-degree',
+      degree: Math.round(numberOr(data.degree, 0)),
+      octave: clamp(Math.round(numberOr(data.octave, 4)), -2, 8)
+    };
+  }
+  if (data.kind === 'chord') {
+    return {
+      kind: 'chord',
+      degreeOffset: Math.round(numberOr(data.degreeOffset, 0)),
+      octave: clamp(Math.round(numberOr(data.octave, 3)), -2, 8),
+      size: clamp(Math.round(numberOr(data.size, 4)), 1, 8)
+    };
+  }
+
+  return fallback;
 }
 
 function readBuses(
@@ -640,8 +683,18 @@ function readMachine(raw: unknown): MachineConfig | null {
   const data = asRecord(raw);
   if (!data) return null;
   const kind = data.kind;
-  if (kind !== 'membrane' && kind !== 'poly' && kind !== 'sampler') return null;
+  if (
+    kind !== 'membrane' &&
+    kind !== 'poly' &&
+    kind !== 'mono' &&
+    kind !== 'pluck' &&
+    kind !== 'sampler'
+  ) {
+    return null;
+  }
 
+  const filter = asRecord(data.filter);
+  const pluck = asRecord(data.pluck);
   const machine: MachineConfig = {
     kind,
     ...(typeof data.oscillator === 'string'
@@ -656,7 +709,25 @@ function readMachine(raw: unknown): MachineConfig | null {
       : {}),
     ...(typeof data.fadeIn === 'number' ? { fadeIn: Math.max(0, data.fadeIn) } : {}),
     ...(typeof data.fadeOut === 'number' ? { fadeOut: Math.max(0, data.fadeOut) } : {}),
-    ...(readEnvelope(data.envelope) ? { envelope: readEnvelope(data.envelope)! } : {})
+    ...(readEnvelope(data.envelope) ? { envelope: readEnvelope(data.envelope)! } : {}),
+    ...(filter
+      ? {
+          filter: {
+            frequency: clamp(numberOr(filter.frequency, 800), 20, 20000),
+            q: clamp(numberOr(filter.q, 1), 0.1, 20)
+          }
+        }
+      : {}),
+    ...(pluck
+      ? {
+          pluck: {
+            attackNoise: clamp(numberOr(pluck.attackNoise, 1.2), 0.1, 20),
+            dampening: clamp(numberOr(pluck.dampening, 4000), 0, 7000),
+            resonance: clamp(numberOr(pluck.resonance, 0.9), 0, 1),
+            release: clamp(numberOr(pluck.release, 1.1), 0.01, 5)
+          }
+        }
+      : {})
   };
   return machine;
 }

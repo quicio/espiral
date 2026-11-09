@@ -24,12 +24,15 @@ import { Track } from './track';
 type TrackSource =
   | { readonly kind: 'membrane'; readonly synth: Tone.MembraneSynth }
   | { readonly kind: 'poly'; readonly synth: Tone.PolySynth }
+  | { readonly kind: 'mono'; readonly synth: Tone.MonoSynth }
+  | { readonly kind: 'pluck'; readonly synth: Tone.PluckSynth }
   | { readonly kind: 'sampler'; readonly pools: readonly SampleVoicePool[] };
 
 export class ModularAudioEngine implements AudioEnginePort {
   readonly supportsInserts = true;
   readonly supportsTrackManagement = true;
   readonly supportsRouting = true;
+  readonly supportsMachineChange = true;
   private readonly pluginHost: PluginHost;
   private readonly master: MasterBus;
   private readonly tracks = new Map<string, Track>();
@@ -86,6 +89,15 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.sources.delete(id);
   }
 
+  setTrackMachine(trackId: string, machine: MachineConfig): void {
+    const track = this.tracks.get(trackId);
+    if (!track) return;
+    const previous = this.sources.get(trackId);
+    stopSource(previous);
+    disposeSource(previous);
+    this.sources.set(trackId, this.createSource(machine, track.input));
+  }
+
   async prepare(): Promise<void> {
     if (this.prepared) return;
     if (!isOfflineContext()) await Tone.start();
@@ -117,9 +129,26 @@ export class ModularAudioEngine implements AudioEnginePort {
       }
       case 'synth': {
         const source = this.sources.get(event.trackId ?? event.channel);
-        if (source?.kind !== 'poly') return;
-        const notes = typeof event.notes === 'string' ? event.notes : [...event.notes];
-        source.synth.triggerAttackRelease(notes, event.duration, event.time);
+        if (!source) return;
+        const notes = typeof event.notes === 'string' ? [event.notes] : [...event.notes];
+        const velocity = event.velocity ?? 1;
+        if (source.kind === 'poly') {
+          source.synth.triggerAttackRelease(
+            notes,
+            event.duration,
+            event.time,
+            velocity
+          );
+        } else if (source.kind === 'mono') {
+          source.synth.triggerAttackRelease(
+            notes[0] ?? 'C3',
+            event.duration,
+            event.time,
+            velocity
+          );
+        } else if (source.kind === 'pluck') {
+          source.synth.triggerAttack(notes[0] ?? 'C4', event.time);
+        }
         return;
       }
       case 'sample': {
@@ -322,6 +351,44 @@ export class ModularAudioEngine implements AudioEnginePort {
       return { kind: 'poly', synth };
     }
 
+    if (machine.kind === 'mono') {
+      const synth = new Tone.MonoSynth({
+        oscillator: { type: machine.oscillator ?? 'sawtooth' },
+        envelope: machine.envelope ?? {
+          attack: 0.01,
+          decay: 0.2,
+          sustain: 0.35,
+          release: 0.35
+        },
+        filter: {
+          type: 'lowpass',
+          Q: machine.filter?.q ?? 2,
+          rolloff: -24
+        },
+        filterEnvelope: {
+          attack: 0.01,
+          decay: 0.2,
+          sustain: 0.2,
+          release: 0.4,
+          baseFrequency: machine.filter?.frequency ?? 800,
+          octaves: 2.5
+        }
+      });
+      synth.connect(input);
+      return { kind: 'mono', synth };
+    }
+
+    if (machine.kind === 'pluck') {
+      const synth = new Tone.PluckSynth({
+        attackNoise: machine.pluck?.attackNoise ?? 1.2,
+        dampening: machine.pluck?.dampening ?? 4000,
+        resonance: machine.pluck?.resonance ?? 0.9,
+        release: machine.pluck?.release ?? 1.1
+      });
+      synth.connect(input);
+      return { kind: 'pluck', synth };
+    }
+
     const pools = (machine.samples ?? []).map(
       url =>
         new SampleVoicePool(
@@ -340,6 +407,8 @@ function stopSource(source: TrackSource | undefined): void {
   if (!source) return;
   if (source.kind === 'membrane') source.synth.triggerRelease();
   else if (source.kind === 'poly') source.synth.releaseAll();
+  else if (source.kind === 'mono') source.synth.triggerRelease();
+  else if (source.kind === 'pluck') source.synth.triggerRelease();
   else source.pools.forEach(pool => pool.stop());
 }
 

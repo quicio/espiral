@@ -458,6 +458,45 @@ body.instrument-page .page-title {
   font-variant-numeric: tabular-nums;
 }
 
+.track-machine-add,
+.machine-select {
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.track-machine-add {
+  padding: 0.25rem 0.35rem;
+}
+
+.machine-select {
+  width: 100%;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.3rem;
+}
+
+.machine-select:hover,
+.machine-select:focus-visible,
+.track-machine-add:hover,
+.track-machine-add:focus-visible {
+  border-color: var(--umbral-trace);
+}
+
+.machine-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
 /* --- Performance ---------------------------------------------------------- */
 
 .performance-focus {

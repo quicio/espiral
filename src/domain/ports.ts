@@ -5,7 +5,7 @@ import type {
   PatternChannel,
   ReverbSettings
 } from './channels';
-import type { InsertConfig, TrackConfig } from './graph';
+import type { InsertConfig, MachineConfig, TrackConfig } from './graph';
 import type { KitState } from './kit';
 import type { PluginDefinition } from './plugin';
 import type {
@@ -30,11 +30,13 @@ export interface AudioEnginePort {
   readonly supportsInserts: boolean;
   readonly supportsTrackManagement: boolean;
   readonly supportsRouting: boolean;
+  readonly supportsMachineChange: boolean;
   prepare(): Promise<void>;
   stop(): void;
   dispose(): void;
   addTrack(track: TrackConfig): void;
   removeTrack(trackId: string): void;
+  setTrackMachine(trackId: string, machine: MachineConfig): void;
   trigger(event: SoundEvent): void;
   setChannelVolume(trackId: string, db: number, time?: number): void;
   setChannelPan(trackId: string, pan: number, time?: number): void;

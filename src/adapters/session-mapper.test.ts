@@ -88,6 +88,14 @@ describe('SessionMapper', () => {
           'track-08': {
             ...state.kit.tracks['track-08']!,
             gainDb: -13,
+            machineId: 'analog-pad',
+            machine: {
+              kind: 'poly',
+              oscillator: 'sawtooth',
+              envelope: { attack: 1, decay: 1, sustain: 0.8, release: 3 },
+              maxPolyphony: 8
+            },
+            noteSource: { kind: 'fixed', note: 'A3' },
             sends: [{ busId: 'reverb-bus', amount: 0.35, preFader: true }]
           }
         },
@@ -151,6 +159,12 @@ describe('SessionMapper', () => {
     expect(restored.pattern.probability.kick?.[2]).toBe(0.3);
     expect(restored.pattern.ratchets.kick?.[2]).toBe(3);
     expect(restored.kit.tracks['track-08']?.gainDb).toBe(-13);
+    expect(restored.kit.tracks['track-08']?.machineId).toBe('analog-pad');
+    expect(restored.kit.tracks['track-08']?.machine.kind).toBe('poly');
+    expect(restored.kit.tracks['track-08']?.noteSource).toEqual({
+      kind: 'fixed',
+      note: 'A3'
+    });
     expect(restored.kit.tracks['track-08']?.sends).toEqual([
       { busId: 'reverb-bus', amount: 0.35, preFader: true }
     ]);

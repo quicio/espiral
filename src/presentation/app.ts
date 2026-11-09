@@ -299,7 +299,11 @@ export class EspiralApp {
   }
 
   private bindTrackActions(): void {
-    view.must('#add-track').addEventListener('click', () => this.deps.tracks.addTrack());
+    view.must('#add-track').addEventListener('click', () => {
+      const machine =
+        view.q<HTMLSelectElement>('#add-track-machine')?.value ?? 'sampler';
+      this.deps.tracks.addTrack(machine);
+    });
     view.must('#remove-track').addEventListener('click', () =>
       this.deps.tracks.removeSelectedTrack()
     );
@@ -679,6 +683,12 @@ export class EspiralApp {
     });
 
     view.must('#sound-channels').addEventListener('change', event => {
+      const trackId = attr(event, 'data-machine');
+      if (trackId && event.target instanceof HTMLSelectElement) {
+        this.deps.tracks.setMachine(trackId, event.target.value);
+        return;
+      }
+
       const channel = attr(event, 'data-add-insert');
       if (!channel) return;
       if (!(event.target instanceof HTMLSelectElement) || !event.target.value) return;

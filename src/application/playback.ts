@@ -1,4 +1,6 @@
+import type { NoteDuration } from '../domain/audio';
 import type { InstrumentState } from '../domain/models';
+import type { TrackState } from '../domain/kit';
 import { locksAt, normalizeStep, patternStep } from '../domain/pattern';
 import type {
   AudioEnginePort,
@@ -18,6 +20,7 @@ import {
   noteDuration,
   padChord,
   percPlaybackRate,
+  progressionDegrees,
   timingOffset
 } from './voices';
 
@@ -314,17 +317,50 @@ export class PlaybackService {
 
     Object.values(state.kit.tracks).forEach(track => {
       if (track.role !== 'user' || !track.hasPattern) return;
-      if (track.machine.kind !== 'sampler') return;
+      if (track.machine.kind === 'sampler') {
+        this.eachPatternHit(state, track.id, stepCount, time, (at, velocity) => {
+          this.engine.trigger({
+            type: 'sample',
+            channel: 'perc',
+            trackId: track.id,
+            time: at,
+            sampleIndex: 0,
+            playbackRate: 1,
+            gainDb: velocityGainDb(velocity),
+            duration: '8n'
+          });
+        });
+        return;
+      }
+      if (
+        track.machine.kind !== 'poly' &&
+        track.machine.kind !== 'mono' &&
+        track.machine.kind !== 'pluck'
+      ) {
+        return;
+      }
+
+      const notes = notesForTrack(
+        state,
+        this.generative,
+        track,
+        this.runtime.currentChordDegree
+      );
+      if (!notes) return;
+      const duration = machineNoteDuration(
+        track.machine.kind,
+        state.harmony.sustain
+      );
+      const channel = track.machine.kind === 'poly' ? 'pad' : 'lead';
       this.eachPatternHit(state, track.id, stepCount, time, (at, velocity) => {
         this.engine.trigger({
-          type: 'sample',
-          channel: 'perc',
+          type: 'synth',
+          channel,
           trackId: track.id,
           time: at,
-          sampleIndex: 0,
-          playbackRate: 1,
-          gainDb: velocityGainDb(velocity),
-          duration: '8n'
+          notes,
+          duration,
+          velocity
         });
       });
     });
@@ -394,6 +430,51 @@ function velocityGainDb(velocity: number): number {
   return velocity >= 0.999
     ? 0
     : 20 * Math.log10(Math.max(0.02, velocity));
+}
+
+function notesForTrack(
+  state: InstrumentState,
+  generative: GenerativePort,
+  track: TrackState,
+  chordDegree: number
+): string | readonly string[] | null {
+  const source = track.noteSource;
+  if (!source) return 'C4';
+
+  if (source.kind === 'fixed') return source.note;
+
+  if (source.kind === 'scale-degree') {
+    return generative.midiToNote(
+      generative.scaleDegreeMidi(
+        state.harmony.root,
+        state.harmony.scale,
+        source.degree,
+        source.octave
+      )
+    );
+  }
+
+  const degrees = progressionDegrees(state, generative);
+  const degree =
+    (degrees[chordDegree % degrees.length] ?? 0) + source.degreeOffset;
+  const notes = generative.chordNotes(
+    state.harmony.root,
+    state.harmony.scale,
+    degree,
+    source.octave,
+    source.size
+  );
+  if (notes.length === 0) return null;
+  return source.size === 1 ? notes[0] ?? null : notes;
+}
+
+function machineNoteDuration(
+  kind: 'poly' | 'mono' | 'pluck',
+  sustain: number
+): NoteDuration {
+  if (kind === 'mono') return noteDuration('bass', sustain);
+  if (kind === 'pluck') return '8n';
+  return noteDuration('pad', sustain);
 }
 
 function lockKey(trackId: string, insertId: string, paramId: string): string {

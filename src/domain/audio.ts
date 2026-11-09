@@ -13,6 +13,7 @@ export type SoundEvent =
       readonly time: number;
       readonly notes: string | readonly string[];
       readonly duration: NoteDuration;
+      readonly velocity?: number;
     }
   | {
       readonly type: 'sample';

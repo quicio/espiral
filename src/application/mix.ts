@@ -29,6 +29,10 @@ export class MixService {
     return this.engine.supportsRouting;
   }
 
+  get supportsMachineChange(): boolean {
+    return this.engine.supportsMachineChange;
+  }
+
   listPlugins(): readonly PluginDefinition[] {
     return this.engine.listPlugins();
   }

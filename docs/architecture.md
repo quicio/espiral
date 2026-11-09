@@ -91,6 +91,11 @@ el disparo en hasta cuatro ratchets.
 Los presets musicales incluyen BPM, mezcla, pan, sends, armonía y patrones por escena. El
 `PresetMapper` los convierte en un snapshot completo que reemplaza el estado musical actual.
 
+Las máquinas de track viven en un catálogo (`MachinePreset`) con configuración de motor y
+`NoteSource`. `TrackState` guarda `machineId`, `machine` y `noteSource`. El motor modular
+crea `PolySynth`, `MonoSynth`, `PluckSynth` o sampler según la máquina y puede reemplazar
+la fuente en caliente con `setTrackMachine`.
+
 La calidad de audio se verifica con `npm run test:audio`: renderiza 8 compases en un
 `OfflineAudioContext` real y falla si hay clipping, NaN, DC o silencio.
 
@@ -129,5 +134,5 @@ otro adapter y se cambia únicamente en `main.ts`.
 - La UI es DOM directo. Se puede migrar vista por vista a un framework sin tocar las capas internas.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
   La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
-  a control-rate, parameter locks y dinámica por paso. Los presets son musicales y por
-  género. Los macros por track y los destinos AudioParam a audio-rate son el siguiente corte.
+  a control-rate, parameter locks, dinámica y máquinas de synth. Pendiente: editor de
+  parámetros de máquina, instrument plugins y macros por track.

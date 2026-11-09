@@ -6,6 +6,7 @@ import {
   type ChannelKey
 } from '../domain/channels';
 import { kitHasSolo, kitTracks } from '../domain/kit';
+import { MACHINE_PRESETS, USER_MACHINE_IDS } from '../domain/machines';
 import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
 import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
@@ -214,8 +215,19 @@ export function renderSound(
               .join('')}</div>`
           : '';
 
+      const machineControl =
+        track.role === 'user'
+          ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${USER_MACHINE_IDS.map(
+              id => {
+                const preset = MACHINE_PRESETS[id];
+                if (!preset) return '';
+                return `<option value="${id}"${track.machineId === id ? ' selected' : ''}>${preset.name}</option>`;
+              }
+            ).join('')}</select>`
+          : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
+
       return `<div class="sound-channel${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
-      <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span></div>
+      <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span>${machineControl}</div>
       <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
       <output class="sound-value" data-sound-value="${track.id}">${track.gainDb.toFixed(1)} dB</output>
       <div class="sound-controls">
@@ -561,6 +573,15 @@ export function syncTrackManagement(
 ): void {
   const count = q('#track-count');
   if (count) count.textContent = String(Object.keys(state.kit.tracks).length);
+
+  const machineSelect = q<HTMLSelectElement>('#add-track-machine');
+  if (machineSelect && machineSelect.options.length === 0) {
+    machineSelect.innerHTML = USER_MACHINE_IDS.map(id => {
+      const preset = MACHINE_PRESETS[id];
+      return preset ? `<option value="${id}">${preset.name}</option>` : '';
+    }).join('');
+  }
+  if (machineSelect) machineSelect.disabled = !supportsTrackManagement;
 
   const add = q<HTMLButtonElement>('#add-track');
   if (add) {
@@ -1180,6 +1201,12 @@ function statePattern(state: InstrumentState, key: string): Pattern {
 
 function trackName(state: InstrumentState, id: string): string {
   return state.kit.tracks[id]?.name ?? id;
+}
+
+function machineLabel(machineId: string): string {
+  const preset = MACHINE_PRESETS[machineId];
+  if (preset) return preset.name;
+  return machineId.replace(/^core-/, '');
 }
 
 function formatPan(pan: number): string {

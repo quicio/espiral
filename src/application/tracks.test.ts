@@ -31,6 +31,44 @@ describe('TrackService', () => {
     expect(engine.added.at(-1)?.id).toBe('track-17');
   });
 
+  it('adds a user track with a selected synth machine', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.addTrack('analog-pad');
+
+    const track = store.getState().kit.tracks['track-17'];
+    expect(track?.machineId).toBe('analog-pad');
+    expect(track?.machine.kind).toBe('poly');
+    expect(track?.noteSource.kind).toBe('chord');
+    expect(engine.added.at(-1)?.machine.kind).toBe('poly');
+  });
+
+  it('changes the machine of a user track', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.setMachine('track-08', 'bass-synth');
+
+    const track = store.getState().kit.tracks['track-08'];
+    expect(track?.machineId).toBe('bass-synth');
+    expect(track?.machine.kind).toBe('mono');
+    expect(track?.noteSource).toEqual({
+      kind: 'chord',
+      degreeOffset: 0,
+      octave: 2,
+      size: 1
+    });
+    expect(engine.machines.at(-1)?.trackId).toBe('track-08');
+    expect(engine.machines.at(-1)?.machine.kind).toBe('mono');
+  });
+
+  it('refuses to change the machine of a core track', () => {
+    const { store, tracks } = setup();
+
+    tracks.setMachine('kick', 'pluck');
+
+    expect(store.getState().kit.tracks.kick?.machine.kind).toBe('membrane');
+  });
+
   it('removes a user track from the kit, patterns and every scene', () => {
     const { store, engine, tracks } = setup();
 

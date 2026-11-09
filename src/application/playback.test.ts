@@ -241,6 +241,59 @@ describe('PlaybackService', () => {
     expect(engine.events.some(event => event.type === 'kick')).toBe(false);
   });
 
+  it('triggers a synth note for a user track with a synth machine', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const track = state.kit.tracks['track-08']!;
+      return {
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: {
+            ...state.kit.tracks,
+            'track-08': {
+              ...track,
+              machineId: 'analog-pad',
+              machine: {
+                kind: 'poly',
+                oscillator: 'sawtooth',
+                envelope: { attack: 1, decay: 1, sustain: 0.8, release: 3 },
+                maxPolyphony: 8
+              },
+              noteSource: { kind: 'fixed', note: 'C4' }
+            }
+          }
+        },
+        pattern: {
+          ...state.pattern,
+          steps: {
+            ...state.pattern.steps,
+            'track-08': state.pattern.steps['track-08']!.map((value, index) =>
+              index === 0 ? 1 : value
+            )
+          }
+        }
+      };
+    });
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    const event = engine.events.find(
+      entry => entry.type === 'synth' && entry.trackId === 'track-08'
+    );
+    expect(event).toEqual(
+      expect.objectContaining({
+        type: 'synth',
+        channel: 'pad',
+        trackId: 'track-08',
+        notes: 'C4',
+        velocity: 1
+      })
+    );
+  });
+
   it('does not trigger silent steps', async () => {
     const { playback, clock, engine } = setup();
     await playback.start();
