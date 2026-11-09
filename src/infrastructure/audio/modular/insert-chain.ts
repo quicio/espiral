@@ -34,6 +34,17 @@ export class InsertChain {
     return this.findInsert(insertId)?.getParam(param);
   }
 
+  getInsertAudioParam(
+    insertId: string,
+    param: string
+  ): Tone.Param<any> | Tone.Signal<any> | null {
+    return this.findInsert(insertId)?.getAudioParam(param) ?? null;
+  }
+
+  getInsert(insertId: string): InsertSlot | undefined {
+    return this.findInsert(insertId);
+  }
+
   findInsertByPlugin(pluginId: string): InsertSlot | undefined {
     return this.slots.find(insert => insert.pluginId === pluginId);
   }

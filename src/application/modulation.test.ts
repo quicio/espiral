@@ -54,6 +54,40 @@ describe('ModulationService', () => {
     expect(store.getState().modulation.sources[2]?.value).toBe(1);
   });
 
+  it('routes LFO modulation through the audio-rate engine path when available', () => {
+    const { store, engine, modulation } = setup();
+    engine.audioModulationSupport = true;
+    modulation.addRoute('lfo-1', cutoffTarget, 0.5, true);
+    modulation.setEnabled(true);
+
+    modulation.tick(0);
+
+    const audio = engine.audioModulations.at(-1);
+    expect(audio?.source.shape).toBe('sine');
+    expect(audio?.target).toEqual(cutoffTarget);
+    expect(audio?.bipolar).toBe(true);
+    expect(engine.params.some(entry => entry.paramId === 'cutoff')).toBe(false);
+
+    const routeId = store.getState().modulation.routes[0]!.id;
+    modulation.removeRoute(routeId);
+    modulation.tick(1);
+
+    expect(engine.removedAudioModulations).toContain(routeId);
+  });
+
+  it('keeps macros on the control-rate path even with audio support', () => {
+    const { engine, modulation } = setup();
+    engine.audioModulationSupport = true;
+    modulation.addRoute('macro-1', cutoffTarget, 0.1, false);
+    modulation.setEnabled(true);
+    modulation.setMacro('macro-1', 1);
+
+    modulation.tick(0);
+
+    expect(engine.audioModulations).toHaveLength(0);
+    expect(engine.params.at(-1)?.paramId).toBe('cutoff');
+  });
+
   it('applies a track macro as a modulation source', () => {
     const { store, engine, modulation } = setup();
     store.update(state => ({

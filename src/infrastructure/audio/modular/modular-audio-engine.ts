@@ -11,6 +11,7 @@ import {
   type MachineConfig,
   type TrackConfig
 } from '../../../domain/graph';
+import type { LfoShape, ModulationTarget } from '../../../domain/modulation';
 import type { PluginDefinition } from '../../../domain/plugin';
 import type { AudioEnginePort } from '../../../domain/ports';
 import { createBuiltinPluginHost } from '../plugins/builtins';
@@ -43,6 +44,14 @@ export class ModularAudioEngine implements AudioEnginePort {
   private readonly tracks = new Map<string, Track>();
   private readonly buses = new Map<string, Bus>();
   private readonly sources = new Map<string, TrackSource>();
+  private readonly audioModulations = new Map<
+    string,
+    {
+      lfo: Tone.LFO;
+      signature: string;
+      param: Tone.Param<any> | Tone.Signal<any>;
+    }
+  >();
   private readonly latencyPlan: LatencyPlan;
   private prepared = false;
 
@@ -316,6 +325,99 @@ export class ModularAudioEngine implements AudioEnginePort {
     owner?.setInsertBypass(insertId, bypass);
   }
 
+  supportsAudioModulation(target: ModulationTarget): boolean {
+    return this.resolveAudioParam(target) !== null;
+  }
+
+  setAudioModulation(
+    routeId: string,
+    source: { readonly rate: number; readonly shape: LfoShape },
+    target: ModulationTarget,
+    amount: number,
+    bipolar: boolean
+  ): void {
+    const resolved = this.resolveAudioParam(target);
+    if (!resolved) return;
+
+    const range = resolved.max - resolved.min;
+    const magnitude = range * Math.abs(amount);
+    const depth = bipolar ? magnitude / 2 : magnitude;
+    let min = bipolar ? -depth : 0;
+    let max = depth;
+    if (amount < 0) [min, max] = [max, min];
+
+    const shape: Tone.ToneOscillatorType =
+      source.shape === 'saw' ? 'sawtooth' : source.shape;
+    const signature = JSON.stringify({
+      rate: source.rate,
+      shape,
+      amount,
+      bipolar,
+      min,
+      max,
+      target
+    });
+    const existing = this.audioModulations.get(routeId);
+    if (
+      existing?.signature === signature &&
+      existing.param === resolved.param
+    ) {
+      return;
+    }
+    if (existing) {
+      existing.lfo.dispose();
+      this.audioModulations.delete(routeId);
+    }
+
+    const lfo = new Tone.LFO({
+      frequency: source.rate,
+      type: shape,
+      min,
+      max
+    }).start();
+    lfo.connect(resolved.param);
+    this.audioModulations.set(routeId, {
+      lfo,
+      signature,
+      param: resolved.param
+    });
+  }
+
+  removeAudioModulation(routeId: string): void {
+    const existing = this.audioModulations.get(routeId);
+    if (!existing) return;
+    existing.lfo.dispose();
+    this.audioModulations.delete(routeId);
+  }
+
+  clearAudioModulations(): void {
+    this.audioModulations.forEach(entry => entry.lfo.dispose());
+    this.audioModulations.clear();
+  }
+
+  private resolveAudioParam(target: ModulationTarget): {
+    param: Tone.Param<any> | Tone.Signal<any>;
+    min: number;
+    max: number;
+  } | null {
+    const track = this.tracks.get(target.trackId);
+    if (!track) return null;
+    const param = track.getInsertAudioParam(target.insertId, target.paramId);
+    if (!param) return null;
+
+    const insert = track
+      .getInsertConfigs()
+      .find(entry => entry.id === target.insertId);
+    if (!insert) return null;
+    const definition = this.pluginHost.getDefinition(insert.pluginId);
+    const descriptor = definition?.params.find(
+      entry => entry.id === target.paramId
+    );
+    if (!descriptor) return null;
+
+    return { param, min: descriptor.min, max: descriptor.max };
+  }
+
   private async loadInsertPlugins(inserts: readonly InsertConfig[]): Promise<void> {
     await Promise.all(inserts.map(insert => this.pluginHost.load(insert.pluginId)));
   }
@@ -330,6 +432,7 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   dispose(): void {
     this.stop();
+    this.clearAudioModulations();
     this.sources.forEach(disposeSource);
     this.sources.clear();
     this.tracks.forEach(track => track.dispose());

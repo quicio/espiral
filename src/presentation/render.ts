@@ -12,6 +12,7 @@ import {
   MACHINE_PRESETS,
   USER_MACHINE_IDS
 } from '../domain/machines';
+import type { ModulationRoute } from '../domain/modulation';
 import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
 import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
@@ -1071,7 +1072,7 @@ export function renderModulation(
               return `<div class="mod-route" data-mod-route="${route.id}">
                 <div class="mod-route-info">
                   <strong>${source} → ${target}</strong>
-                  <span data-mod-mode="${route.id}">${route.bipolar ? 'bipolar' : 'unipolar'}</span>
+                  <span data-mod-mode="${route.id}">${routeRateLabel(state, route, mixService)}</span>
                 </div>
                 <input class="routing-range" type="range" min="-100" max="100" step="1" value="${amount}" data-mod-amount="${route.id}" aria-label="Cantidad de ${source}"${supports ? '' : ' disabled'}>
                 <output class="routing-value" data-mod-value="${route.id}">${amount}%</output>
@@ -1135,7 +1136,8 @@ export function syncModulation(
     const routeId = span.getAttribute('data-mod-mode');
     if (!routeId) return;
     const route = modulation.routes.find(entry => entry.id === routeId);
-    span.textContent = route?.bipolar ? 'bipolar' : 'unipolar';
+    if (!route) return;
+    span.textContent = routeRateLabel(state, route, mixService);
   });
 
   qa<HTMLButtonElement>('[data-mod-remove]').forEach(button => {
@@ -1184,6 +1186,19 @@ function modulationSourceLabel(
     if (track) return `${track.name} M${Number(rawIndex) + 1}`;
   }
   return sourceId;
+}
+
+function routeRateLabel(
+  state: InstrumentState,
+  route: ModulationRoute,
+  mixService: MixService
+): string {
+  const source = state.modulation.sources.find(
+    entry => entry.id === route.sourceId
+  );
+  const audio =
+    source?.kind === 'lfo' && mixService.supportsAudioModulation(route.target);
+  return `${audio ? 'audio-rate' : 'control-rate'} · ${route.bipolar ? 'bipolar' : 'unipolar'}`;
 }
 
 function modulationTargets(

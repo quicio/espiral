@@ -219,6 +219,18 @@ export class ToneAudioEngine implements AudioEnginePort {
     // El motor legacy solo soporta delay/reverb fijos.
   }
 
+  supportsAudioModulation(): boolean {
+    return false;
+  }
+
+  setAudioModulation(): void {
+    // El motor legacy no expone AudioParams de plugins.
+  }
+
+  removeAudioModulation(): void {}
+
+  clearAudioModulations(): void {}
+
   dispose(): void {
     this.stop();
     this.channels.forEach(channel => {

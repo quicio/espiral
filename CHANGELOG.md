@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Modulación audio-rate: rutas LFO hacia parámetros de plugins que exponen `AudioParam`.
+- `PluginInstance.getAudioParam()` y conexión directa con `Tone.LFO` en el motor modular.
+- Fallback automático a control-rate para macros, paso y parámetros sin `AudioParam`.
+- La UI indica `audio-rate` o `control-rate` por ruta.
+- 90 tests unitarios.
+
 ## 0.4.0 — 2026-11-09
 
 - Editor de parámetros de máquina en Sound: oscilador, envelope, filtro y pluck.

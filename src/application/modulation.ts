@@ -19,6 +19,7 @@ interface AppliedTarget {
 export class ModulationService {
   private cancel: (() => void) | null = null;
   private readonly applied = new Map<string, AppliedTarget>();
+  private readonly audioRouteIds = new Set<string>();
   private routeCounter = 0;
 
   constructor(
@@ -38,6 +39,7 @@ export class ModulationService {
     this.cancel?.();
     this.cancel = null;
     this.restore(this.store.getState());
+    this.clearAudioRoutes();
   }
 
   setEnabled(enabled: boolean): void {
@@ -45,7 +47,10 @@ export class ModulationService {
       ...state,
       modulation: { ...state.modulation, enabled }
     }));
-    if (!enabled) this.restore(this.store.getState());
+    if (!enabled) {
+      this.restore(this.store.getState());
+      this.clearAudioRoutes();
+    }
   }
 
   setMacro(sourceId: string, value: number): void {
@@ -158,10 +163,12 @@ export class ModulationService {
     const state = this.store.getState();
     if (!state.modulation.enabled) {
       this.restore(state);
+      this.clearAudioRoutes();
       return;
     }
 
-    const grouped = this.groupRoutes(state);
+    const audioRouteIds = this.syncAudioRoutes(state);
+    const grouped = this.groupRoutes(state, audioRouteIds);
     const appliedKeys = new Set<string>();
     grouped.forEach(({ target, routes }) => {
       const value = this.modulatedValue(state, target, routes, time);
@@ -185,19 +192,61 @@ export class ModulationService {
   }
 
   private groupRoutes(
-    state: InstrumentState
+    state: InstrumentState,
+    excluded: ReadonlySet<string>
   ): Map<string, { target: ModulationTarget; routes: ModulationRoute[] }> {
     const grouped = new Map<
       string,
       { target: ModulationTarget; routes: ModulationRoute[] }
     >();
     state.modulation.routes.forEach(route => {
+      if (excluded.has(route.id)) return;
       const key = modulationTargetKey(route.target);
       const entry = grouped.get(key);
       if (entry) entry.routes.push(route);
       else grouped.set(key, { target: route.target, routes: [route] });
     });
     return grouped;
+  }
+
+  private syncAudioRoutes(state: InstrumentState): Set<string> {
+    const desired = new Map<string, ModulationRoute>();
+    state.modulation.routes.forEach(route => {
+      const source = modulationSource(state.modulation, route.sourceId);
+      if (source?.kind !== 'lfo') return;
+      if (!this.engine.supportsAudioModulation(route.target)) return;
+      desired.set(route.id, route);
+    });
+
+    desired.forEach((route, routeId) => {
+      const source = modulationSource(state.modulation, route.sourceId);
+      if (!source) return;
+      this.engine.setAudioModulation(
+        routeId,
+        {
+          rate: source.rate ?? 0.25,
+          shape: source.shape ?? 'sine'
+        },
+        route.target,
+        route.amount,
+        route.bipolar
+      );
+      this.audioRouteIds.add(routeId);
+    });
+
+    this.audioRouteIds.forEach(routeId => {
+      if (desired.has(routeId)) return;
+      this.engine.removeAudioModulation(routeId);
+      this.audioRouteIds.delete(routeId);
+    });
+
+    return new Set(desired.keys());
+  }
+
+  private clearAudioRoutes(): void {
+    if (this.audioRouteIds.size === 0) return;
+    this.engine.clearAudioModulations();
+    this.audioRouteIds.clear();
   }
 
   private modulatedValue(

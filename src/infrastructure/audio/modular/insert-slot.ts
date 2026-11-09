@@ -49,6 +49,10 @@ export class InsertSlot {
     return this.processor.getParam(id);
   }
 
+  getAudioParam(id: string): Tone.Param<any> | Tone.Signal<any> | null {
+    return this.processor.getAudioParam?.(id) ?? null;
+  }
+
   prepare(): Promise<void> {
     return this.processor.prepare?.() ?? Promise.resolve();
   }

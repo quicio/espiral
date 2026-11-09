@@ -20,6 +20,7 @@ import type {
 } from '../domain/models';
 import type { Pattern } from '../domain/pattern';
 import type { PluginDefinition } from '../domain/plugin';
+import type { LfoShape, ModulationTarget } from '../domain/modulation';
 import type {
   AudioEnginePort,
   AutomationRunner,
@@ -186,6 +187,16 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly added: TrackConfig[] = [];
   readonly removed: string[] = [];
   readonly machines: { trackId: string; machine: MachineConfig }[] = [];
+  audioModulationSupport = false;
+  readonly audioModulations: {
+    routeId: string;
+    source: { rate: number; shape: LfoShape };
+    target: ModulationTarget;
+    amount: number;
+    bipolar: boolean;
+  }[] = [];
+  readonly removedAudioModulations: string[] = [];
+  audioModulationsCleared = 0;
   readonly sends: {
     trackId: string;
     busId: string;
@@ -362,6 +373,28 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setInsertBypass(): void {
     // No-op.
+  }
+
+  supportsAudioModulation(): boolean {
+    return this.audioModulationSupport;
+  }
+
+  setAudioModulation(
+    routeId: string,
+    source: { rate: number; shape: LfoShape },
+    target: ModulationTarget,
+    amount: number,
+    bipolar: boolean
+  ): void {
+    this.audioModulations.push({ routeId, source, target, amount, bipolar });
+  }
+
+  removeAudioModulation(routeId: string): void {
+    this.removedAudioModulations.push(routeId);
+  }
+
+  clearAudioModulations(): void {
+    this.audioModulationsCleared += 1;
   }
 }
 

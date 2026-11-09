@@ -76,8 +76,9 @@ pan por track, sends rápidos, Tremolo/Bitcrusher y samples variados en tracks d
 El catálogo de máquinas permite crear tracks con Analog Pad, Bass Synth o Pluck. El grafo
 se construye desde el kit, las escenas son snapshots y las sesiones v2 persisten kit,
 patrón, escenas, buses, sends, modulación, locks, dinámica y máquina por track con
-migración v1. Instrument plugins, macros por track y máquinas por preset/escena
-implementados. Pendiente: destinos AudioParam a audio-rate.
+migración v1. Instrument plugins, macros por track, máquinas por preset/escena y
+modulación audio-rate sobre AudioParams implementados. Pendiente: locks sobre parámetros
+que no sean de plugins.
 
 **Entrega:** instrumento de 16 tracks con kits, patrones y escenas.
 

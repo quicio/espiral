@@ -107,6 +107,11 @@ export const filterPlugin: PluginFactory = {
       getParam(id) {
         return id === 'cutoff' ? Number(filter.frequency.value) : Number(filter.Q.value);
       },
+      getAudioParam(id) {
+        if (id === 'cutoff') return filter.frequency;
+        if (id === 'q') return filter.Q;
+        return null;
+      },
       dispose() {
         filter.dispose();
       }
@@ -131,6 +136,12 @@ export const delayPlugin: PluginFactory = {
         if (id === 'time') return Number(delay.delayTime.value);
         return delay.wet.value;
       },
+      getAudioParam(id) {
+        if (id === 'wet') return delay.wet;
+        if (id === 'feedback') return delay.feedback;
+        if (id === 'time') return delay.delayTime;
+        return null;
+      },
       dispose() {
         delay.dispose();
       }
@@ -153,6 +164,9 @@ export const reverbPlugin: PluginFactory = {
       },
       getParam(id) {
         return id === 'decay' ? Number(reverb.decay) : reverb.wet.value;
+      },
+      getAudioParam(id) {
+        return id === 'wet' ? reverb.wet : null;
       },
       async prepare() {
         await reverb.ready;
@@ -177,6 +191,9 @@ export const drivePlugin: PluginFactory = {
       },
       getParam(id) {
         return id === 'mix' ? distortion.wet.value : distortion.distortion;
+      },
+      getAudioParam(id) {
+        return id === 'mix' ? distortion.wet : null;
       },
       dispose() {
         distortion.dispose();
@@ -209,6 +226,13 @@ export const compressorPlugin: PluginFactory = {
         if (id === 'attack') return Number(compressor.attack.value);
         return Number(compressor.release.value);
       },
+      getAudioParam(id) {
+        if (id === 'threshold') return compressor.threshold;
+        if (id === 'ratio') return compressor.ratio;
+        if (id === 'attack') return compressor.attack;
+        if (id === 'release') return compressor.release;
+        return null;
+      },
       dispose() {
         compressor.dispose();
       }
@@ -238,6 +262,12 @@ export const tremoloPlugin: PluginFactory = {
         if (id === 'depth') return Number(tremolo.depth.value);
         return Number(tremolo.wet.value);
       },
+      getAudioParam(id) {
+        if (id === 'rate') return tremolo.frequency;
+        if (id === 'depth') return tremolo.depth;
+        if (id === 'wet') return tremolo.wet;
+        return null;
+      },
       dispose() {
         tremolo.dispose();
       }
@@ -259,6 +289,11 @@ export const bitcrusherPlugin: PluginFactory = {
       },
       getParam(id) {
         return id === 'bits' ? Number(crusher.bits.value) : Number(crusher.wet.value);
+      },
+      getAudioParam(id) {
+        if (id === 'bits') return crusher.bits;
+        if (id === 'wet') return crusher.wet;
+        return null;
       },
       dispose() {
         crusher.dispose();

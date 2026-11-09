@@ -2,6 +2,7 @@ import { findInsertByPlugin, isChannelKey, type ChannelKey } from '../domain/cha
 import type { EffectKind } from '../domain/audio';
 import type { InsertConfig } from '../domain/graph';
 import { kitEffectiveMute, type TrackState } from '../domain/kit';
+import type { ModulationTarget } from '../domain/modulation';
 import type { InstrumentState } from '../domain/models';
 import {
   clampPluginParam,
@@ -31,6 +32,10 @@ export class MixService {
 
   get supportsMachineChange(): boolean {
     return this.engine.supportsMachineChange;
+  }
+
+  supportsAudioModulation(target: ModulationTarget): boolean {
+    return this.engine.supportsAudioModulation(target);
   }
 
   listPlugins(): readonly PluginDefinition[] {

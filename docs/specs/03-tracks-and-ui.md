@@ -35,7 +35,7 @@
 - Hecho: catálogo de máquinas, instrument plugins y editores de parámetros.
 - Hecho: dos macros por track como fuentes del mod matrix.
 - Hecho: presets y escenas pueden definir máquinas por track.
-- Pendiente: destinos AudioParam a audio-rate.
+- Hecho: destinos AudioParam a audio-rate para rutas LFO sobre parámetros de plugins.
 - Pendiente: locks sobre parámetros que no sean de plugins.
 
 ## Objetivo
@@ -101,9 +101,10 @@ interface ModulationRoute {
 - Destinos sin `AudioParam` a control-rate (60–120 Hz) con rampas.
 - Macros pueden apuntar a varios destinos con rangos.
 
-**Primer corte implementado:** fuentes LFO 1/2, Macro 1/2 y Paso; destinos de parámetros
-de plugins; evaluación y aplicación a control-rate 60 Hz. Los destinos AudioParam a
-audio-rate quedan para una fase posterior.
+**Implementado:** fuentes LFO 1/2, Macro 1/2 y Paso; destinos de parámetros de plugins.
+Las rutas LFO cuyos destinos exponen `AudioParam` se conectan a audio-rate con `Tone.LFO`.
+El resto (macros, paso, parámetros sin AudioParam) se evalúa a control-rate 60 Hz. La UI
+indica `audio-rate` o `control-rate` por ruta.
 
 ### Parameter locks
 
@@ -175,4 +176,5 @@ Requisitos:
 - [x] Presets musicales por género con escenas.
 - [x] Pan y sends rápidos por track.
 - [x] Macros por track.
-- [ ] Destinos AudioParam a audio-rate.
+- [x] Destinos AudioParam a audio-rate.
+- [ ] Locks sobre parámetros que no sean de plugins.

@@ -77,8 +77,9 @@ captura la actual y restaura la destino. La sesión v2 persiste todo y migra aut
 sesiones v1 basadas en canales.
 
 La modulación vive en `ModulationState` (fuentes, rutas y enable) y es global, no parte de
-la escena. `ModulationService` evalúa las fuentes a control-rate 60 Hz y aplica el valor
-modulado a los parámetros de plugins sin mutar el valor base del estado.
+la escena. `ModulationService` evalúa a control-rate 60 Hz las fuentes macro/paso y los
+destinos sin `AudioParam`. Las rutas LFO hacia parámetros de plugins que exponen
+`AudioParam` se conectan directamente a audio-rate mediante `Tone.LFO` en el motor modular.
 
 Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parámetros). Playback
 los aplica en el timestamp del paso activo mediante `AudioEnginePort.setInsertParam` y
@@ -139,5 +140,5 @@ otro adapter y se cambia únicamente en `main.ts`.
 - El kit modela 16 tracks y dos buses; el motor modular construye el grafo desde él.
   La UI se genera desde el kit y permite crear/eliminar tracks, editar routing, modulación
   a control-rate, parameter locks, dinámica, máquinas de synth e instrument plugins.
-  Las máquinas pueden venir de presets y variar por escena. Pendiente: destinos AudioParam
-  a audio-rate.
+  Las máquinas pueden venir de presets y variar por escena; las rutas LFO usan audio-rate
+  cuando el destino expone `AudioParam`. Pendiente: locks sobre parámetros fuera de plugins.

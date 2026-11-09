@@ -22,6 +22,7 @@ import type {
   SceneId
 } from './models';
 import type { Pattern, PatternState } from './pattern';
+import type { LfoShape, ModulationTarget } from './modulation';
 import type { SceneCollection } from './scene';
 
 export type StepListener = (time: number, stepCount: number) => void;
@@ -65,6 +66,16 @@ export interface AudioEnginePort {
     time?: number
   ): void;
   setInsertBypass(trackId: string, insertId: string, bypass: boolean): void;
+  supportsAudioModulation(target: ModulationTarget): boolean;
+  setAudioModulation(
+    routeId: string,
+    source: { readonly rate: number; readonly shape: LfoShape },
+    target: ModulationTarget,
+    amount: number,
+    bipolar: boolean
+  ): void;
+  removeAudioModulation(routeId: string): void;
+  clearAudioModulations(): void;
 }
 
 export interface ClockPort {

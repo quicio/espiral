@@ -7,6 +7,7 @@ export interface PluginInstance {
   readonly output: Tone.ToneAudioNode;
   setParam(id: string, value: number, time?: number): void;
   getParam(id: string): number;
+  getAudioParam?(id: string): Tone.Param<any> | Tone.Signal<any> | null;
   prepare?(): Promise<void>;
   dispose(): void;
 }

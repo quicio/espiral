@@ -151,6 +151,13 @@ export class Track {
     return this.chain.configs;
   }
 
+  getInsertAudioParam(
+    insertId: string,
+    paramId: string
+  ): Tone.Param<any> | Tone.Signal<any> | null {
+    return this.chain.getInsertAudioParam(insertId, paramId);
+  }
+
   async setInserts(configs: readonly InsertConfig[]): Promise<void> {
     const next = new InsertChain(configs, this.host);
     const nextFade = new Tone.Gain(0);
