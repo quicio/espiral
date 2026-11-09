@@ -32,6 +32,12 @@ type TrackSource =
   | { readonly kind: 'instrument'; readonly instance: InstrumentPluginInstance }
   | { readonly kind: 'sampler'; readonly pools: readonly SampleVoicePool[] };
 
+interface SourceNode {
+  readonly source: TrackSource;
+  readonly gain: Tone.Gain;
+  readonly machineKey: string;
+}
+
 export class ModularAudioEngine implements AudioEnginePort {
   readonly supportsInserts = true;
   readonly supportsTrackManagement = true;
@@ -42,7 +48,7 @@ export class ModularAudioEngine implements AudioEnginePort {
   private readonly master: MasterBus;
   private readonly tracks = new Map<string, Track>();
   private readonly buses = new Map<string, Bus>();
-  private readonly sources = new Map<string, TrackSource>();
+  private readonly sources = new Map<string, SourceNode>();
   private readonly audioModulations = new Map<
     string,
     {
@@ -93,27 +99,61 @@ export class ModularAudioEngine implements AudioEnginePort {
       send => this.latencyPlan.sendCompensation[`${config.id}:${send.busId}`] ?? 0
     );
     this.tracks.set(config.id, track);
-    this.sources.set(config.id, this.createSource(config.machine, track.input));
+    this.sources.set(config.id, this.createSourceNode(config.machine, track.input));
   }
 
   removeTrack(id: string): void {
     const track = this.tracks.get(id);
-    const source = this.sources.get(id);
+    const node = this.sources.get(id);
     if (!track) return;
-    stopSource(source);
-    disposeSource(source);
-    track.dispose();
     this.tracks.delete(id);
     this.sources.delete(id);
+    if (node) {
+      node.gain.gain.rampTo(0, 0.04, Tone.now());
+      globalThis.setTimeout(() => {
+        stopSource(node.source);
+        disposeSource(node.source);
+        node.gain.dispose();
+      }, 80);
+    }
+    globalThis.setTimeout(() => track.dispose(), 80);
   }
 
   setTrackMachine(trackId: string, machine: MachineConfig): void {
     const track = this.tracks.get(trackId);
     if (!track) return;
+    const key = machineKey(machine);
     const previous = this.sources.get(trackId);
-    stopSource(previous);
-    disposeSource(previous);
-    this.sources.set(trackId, this.createSource(machine, track.input));
+    if (previous?.machineKey === key) return;
+
+    const gain = new Tone.Gain(0);
+    gain.connect(track.input);
+    const source = this.createSource(machine, gain);
+    this.sources.set(trackId, { source, gain, machineKey: key });
+    gain.gain.rampTo(1, 0.04, Tone.now());
+
+    if (previous) {
+      previous.gain.gain.rampTo(0, 0.04, Tone.now());
+      globalThis.setTimeout(() => {
+        stopSource(previous.source);
+        disposeSource(previous.source);
+        previous.gain.dispose();
+      }, 80);
+    }
+  }
+
+  syncTracks(tracks: readonly TrackConfig[]): void {
+    const desired = new Set(tracks.map(track => track.id));
+    Array.from(this.tracks.keys()).forEach(id => {
+      if (!desired.has(id)) this.removeTrack(id);
+    });
+    tracks.forEach(track => {
+      if (!this.tracks.has(track.id)) {
+        this.addTrack(track);
+      } else {
+        this.setTrackMachine(track.id, track.machine);
+      }
+    });
   }
 
   async prepare(): Promise<void> {
@@ -122,9 +162,9 @@ export class ModularAudioEngine implements AudioEnginePort {
     await Promise.all([
       ...Array.from(this.tracks.values(), track => track.prepare()),
       ...Array.from(this.buses.values(), bus => bus.prepare()),
-      ...Array.from(this.sources.values()).flatMap(source =>
-        source.kind === 'instrument' && source.instance.prepare
-          ? [source.instance.prepare()]
+      ...Array.from(this.sources.values()).flatMap(node =>
+        node.source.kind === 'instrument' && node.source.instance.prepare
+          ? [node.source.instance.prepare()]
           : []
       )
     ]);
@@ -133,13 +173,13 @@ export class ModularAudioEngine implements AudioEnginePort {
   }
 
   stop(): void {
-    this.sources.forEach(stopSource);
+    this.sources.forEach(node => stopSource(node.source));
   }
 
   trigger(event: SoundEvent): void {
     switch (event.type) {
       case 'kick': {
-        const source = this.sources.get('kick');
+        const source = this.sources.get('kick')?.source;
         if (source?.kind === 'membrane') {
           source.synth.triggerAttackRelease(
             'C1',
@@ -151,7 +191,7 @@ export class ModularAudioEngine implements AudioEnginePort {
         return;
       }
       case 'synth': {
-        const source = this.sources.get(event.trackId ?? event.channel);
+        const source = this.sources.get(event.trackId ?? event.channel)?.source;
         if (!source) return;
         const notes = typeof event.notes === 'string' ? [event.notes] : [...event.notes];
         const velocity = event.velocity ?? 1;
@@ -177,7 +217,7 @@ export class ModularAudioEngine implements AudioEnginePort {
         return;
       }
       case 'sample': {
-        const source = this.sources.get(event.trackId ?? event.channel);
+        const source = this.sources.get(event.trackId ?? event.channel)?.source;
         if (source?.kind !== 'sampler' || source.pools.length === 0) return;
         const index = clamp(event.sampleIndex ?? 0, 0, source.pools.length - 1);
         source.pools[index]?.play(
@@ -438,7 +478,10 @@ export class ModularAudioEngine implements AudioEnginePort {
   dispose(): void {
     this.stop();
     this.clearAudioModulations();
-    this.sources.forEach(disposeSource);
+    this.sources.forEach(node => {
+      disposeSource(node.source);
+      node.gain.dispose();
+    });
     this.sources.clear();
     this.tracks.forEach(track => track.dispose());
     this.tracks.clear();
@@ -446,6 +489,19 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.buses.clear();
     this.master.dispose();
     this.prepared = false;
+  }
+
+  private createSourceNode(
+    machine: MachineConfig,
+    input: Tone.ToneAudioNode
+  ): SourceNode {
+    const gain = new Tone.Gain(1);
+    gain.connect(input);
+    return {
+      source: this.createSource(machine, gain),
+      gain,
+      machineKey: machineKey(machine)
+    };
   }
 
   private createSource(machine: MachineConfig, input: Tone.ToneAudioNode): TrackSource {
@@ -542,6 +598,10 @@ export class ModularAudioEngine implements AudioEnginePort {
     );
     return { kind: 'sampler', pools };
   }
+}
+
+function machineKey(machine: MachineConfig): string {
+  return JSON.stringify(machine);
 }
 
 function stopSource(source: TrackSource | undefined): void {

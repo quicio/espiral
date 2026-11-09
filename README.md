@@ -13,6 +13,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Medidores y clip latch por track/bus, además del master.
 - Medidor de CPU estimada y motor modular único, sin fallback legacy.
 - Export WAV offline de la performance actual, con escena y duración configurables.
+- Cambios de máquina/track con crossfade para evitar clicks y cortes.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.

@@ -185,6 +185,7 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly added: TrackConfig[] = [];
   readonly removed: string[] = [];
   readonly machines: { trackId: string; machine: MachineConfig }[] = [];
+  readonly syncedTracks: (readonly TrackConfig[])[] = [];
   audioModulationSupport = false;
   readonly audioModulations: {
     routeId: string;
@@ -295,6 +296,10 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setTrackMachine(trackId: string, machine: MachineConfig): void {
     this.machines.push({ trackId, machine });
+  }
+
+  syncTracks(tracks: readonly TrackConfig[]): void {
+    this.syncedTracks.push(tracks);
   }
 
   setTrackSend(

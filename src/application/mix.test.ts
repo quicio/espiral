@@ -55,6 +55,7 @@ describe('MixService', () => {
 
     expect(engine.volumes).toHaveLength(16);
     expect(engine.mutes).toHaveLength(16);
+    expect(engine.syncedTracks.at(-1)).toHaveLength(16);
     expect(engine.returns.map(entry => entry.busId)).toEqual([
       'reverb-bus',
       'delay-bus'

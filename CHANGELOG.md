@@ -7,6 +7,8 @@
 - Renderer offline reutiliza `ModularAudioEngine` y `PlaybackService`.
 - Codificador WAV PCM 16-bit y descarga binaria.
 - Botón `Exportar WAV` con estados de render/exportación.
+- Crossfade de fuente al cambiar máquinas y fade-out al eliminar tracks.
+- `syncTracks` reconcilia altas, bajas y máquinas al cargar presets/escenas/sesiones.
 - 103 tests unitarios.
 
 ## 0.6.0 — 2026-11-09

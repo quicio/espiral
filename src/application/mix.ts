@@ -1,6 +1,10 @@
 import type { EffectKind } from '../domain/audio';
 import type { InsertConfig } from '../domain/graph';
-import { kitEffectiveMute, type TrackState } from '../domain/kit';
+import {
+  kitEffectiveMute,
+  trackToConfig,
+  type TrackState
+} from '../domain/kit';
 import type { ModulationTarget } from '../domain/modulation';
 import type { InstrumentState } from '../domain/models';
 import {
@@ -193,6 +197,9 @@ export class MixService {
   }
 
   syncAll(state: InstrumentState = this.store.getState(), syncChains = false): void {
+    this.engine.syncTracks(
+      Object.values(state.kit.tracks).map(track => trackToConfig(track))
+    );
     Object.values(state.kit.tracks).forEach(track => {
       this.engine.setChannelVolume(track.id, track.gainDb);
       this.engine.setChannelPan(track.id, track.pan);

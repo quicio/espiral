@@ -97,8 +97,9 @@ todo con migración v1. El siguiente trabajo es calidad de Fase 4.
 **Entrega:** confianza operativa y routing avanzado.
 
 **Estado:** render offline en CI, integración Playwright, medidores por nodo, CPU estimada,
-baseline, modulación audio-rate, instrument plugins y export WAV implementados. Pendiente:
-patch bay opcional con detección de ciclos y pulido de CPU/límites.
+baseline, modulación audio-rate, instrument plugins, export WAV y transiciones con
+crossfade implementados. Pendiente: patch bay opcional con detección de ciclos y pulido
+de CPU/límites.
 
 - Render offline en CI con assertions de peak/loudness.
 - Compensación de latencia (PDC) para paths paralelos.

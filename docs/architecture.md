@@ -66,7 +66,9 @@ La UI no conoce esta cadena. El motor es reemplazable detrás de `AudioEnginePor
 `application` ni `presentation`.
 
 El composition root usa `ModularAudioEngine`. Tiene tracks, buses, inserts, sends, PDC,
-instrument plugins y modulación audio-rate.
+instrument plugins y modulación audio-rate. Los cambios de máquina usan crossfade de
+fuente; los inserts cambian con crossfade y los tracks se reconcilian con `syncTracks`
+al cargar presets, escenas o sesiones.
 
 El estado guarda un `KitState` con `TrackState` por track (máquina, inserts, gain, pan,
 mute, solo, sends, `hasPattern`) y un `PatternState` (pasos, pulsos, freeze). El kit por

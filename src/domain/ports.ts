@@ -34,6 +34,7 @@ export interface AudioEnginePort {
   dispose(): void;
   addTrack(track: TrackConfig): void;
   removeTrack(trackId: string): void;
+  syncTracks(tracks: readonly TrackConfig[]): void;
   setTrackMachine(trackId: string, machine: MachineConfig): void;
   trigger(event: SoundEvent): void;
   setChannelVolume(trackId: string, db: number, time?: number): void;
