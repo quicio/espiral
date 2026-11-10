@@ -47,9 +47,17 @@ o presets durante la reproducción.
   con 10 ms de margen para que el cambio estructural no se escuche como click.
 - El BPM se rampa en 80 ms al cargar un preset o sesión.
 
+### Lookahead configurable
+
+- `TransportState.lookAhead` guarda el lookahead en segundos.
+- Control **Buffer** en el transporte: 20–300 ms.
+- Se aplica a `Tone.getContext().lookAhead`.
+- Se persiste en la sesión.
+- Un lookahead mayor da más margen al scheduler; uno menor reduce la latencia percibida.
+
 ## Límites
 
-- No hay buffer de notas ni lookahead adicional: el scheduling sigue en `Tone.Loop`.
+- No hay buffer de notas propio: el scheduling sigue en `Tone.Loop`.
 - El crossfade protege transiciones de fuente y cadena, no cambios musicales de patrón.
 - Cambios masivos de preset pueden seguir generando trabajo de CPU; el medidor estimado
   ayuda a detectarlos.
@@ -70,4 +78,4 @@ o presets durante la reproducción.
 - [x] Firma de máquina para evitar rebuilds innecesarios.
 - [x] Fade global de master durante cambios estructurales masivos.
 - [x] BPM rampeado al cargar presets/sesiones.
-- [ ] Buffer/lookahead configurable para scheduling.
+- [x] Buffer/lookahead configurable y persistente.

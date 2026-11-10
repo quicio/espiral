@@ -43,7 +43,10 @@ async function boot(): Promise<void> {
     createEspiralGraph(initial.kit, initial.masterVolume)
   );
 
-  const clock = new ToneClock(initial.transport.bpm);
+  const clock = new ToneClock(
+    initial.transport.bpm,
+    initial.transport.lookAhead
+  );
   const patterns = new PatternService(store, generative, status, runtime);
   const automation = new AutomationService(store, engine, status);
   const playback = new PlaybackService(

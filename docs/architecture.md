@@ -69,7 +69,8 @@ El composition root usa `ModularAudioEngine`. Tiene tracks, buses, inserts, send
 instrument plugins y modulación audio-rate. Los cambios de máquina usan crossfade de
 fuente; los inserts cambian con crossfade y los tracks se reconcilian con `syncTracks`
 al cargar presets, escenas o sesiones. Los cambios estructurales hacen un duck breve de
-master para evitar clicks.
+master para evitar clicks. El lookahead del scheduler es configurable y se persiste en
+el transporte.
 
 El estado guarda un `KitState` con `TrackState` por track (máquina, inserts, gain, pan,
 mute, solo, sends, `hasPattern`) y un `PatternState` (pasos, pulsos, freeze). El kit por

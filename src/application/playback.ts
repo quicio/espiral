@@ -140,6 +140,15 @@ export class PlaybackService {
     }));
   }
 
+  setLookAhead(seconds: number): void {
+    const lookAhead = clamp(seconds, 0, 0.5);
+    this.clock.setLookAhead(lookAhead);
+    this.store.update(current => ({
+      ...current,
+      transport: { ...current.transport, lookAhead }
+    }));
+  }
+
   resetHarmony(): void {
     this.runtime.resetHarmony();
   }

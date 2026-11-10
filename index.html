@@ -60,6 +60,14 @@
       </div>
 
       <div class="transport-field">
+        <label for="lookahead-control">Buffer</label>
+        <div class="field-range">
+          <input id="lookahead-control" type="range" min="20" max="300" step="5" value="100">
+          <output id="lookahead-value" for="lookahead-control">100 ms</output>
+        </div>
+      </div>
+
+      <div class="transport-field">
         <label for="master-volume">Master</label>
         <div class="field-range">
           <input id="master-volume" type="range" min="-20" max="0" step="0.5" value="-4">

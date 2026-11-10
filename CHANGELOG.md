@@ -11,6 +11,7 @@
 - `syncTracks` reconcilia altas, bajas y máquinas al cargar presets/escenas/sesiones.
 - Duck de master de 6 ms y restauración de 30 ms en cambios estructurales.
 - BPM rampeado al cargar presets, escenas y sesiones.
+- Buffer/lookahead configurable (20–300 ms) y persistente en la sesión.
 - 104 tests unitarios.
 
 ## 0.6.0 — 2026-11-09

@@ -116,7 +116,7 @@ describe('SessionMapper', () => {
           bus.id === 'reverb-bus' ? { ...bus, returnDb: -20 } : bus
         )
       },
-      transport: { ...state.transport, bpm: 132, swing: 0.2, humanize: 0.05 },
+      transport: { ...state.transport, bpm: 132, swing: 0.2, humanize: 0.05, lookAhead: 0.15 },
       modulation: {
         ...state.modulation,
         enabled: true,
@@ -160,6 +160,7 @@ describe('SessionMapper', () => {
       decay: 6
     });
     expect(restored.transport.bpm).toBe(132);
+    expect(restored.transport.lookAhead).toBe(0.15);
     expect(restored.masterVolume).toBe(-7);
     expect(restored.selected).toBe('track-08');
     expect(restored.pattern.steps['track-08']?.[4]).toBe(1);

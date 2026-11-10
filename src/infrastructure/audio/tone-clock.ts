@@ -5,10 +5,13 @@ export class ToneClock implements ClockPort {
   private loop: Tone.Loop | null = null;
   private readonly listeners = new Set<StepListener>();
 
-  constructor(private bpm: number) {}
+  constructor(private bpm: number, private lookAhead = 0.1) {
+    Tone.getContext().lookAhead = this.lookAhead;
+  }
 
   async start(): Promise<void> {
     await Tone.start();
+    Tone.getContext().lookAhead = this.lookAhead;
     Tone.Transport.bpm.value = this.bpm;
     this.loop?.dispose();
     this.loop = new Tone.Loop(time => {
@@ -32,6 +35,15 @@ export class ToneClock implements ClockPort {
 
   getBpm(): number {
     return this.bpm;
+  }
+
+  setLookAhead(seconds: number): void {
+    this.lookAhead = Math.max(0, Math.min(0.5, seconds));
+    Tone.getContext().lookAhead = this.lookAhead;
+  }
+
+  getLookAhead(): number {
+    return this.lookAhead;
   }
 
   onStep(listener: StepListener): () => void {

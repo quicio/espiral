@@ -140,6 +140,7 @@ export interface SessionDto {
   readonly master: number;
   readonly swing: number;
   readonly humanize: number;
+  readonly lookAhead?: number;
   readonly evolve: boolean;
   readonly mutationCount: number;
   readonly evolveCount: number;
@@ -185,6 +186,7 @@ export class SessionMapper implements SessionCodec {
       master: state.masterVolume,
       swing: state.transport.swing,
       humanize: state.transport.humanize,
+      lookAhead: state.transport.lookAhead,
       evolve: state.evolve,
       mutationCount: state.mutationCount,
       evolveCount: state.evolveCount,
@@ -289,7 +291,12 @@ export class SessionMapper implements SessionCodec {
         ...current.transport,
         bpm: clamp(numberOr(data.bpm, current.transport.bpm), 40, 240),
         swing: clamp(numberOr(data.swing, current.transport.swing), 0, 1),
-        humanize: clamp(numberOr(data.humanize, current.transport.humanize), 0, 1)
+        humanize: clamp(numberOr(data.humanize, current.transport.humanize), 0, 1),
+        lookAhead: clamp(
+          numberOr(data.lookAhead, current.transport.lookAhead),
+          0,
+          0.5
+        )
       },
       kit,
       masterVolume: clamp(numberOr(data.master, current.masterVolume), -60, 0),

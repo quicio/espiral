@@ -421,10 +421,13 @@ describe('PlaybackService', () => {
     playback.setBpm(140);
     playback.setSwing(0.3);
     playback.setHumanize(0.5);
+    playback.setLookAhead(0.12);
 
     expect(clock.bpm).toBe(140);
+    expect(clock.getLookAhead()).toBe(0.12);
     expect(store.getState().transport.bpm).toBe(140);
     expect(store.getState().transport.swing).toBe(0.3);
     expect(store.getState().transport.humanize).toBe(0.5);
+    expect(store.getState().transport.lookAhead).toBe(0.12);
   });
 });

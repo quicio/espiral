@@ -17,6 +17,7 @@ import { encodeWav } from './wav';
 
 class OfflineClock implements ClockPort {
   private readonly listeners = new Set<StepListener>();
+  lookAhead = 0.1;
 
   constructor(private bpm: number) {}
 
@@ -32,6 +33,14 @@ class OfflineClock implements ClockPort {
 
   getBpm(): number {
     return this.bpm;
+  }
+
+  setLookAhead(seconds: number): void {
+    this.lookAhead = seconds;
+  }
+
+  getLookAhead(): number {
+    return this.lookAhead;
   }
 
   onStep(listener: StepListener): () => void {

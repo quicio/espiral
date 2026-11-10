@@ -74,6 +74,7 @@ export class SessionService {
     try {
       this.store.update(() => next);
       this.playback.setBpm(next.transport.bpm);
+      this.playback.setLookAhead(next.transport.lookAhead);
       this.mix.syncAll(next, true);
       this.runtime.resetHarmony();
     } finally {

@@ -88,6 +88,8 @@ export interface ClockPort {
   stop(): void;
   setBpm(bpm: number): void;
   getBpm(): number;
+  setLookAhead(seconds: number): void;
+  getLookAhead(): number;
   onStep(listener: StepListener): () => void;
   dispose(): void;
 }

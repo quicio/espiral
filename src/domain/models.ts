@@ -66,6 +66,7 @@ export interface TransportState {
   readonly bpm: number;
   readonly swing: number;
   readonly humanize: number;
+  readonly lookAhead: number;
   readonly playing: boolean;
   readonly preparing: boolean;
   readonly currentStep: number;

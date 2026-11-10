@@ -277,6 +277,13 @@ export class EspiralApp {
       if (output) output.textContent = `${value}%`;
     });
 
+    view.must<HTMLInputElement>('#lookahead-control').addEventListener('input', event => {
+      const value = Number(inputValue(event));
+      playback.setLookAhead(value / 1000);
+      const output = view.q('#lookahead-value');
+      if (output) output.textContent = `${value} ms`;
+    });
+
     view.must<HTMLInputElement>('#master-volume').addEventListener('input', event => {
       const value = Number(inputValue(event));
       mix.setMasterVolume(value);

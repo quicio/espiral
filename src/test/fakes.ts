@@ -425,6 +425,7 @@ export class FakeAudioEngine implements AudioEnginePort {
 
 export class FakeClock implements ClockPort {
   bpm = 120;
+  lookAhead = 0.1;
   started = 0;
   stopped = 0;
   private readonly listeners = new Set<StepListener>();
@@ -443,6 +444,14 @@ export class FakeClock implements ClockPort {
 
   getBpm(): number {
     return this.bpm;
+  }
+
+  setLookAhead(seconds: number): void {
+    this.lookAhead = seconds;
+  }
+
+  getLookAhead(): number {
+    return this.lookAhead;
   }
 
   onStep(listener: StepListener): () => void {

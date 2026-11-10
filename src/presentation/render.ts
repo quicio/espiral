@@ -375,6 +375,12 @@ export function syncTransport(state: InstrumentState): void {
   if (humanize) humanize.value = String(Math.round(state.transport.humanize * 100));
   if (humanizeValue) humanizeValue.textContent = `${Math.round(state.transport.humanize * 100)}%`;
 
+  const lookAhead = q<HTMLInputElement>('#lookahead-control');
+  const lookAheadValue = q('#lookahead-value');
+  const lookAheadMs = Math.round(state.transport.lookAhead * 1000);
+  if (lookAhead) lookAhead.value = String(lookAheadMs);
+  if (lookAheadValue) lookAheadValue.textContent = `${lookAheadMs} ms`;
+
   const master = q<HTMLInputElement>('#master-volume');
   const masterValue = q('#master-volume-value');
   if (master) master.value = String(state.masterVolume);
