@@ -219,6 +219,7 @@ export class MixService {
       this.engine.setBusReturn(bus.id, bus.returnDb);
       if (syncChains) void this.engine.setBusInserts(bus.id, bus.inserts);
     });
+    this.engine.syncBusSends(state.kit.buses);
     Object.values(state.kit.tracks).forEach(track => {
       track.sends.forEach(send => {
         this.engine.setTrackSend(

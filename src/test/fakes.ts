@@ -4,6 +4,7 @@ import type {
   PatternChannel
 } from '../domain/channels';
 import type { InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
+import type { BusState } from '../domain/kit';
 import type {
   ChannelSeed,
   GenerativeParams,
@@ -207,6 +208,12 @@ export class FakeAudioEngine implements AudioEnginePort {
     busId: string;
     inserts: readonly InsertConfig[];
   }[] = [];
+  readonly busSends: {
+    fromBusId: string;
+    toBusId: string;
+    amount: number;
+  }[] = [];
+  readonly syncedBuses: (readonly BusState[])[] = [];
   readonly params: {
     trackId: string;
     insertId: string;
@@ -314,6 +321,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setBusReturn(busId: string, db: number): void {
     this.returns.push({ busId, db });
+  }
+
+  setBusSend(fromBusId: string, toBusId: string, amount: number): void {
+    this.busSends.push({ fromBusId, toBusId, amount });
+  }
+
+  syncBusSends(buses: readonly BusState[]): void {
+    this.syncedBuses.push(buses);
   }
 
   async setBusInserts(

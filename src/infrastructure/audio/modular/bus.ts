@@ -13,6 +13,7 @@ export class Bus {
   private readonly meter: Tone.Meter;
   private readonly host: PluginHost;
   private readonly chainMix = new Tone.Gain(1);
+  private readonly sends = new Map<string, Tone.Gain>();
   private chain: InsertChain;
   private chainFade: Tone.Gain;
 
@@ -35,6 +36,50 @@ export class Bus {
 
   setReturn(db: number): void {
     this.volume.volume.rampTo(db, 0.05, Tone.now());
+  }
+
+  setSend(busId: string, target: Tone.ToneAudioNode, amount: number): void {
+    const existing = this.sends.get(busId);
+    if (amount <= 0) {
+      this.removeSend(busId);
+      return;
+    }
+    if (existing) {
+      existing.gain.rampTo(amount, 0.05, Tone.now());
+      return;
+    }
+
+    const gain = new Tone.Gain(0);
+    this.output.connect(gain);
+    gain.connect(target);
+    this.sends.set(busId, gain);
+    gain.gain.rampTo(amount, 0.05, Tone.now());
+  }
+
+  removeSend(busId: string): void {
+    const gain = this.sends.get(busId);
+    if (!gain) return;
+    this.sends.delete(busId);
+    gain.gain.rampTo(0, 0.03, Tone.now());
+    globalThis.setTimeout(() => gain.dispose(), 60);
+  }
+
+  clearSends(): void {
+    Array.from(this.sends.keys()).forEach(busId => this.removeSend(busId));
+  }
+
+  syncSends(
+    entries: readonly { readonly busId: string; readonly amount: number }[],
+    resolve: (busId: string) => Tone.ToneAudioNode | undefined
+  ): void {
+    const desired = new Set(entries.map(entry => entry.busId));
+    Array.from(this.sends.keys()).forEach(busId => {
+      if (!desired.has(busId)) this.removeSend(busId);
+    });
+    entries.forEach(entry => {
+      const target = resolve(entry.busId);
+      if (target) this.setSend(entry.busId, target, entry.amount);
+    });
   }
 
   setInsertBypass(insertId: string, bypass: boolean): void {
@@ -95,6 +140,8 @@ export class Bus {
   }
 
   dispose(): void {
+    this.sends.forEach(gain => gain.dispose());
+    this.sends.clear();
     this.chain.dispose();
     this.chainFade.dispose();
     this.chainMix.dispose();

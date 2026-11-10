@@ -12,7 +12,9 @@
 - Duck de master de 6 ms y restauración de 30 ms en cambios estructurales.
 - BPM rampeado al cargar presets, escenas y sesiones.
 - Buffer/lookahead configurable (20–300 ms) y persistente en la sesión.
-- 104 tests unitarios.
+- Patch bay de buses con detección de ciclos y matriz dedicada en Routing.
+- Conexiones bus → bus persistentes en sesión y escenas.
+- 110 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

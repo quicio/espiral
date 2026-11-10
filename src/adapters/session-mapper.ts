@@ -79,6 +79,7 @@ export interface SessionBusDto {
   readonly name: string;
   readonly returnDb: number;
   readonly inserts: readonly SessionInsertDto[];
+  readonly sends?: readonly SendConfig[];
 }
 
 export interface SessionKitDto {
@@ -357,7 +358,8 @@ function toKitDto(kit: KitState): SessionKitDto {
       inserts: bus.inserts.map(insert => ({
         ...insert,
         params: { ...insert.params }
-      }))
+      })),
+      sends: bus.sends.map(send => ({ ...send }))
     }))
   };
 }
@@ -604,7 +606,8 @@ function readBuses(
       inserts: bus.inserts.map(insert => ({
         ...insert,
         params: { ...insert.params }
-      }))
+      })),
+      sends: bus.sends.map(send => ({ ...send }))
     }));
   }
 
@@ -616,7 +619,8 @@ function readBuses(
       id: data.id,
       name: typeof data.name === 'string' ? data.name : data.id,
       returnDb: clamp(numberOr(data.returnDb, -14), -60, 6),
-      inserts: readInserts(data.inserts) ?? []
+      inserts: readInserts(data.inserts) ?? [],
+      sends: readSends(data.sends) ?? []
     });
   });
 

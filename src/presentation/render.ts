@@ -709,6 +709,41 @@ export function renderRouting(
       })
       .join('');
 
+  const patch = q('#patch-matrix');
+  if (patch) {
+    const buses = state.kit.buses;
+    const patchColumns = `minmax(6.5rem, 9rem) repeat(${Math.max(1, buses.length)}, minmax(7rem, 1fr))`;
+    patch.innerHTML =
+      `<div class="routing-row routing-row--head" style="grid-template-columns:${patchColumns}">
+        <span class="routing-track-label">Desde</span>
+        ${buses.map(bus => `<span class="routing-bus-label">${bus.name}</span>`).join('')}
+      </div>` +
+      buses
+        .map(sourceBus => {
+          const cells = buses
+            .map(targetBus => {
+              if (sourceBus.id === targetBus.id) {
+                return '<div class="routing-cell routing-cell--self"><span>—</span></div>';
+              }
+              const ref = `${sourceBus.id}:${targetBus.id}`;
+              const send = sourceBus.sends.find(
+                entry => entry.busId === targetBus.id
+              );
+              const amount = Math.round((send?.amount ?? 0) * 100);
+              return `<div class="routing-cell">
+                <input class="routing-range" type="range" min="0" max="100" step="1" value="${amount}" data-bus-send="${ref}" aria-label="Enviar ${sourceBus.name} a ${targetBus.name}"${supports ? '' : ' disabled'}>
+                <output class="routing-value" data-bus-send-value="${ref}">${amount}%</output>
+              </div>`;
+            })
+            .join('');
+          return `<div class="routing-row" style="grid-template-columns:${patchColumns}">
+            <span class="routing-track-label">${sourceBus.name}</span>
+            ${cells}
+          </div>`;
+        })
+        .join('');
+  }
+
   syncRouting(state, mixService);
 }
 
@@ -767,6 +802,30 @@ export function syncRouting(
     const output = q(`[data-bus-value="${busId}"]`);
     if (output) output.textContent = `${bus.returnDb.toFixed(1)} dB`;
   });
+
+  qa<HTMLInputElement>('[data-bus-send]').forEach(input => {
+    const ref = input.getAttribute('data-bus-send');
+    if (!ref) return;
+    const [fromBusId, toBusId] = ref.split(':');
+    if (!fromBusId || !toBusId) return;
+    const send = state.kit.buses
+      .find(bus => bus.id === fromBusId)
+      ?.sends.find(entry => entry.busId === toBusId);
+    const amount = Math.round((send?.amount ?? 0) * 100);
+    input.value = String(amount);
+    input.disabled = !supports;
+    const output = q(`[data-bus-send-value="${ref}"]`);
+    if (output) output.textContent = `${amount}%`;
+  });
+
+  const patchStatus = q('#patch-status');
+  if (patchStatus) {
+    const total = state.kit.buses.reduce(
+      (count, bus) => count + bus.sends.filter(send => send.amount > 0).length,
+      0
+    );
+    patchStatus.textContent = `${total} ${total === 1 ? 'conexión' : 'conexiones'}`;
+  }
 }
 
 export function syncDynamics(state: InstrumentState): void {

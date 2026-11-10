@@ -13,6 +13,7 @@ import {
 import type { LfoShape, ModulationTarget } from '../../../domain/modulation';
 import type { PluginDefinition } from '../../../domain/plugin';
 import type { AudioEnginePort } from '../../../domain/ports';
+import type { BusState } from '../../../domain/kit';
 import { createBuiltinPluginHost } from '../plugins/builtins';
 import { createBuiltinInstrumentHost } from '../plugins/instruments';
 import { InstrumentPluginHost } from '../plugins/instrument-host';
@@ -73,6 +74,11 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.latencyPlan = planLatency(config);
     this.master = new MasterBus(config.master);
     config.buses.forEach(bus => this.addBus(bus));
+    config.buses.forEach(bus => {
+      (bus.sends ?? []).forEach(send => {
+        this.setBusSend(bus.id, send.busId, send.amount);
+      });
+    });
     config.tracks.forEach(track => this.addTrack(track));
   }
 
@@ -339,6 +345,24 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   setBusReturn(busId: string, db: number): void {
     this.buses.get(busId)?.setReturn(db);
+  }
+
+  setBusSend(fromBusId: string, toBusId: string, amount: number): void {
+    const source = this.buses.get(fromBusId);
+    const target = this.buses.get(toBusId);
+    if (!source || !target || fromBusId === toBusId) return;
+    source.setSend(toBusId, target.input, amount);
+  }
+
+  syncBusSends(buses: readonly BusState[]): void {
+    const byId = new Map(buses.map(bus => [bus.id, bus]));
+    this.buses.forEach((bus, id) => {
+      const config = byId.get(id);
+      bus.syncSends(config?.sends ?? [], targetId => {
+        if (targetId === id) return undefined;
+        return this.buses.get(targetId)?.input;
+      });
+    });
   }
 
   setTrackPan(trackId: string, pan: number): void {

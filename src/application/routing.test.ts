@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { createInitialState } from './initial-state';
 import { RoutingService } from './routing';
 import { Store } from './store';
-import { FakeAudioEngine, FakeGenerative } from '../test/fakes';
+import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
   const generative = new FakeGenerative();
   const store = new Store(createInitialState(generative));
   const engine = new FakeAudioEngine();
-  const routing = new RoutingService(store, engine);
-  return { store, engine, routing };
+  const status = new FakeStatus();
+  const routing = new RoutingService(store, engine, status);
+  return { store, engine, status, routing };
 }
 
 describe('RoutingService', () => {
@@ -63,6 +64,36 @@ describe('RoutingService', () => {
     expect(store.getState().kit.buses[0]?.returnDb).toBe(-22);
     expect(store.getState().kit.buses[1]?.returnDb).toBe(6);
     expect(engine.returns.at(-1)).toEqual({ busId: 'delay-bus', db: 6 });
+  });
+
+  it('routes one bus into another and removes the connection at zero', () => {
+    const { store, engine, routing } = setup();
+
+    routing.setBusSend('reverb-bus', 'delay-bus', 0.4);
+
+    expect(store.getState().kit.buses[0]?.sends).toEqual([
+      { busId: 'delay-bus', amount: 0.4, preFader: false }
+    ]);
+    expect(engine.busSends.at(-1)).toEqual({
+      fromBusId: 'reverb-bus',
+      toBusId: 'delay-bus',
+      amount: 0.4
+    });
+
+    routing.setBusSend('reverb-bus', 'delay-bus', 0);
+
+    expect(store.getState().kit.buses[0]?.sends).toEqual([]);
+    expect(engine.busSends.at(-1)?.amount).toBe(0);
+  });
+
+  it('rejects bus connections that would create a cycle', () => {
+    const { store, status, routing } = setup();
+    routing.setBusSend('reverb-bus', 'delay-bus', 0.4);
+
+    routing.setBusSend('delay-bus', 'reverb-bus', 0.3);
+
+    expect(store.getState().kit.buses[1]?.sends).toEqual([]);
+    expect(status.messages.at(-1)).toContain('ciclo');
   });
 
   it('keeps scene snapshots until the scene is captured', () => {

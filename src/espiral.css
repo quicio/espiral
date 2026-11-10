@@ -1318,6 +1318,13 @@ body.instrument-page .page-title {
   align-items: center;
 }
 
+.routing-cell--self {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--umbral-rule);
+}
+
 .routing-range {
   width: 100%;
   accent-color: var(--umbral-trace);

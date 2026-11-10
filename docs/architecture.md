@@ -70,7 +70,8 @@ instrument plugins y modulación audio-rate. Los cambios de máquina usan crossf
 fuente; los inserts cambian con crossfade y los tracks se reconcilian con `syncTracks`
 al cargar presets, escenas o sesiones. Los cambios estructurales hacen un duck breve de
 master para evitar clicks. El lookahead del scheduler es configurable y se persiste en
-el transporte.
+el transporte. El patch bay de buses conecta salidas de bus a entradas de otros buses con
+validación de ciclos.
 
 El estado guarda un `KitState` con `TrackState` por track (máquina, inserts, gain, pan,
 mute, solo, sends, `hasPattern`) y un `PatternState` (pasos, pulsos, freeze). El kit por

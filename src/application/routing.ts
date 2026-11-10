@@ -1,12 +1,14 @@
 import type { SendConfig } from '../domain/graph';
 import type { TrackState } from '../domain/kit';
-import type { AudioEnginePort } from '../domain/ports';
+import { wouldCreateCycle } from '../domain/patch';
+import type { AudioEnginePort, StatusPort } from '../domain/ports';
 import type { Store } from './store';
 
 export class RoutingService {
   constructor(
     private readonly store: Store,
-    private readonly engine: AudioEnginePort
+    private readonly engine: AudioEnginePort,
+    private readonly status?: StatusPort
   ) {}
 
   setSend(trackId: string, busId: string, amount: number): void {
@@ -62,6 +64,47 @@ export class RoutingService {
       }
     }));
     this.engine.setBusReturn(busId, returnDb);
+  }
+
+  setBusSend(fromBusId: string, toBusId: string, amount: number): void {
+    const state = this.store.getState();
+    const source = state.kit.buses.find(bus => bus.id === fromBusId);
+    const target = state.kit.buses.find(bus => bus.id === toBusId);
+    if (!source || !target || fromBusId === toBusId) return;
+
+    const edges = Object.fromEntries(
+      state.kit.buses.map(bus => [
+        bus.id,
+        bus.sends.filter(send => send.busId !== toBusId).map(send => send.busId)
+      ])
+    ) as Record<string, readonly string[]>;
+    if (wouldCreateCycle(edges, fromBusId, toBusId)) {
+      this.status?.generative('Ese envío crearía un ciclo de buses.');
+      return;
+    }
+
+    const nextAmount = clamp(amount, 0, 1);
+    const sends = [
+      ...source.sends.filter(send => send.busId !== toBusId),
+      ...(nextAmount > 0
+        ? [{ busId: toBusId, amount: nextAmount, preFader: false }]
+        : [])
+    ];
+
+    this.store.update(current => ({
+      ...current,
+      kit: {
+        ...current.kit,
+        buses: current.kit.buses.map(bus =>
+          bus.id === fromBusId ? { ...bus, sends } : bus
+        )
+      }
+    }));
+    this.engine.setBusSend(fromBusId, toBusId, nextAmount);
+  }
+
+  clearBusSend(fromBusId: string, toBusId: string): void {
+    this.setBusSend(fromBusId, toBusId, 0);
   }
 
   private updateTrack(

@@ -412,6 +412,18 @@ export class EspiralApp {
       const output = view.q(`[data-bus-value="${busId}"]`);
       if (output) output.textContent = `${db.toFixed(1)} dB`;
     });
+
+    view.must('#patch-matrix').addEventListener('input', event => {
+      const ref = attr(event, 'data-bus-send');
+      const value = inputValue(event);
+      if (!ref || value === '') return;
+      const [fromBusId, toBusId] = ref.split(':');
+      if (!fromBusId || !toBusId) return;
+
+      const amount = Number(value) / 100;
+      routing.setBusSend(fromBusId, toBusId, amount);
+      view.syncRouting(this.deps.store.getState(), this.deps.mix);
+    });
   }
 
   private bindModulation(): void {

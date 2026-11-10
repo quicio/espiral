@@ -1,4 +1,5 @@
 import type { ChannelKey } from './channels';
+import { wouldCreateCycle } from './patch';
 
 export type MachineKind = 'membrane' | 'poly' | 'mono' | 'pluck' | 'sampler' | 'plugin';
 export type MachinePluginState = Readonly<Record<string, number>>;
@@ -65,6 +66,7 @@ export interface BusConfig {
   readonly name: string;
   readonly returnDb: number;
   readonly inserts: readonly InsertConfig[];
+  readonly sends?: readonly SendConfig[];
 }
 
 export interface GlueConfig {
@@ -192,6 +194,26 @@ export function validateGraph(config: GraphConfig): readonly string[] {
         errors.push(`Insert duplicado en ${bus.id}: ${insert.id}`);
       }
       insertIds.add(insert.id);
+    });
+  });
+
+  const busEdges = Object.fromEntries(
+    config.buses.map(bus => [
+      bus.id,
+      (bus.sends ?? []).map(send => send.busId)
+    ])
+  );
+  config.buses.forEach(bus => {
+    (bus.sends ?? []).forEach(send => {
+      if (!busIds.has(send.busId)) {
+        errors.push(`Send de bus ${bus.id} a bus inexistente: ${send.busId}`);
+      }
+      if (send.amount < 0 || send.amount > 1) {
+        errors.push(`Send de bus fuera de rango en ${bus.id} → ${send.busId}`);
+      }
+      if (busIds.has(send.busId) && wouldCreateCycle(busEdges, bus.id, send.busId)) {
+        errors.push(`Ciclo de buses en ${bus.id} → ${send.busId}`);
+      }
     });
   });
 

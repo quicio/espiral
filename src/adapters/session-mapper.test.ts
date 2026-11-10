@@ -113,7 +113,13 @@ describe('SessionMapper', () => {
           }
         },
         buses: state.kit.buses.map(bus =>
-          bus.id === 'reverb-bus' ? { ...bus, returnDb: -20 } : bus
+          bus.id === 'reverb-bus'
+            ? {
+                ...bus,
+                returnDb: -20,
+                sends: [{ busId: 'delay-bus', amount: 0.35, preFader: false }]
+              }
+            : bus
         )
       },
       transport: { ...state.transport, bpm: 132, swing: 0.2, humanize: 0.05, lookAhead: 0.15 },
@@ -192,6 +198,9 @@ describe('SessionMapper', () => {
       { busId: 'reverb-bus', amount: 0.35, preFader: true }
     ]);
     expect(restored.kit.buses.find(bus => bus.id === 'reverb-bus')?.returnDb).toBe(-20);
+    expect(restored.kit.buses.find(bus => bus.id === 'reverb-bus')?.sends).toEqual([
+      { busId: 'delay-bus', amount: 0.35, preFader: false }
+    ]);
     expect(restored.modulation.enabled).toBe(true);
     expect(restored.modulation.routes).toEqual(original.modulation.routes);
     expect(restored.scenes.umbral.kit.tracks.kick?.gainDb).toBe(-9);

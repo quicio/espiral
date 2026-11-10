@@ -62,7 +62,7 @@ async function boot(): Promise<void> {
   const mix = new MixService(store, engine);
   const scenes = new SceneService(store, mix, runtime, status);
   const tracks = new TrackService(store, engine, status);
-  const routing = new RoutingService(store, engine);
+  const routing = new RoutingService(store, engine, status);
   const modulation = new ModulationService(store, engine, new IntervalTicker());
   const locks = new LocksService(store, engine);
   const sessionMapper = new SessionMapper(generative);

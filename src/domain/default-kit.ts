@@ -120,13 +120,15 @@ export function createDefaultBuses(): readonly BusState[] {
       id: 'reverb-bus',
       name: 'Reverb',
       returnDb: -14,
-      inserts: [reverbInsert(1, 4.5)]
+      inserts: [reverbInsert(1, 4.5)],
+      sends: []
     },
     {
       id: 'delay-bus',
       name: 'Delay',
       returnDb: -16,
-      inserts: [delayInsert(1, 0.32, 0.375)]
+      inserts: [delayInsert(1, 0.32, 0.375)],
+      sends: []
     }
   ];
 }

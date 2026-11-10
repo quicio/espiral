@@ -32,6 +32,7 @@ export interface BusState {
   readonly name: string;
   readonly returnDb: number;
   readonly inserts: readonly InsertConfig[];
+  readonly sends: readonly SendConfig[];
 }
 
 export interface KitState {
@@ -79,7 +80,8 @@ export function busToConfig(bus: BusState): BusConfig {
     id: bus.id,
     name: bus.name,
     returnDb: bus.returnDb,
-    inserts: bus.inserts
+    inserts: bus.inserts,
+    sends: bus.sends
   };
 }
 
@@ -110,7 +112,8 @@ export function cloneKit(kit: KitState): KitState {
       inserts: bus.inserts.map(insert => ({
         ...insert,
         params: { ...insert.params }
-      }))
+      })),
+      sends: bus.sends.map(send => ({ ...send }))
     }))
   };
 }

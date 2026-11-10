@@ -3,7 +3,7 @@ import type {
   PatternChannel
 } from './channels';
 import type { InsertConfig, MachineConfig, TrackConfig } from './graph';
-import type { KitState } from './kit';
+import type { KitState, BusState } from './kit';
 import type { PluginDefinition } from './plugin';
 import type {
   ChannelSeed,
@@ -47,6 +47,8 @@ export interface AudioEnginePort {
     preFader: boolean
   ): void;
   setBusReturn(busId: string, db: number): void;
+  setBusSend(fromBusId: string, toBusId: string, amount: number): void;
+  syncBusSends(buses: readonly BusState[]): void;
   setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void>;
   setEffectWet(trackId: string, effect: EffectKind, wet: number, time?: number): void;
   setMasterVolume(db: number, time?: number): void;

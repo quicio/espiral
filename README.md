@@ -16,6 +16,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Cambios de máquina/track con crossfade para evitar clicks y cortes.
 - Cambios de preset/escena con duck breve de master y BPM rampeado.
 - Buffer/lookahead configurable de 20–300 ms.
+- Patch bay de buses con detección de ciclos.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
