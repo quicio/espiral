@@ -28,6 +28,8 @@
 - Session / Clip Grid: clips por track y escena, launch cuantizado, follow actions y stop.
 - Los clips activos usan el patrón vivo y se materializan en sus escenas antes de guardar.
 - Persistencia de clips, clips activos y cuantización en sesión v2.
+- Session a pantalla completa, columna de escenas fija, miniaturas de patrón y estados armed/queued/playing/stopped.
+- Feedback de lanzamientos pendientes con countdown y fix del status bar en anchos intermedios.
 - 149 tests unitarios.
 
 ## 0.6.0 — 2026-11-09

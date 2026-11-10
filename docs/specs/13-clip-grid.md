@@ -68,12 +68,23 @@ El follow se evalúa al comienzo del paso, antes de los disparos de audio.
 
 Nueva vista **Session**:
 
-- grilla escena × track;
+- ocupa todo el ancho disponible y oculta el panel Generativo mientras está activa;
+- grilla escena × track con la columna de escenas fija al hacer scroll horizontal;
+- cada clip muestra una miniatura de 16 pasos y su estado, sin repetir el nombre del track;
 - botón de lanzamiento por clip;
-- botón de escena por fila;
+- botón de escena por fila, con estado de cola;
 - stop por track y stop all;
 - selector global de cuantización;
-- inspector del clip activo con follow action y compases.
+- inspector del clip activo o en cola, con follow action y compases;
+- readout con cuenta regresiva de lanzamientos pendientes.
+
+Estados visuales:
+
+- `armed`: clip activo con transporte detenido;
+- `queued`: lanzamiento pendiente, con borde ámbar y countdown en el readout;
+- `playing`: clip sonando;
+- `stopped`: track detenido;
+- `clip`: clip inactivo.
 
 Los tracks generativos sin patrón no aparecen en la grilla. Cuando se les agrega un patrón
 con `+P`, se crean sus clips y aparecen como una columna más.
@@ -104,6 +115,8 @@ antes de escribir el DTO.
 - Lanzar una escena mantiene los tracks en fase.
 - Un follow action cambia de clip después de los compases configurados.
 - Stop por track y stop all silencian sin borrar el patrón vivo.
+- Los estados `armed`, `queued`, `playing`, `stopped` reflejan transporte y cola reales.
+- Los 13 tracks con patrón se ven completos a 1440 px; la columna de escenas queda fija al scrollear.
 - Clips, activos y follow settings sobreviven al round-trip de sesión.
 - `npm test`, `npm run test:audio` y `npm run test:integration` pasan.
 
@@ -112,8 +125,7 @@ antes de escribir el DTO.
 - Crear, duplicar, renombrar, colorear y eliminar clips fuera de las cuatro escenas.
 - Slots independientes por track, sin depender de una escena completa.
 - Edición de un track detenido que persista en su último clip.
-- Vista de grilla a pantalla completa o con columnas fijas.
-- Indicador visual de lanzamientos pendientes.
+- Cancelar explícitamente un lanzamiento pendiente desde la grilla.
 
 ## Riesgos
 

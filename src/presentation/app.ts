@@ -12,6 +12,7 @@ import type { LocksService } from '../application/locks';
 import type { ModulationService } from '../application/modulation';
 import type { PatternService } from '../application/patterns';
 import type { PlaybackService } from '../application/playback';
+import type { PlaybackRuntime } from '../application/runtime';
 import type { PresetService } from '../application/presets';
 import type { RoutingService } from '../application/routing';
 import type { SceneService } from '../application/scenes';
@@ -36,6 +37,7 @@ interface PresentationDependencies {
   readonly playback: PlaybackService;
   readonly patterns: PatternService;
   readonly clips: ClipService;
+  readonly runtime: PlaybackRuntime;
   readonly automation: AutomationService;
   readonly mix: MixService;
   readonly sessions: SessionService;
@@ -64,7 +66,9 @@ export class EspiralApp {
     this.lastState = this.deps.store.getState();
     this.unsubscribe = this.deps.store.subscribe(state => this.handleState(state));
 
-    view.renderAll(this.lastState, this.deps.catalog, this.deps.mix);
+    view.renderAll(this.lastState, this.deps.catalog, this.deps.mix, {
+      runtime: this.deps.runtime
+    });
     const initial = (location.hash || '').replace('#', '');
     this.setView(isView(initial) ? initial : 'performance', { scroll: false });
     this.deps.status.instrument('Detenido');
@@ -169,13 +173,18 @@ export class EspiralApp {
     const previous = this.lastState;
     this.lastState = state;
     if (!previous) {
-      view.renderAll(state, this.deps.catalog, this.deps.mix);
+      view.renderAll(state, this.deps.catalog, this.deps.mix, {
+        runtime: this.deps.runtime
+      });
       return;
     }
 
     if (sameNonTransport(previous, state)) {
       view.syncTransport(state);
       view.updatePatternClasses(state, this.deps.catalog);
+      if (previous.transport.playing !== state.transport.playing) {
+        view.renderSession(state, this.deps.runtime);
+      }
       return;
     }
 
@@ -205,7 +214,8 @@ export class EspiralApp {
       sound:
         previous.kit !== state.kit ||
         previous.masterVolume !== state.masterVolume ||
-        previous.selected !== state.selected
+        previous.selected !== state.selected,
+      runtime: this.deps.runtime
     });
   }
 
@@ -935,7 +945,10 @@ export class EspiralApp {
       clips.setQuantize(event.target.value as ClipQuantize);
     });
 
-    view.must('#clip-stop-all').addEventListener('click', () => clips.stopAll());
+    view.must('#clip-stop-all').addEventListener('click', () => {
+      clips.stopAll();
+      this.refreshSession();
+    });
 
     view.must('#session-grid').addEventListener('click', event => {
       const clip = attr(event, 'data-clip-launch');
@@ -954,6 +967,7 @@ export class EspiralApp {
       } else if (select) {
         patterns.selectChannel(select);
       }
+      this.refreshSession();
     });
 
     view.must('#clip-inspector').addEventListener('change', event => {
@@ -1072,6 +1086,10 @@ export class EspiralApp {
     });
   }
 
+  private refreshSession(): void {
+    view.renderSession(this.deps.store.getState(), this.deps.runtime);
+  }
+
   private toggleMute(trackId: string): void {
     this.deps.mix.toggleMute(trackId);
     this.deps.status.generative(
@@ -1080,6 +1098,7 @@ export class EspiralApp {
   }
 
   private setView(id: ViewId, options: { scroll?: boolean } = {}): void {
+    document.body.dataset.view = id;
     view.qa<HTMLButtonElement>('.view-tab').forEach(tab => {
       const active = tab.getAttribute('data-view') === id;
       tab.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -1092,7 +1111,7 @@ export class EspiralApp {
 
     const state = this.deps.store.getState();
     if (id === 'performance') view.renderPerformance(state, this.deps.catalog);
-    if (id === 'session') view.renderSession(state);
+    if (id === 'session') view.renderSession(state, this.deps.runtime);
     if (id === 'sequencer') {
       view.renderSequencer(state, this.deps.catalog);
       view.renderAutomation(state, this.deps.catalog);

@@ -35,6 +35,7 @@ import {
   type SoundPreset
 } from '../domain/sound-bank';
 import type { MixService } from '../application/mix';
+import type { PlaybackRuntime } from '../application/runtime';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
 
 export interface Catalog {
@@ -136,7 +137,10 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
   }).join('');
 }
 
-export function renderSession(state: InstrumentState): void {
+export function renderSession(
+  state: InstrumentState,
+  runtime?: PlaybackRuntime
+): void {
   const grid = q('#session-grid');
   if (!grid) return;
 
@@ -144,16 +148,30 @@ export function renderSession(state: InstrumentState): void {
   const quantize = q<HTMLSelectElement>('#clip-quantize');
   if (quantize) quantize.value = state.clipQuantize;
 
+  const currentStep = runtime?.absoluteStep ?? 0;
+  const transportPlaying = state.transport.playing;
   const selected = state.kit.tracks[state.selected];
   const activeId = selected ? state.activeClips[selected.id] : undefined;
   const activeClip = activeId ? state.clips[activeId] : undefined;
+  const selectedPending = selected
+    ? pendingForTrack(state, runtime, selected.id)
+    : null;
   const readout = q('#session-readout');
   if (readout) {
-    readout.textContent = activeClip
-      ? `${activeClip.name} · ${state.scenes[activeClip.sceneId]?.name ?? activeClip.sceneId}`
-      : selected?.hasPattern
-        ? `${selected.name} detenido`
-        : 'Clips por track y escena.';
+    const pendingClip =
+      selectedPending?.kind === 'clip' && selectedPending.clipId
+        ? state.clips[selectedPending.clipId]
+        : undefined;
+    readout.textContent =
+      selectedPending?.kind === 'clip' && pendingClip
+        ? `Queued: ${pendingClip.name} · ${state.scenes[pendingClip.sceneId]?.name ?? pendingClip.sceneId} · ${pendingLabel(selectedPending.targetStep, currentStep)}`
+        : selectedPending?.kind === 'stop'
+          ? `Stop ${selected?.name ?? ''} · ${pendingLabel(selectedPending.targetStep, currentStep)}`
+          : activeClip
+            ? `${activeClip.name} · ${state.scenes[activeClip.sceneId]?.name ?? activeClip.sceneId} · ${transportPlaying ? 'playing' : 'armed'}`
+            : selected?.hasPattern
+              ? `${selected.name} detenido`
+              : 'Clips por track y escena.';
   }
 
   const head = `<div class="session-row session-row--head">
@@ -161,7 +179,7 @@ export function renderSession(state: InstrumentState): void {
     ${tracks
       .map(
         track => `<div class="session-track-head">
-          <button class="session-track-name" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}">${track.name}</button>
+          <button class="session-track-name" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}" title="${track.name}" aria-label="Seleccionar ${track.name}">${sessionTrackLabel(track)}</button>
           <button class="session-stop" type="button" data-clip-stop="${track.id}" aria-label="Detener ${track.name}">■</button>
         </div>`
       )
@@ -171,6 +189,15 @@ export function renderSession(state: InstrumentState): void {
   const rows = CLIP_SCENE_ORDER.map(sceneId => {
     const scene = state.scenes[sceneId];
     if (!scene) return '';
+    const scenePending = tracks.some(track => {
+      const pending = pendingForTrack(state, runtime, track.id);
+      return (
+        pending?.kind === 'clip' &&
+        pending.clipId !== undefined &&
+        state.clips[pending.clipId]?.sceneId === sceneId
+      );
+    });
+
     const cells = tracks
       .map(track => {
         const id = clipId(sceneId, track.id);
@@ -180,15 +207,48 @@ export function renderSession(state: InstrumentState): void {
         }
         const active = state.activeClips[track.id] === clip.id;
         const stopped = state.activeClips[track.id] === null;
-        return `<button class="session-clip${active ? ' is-active' : ''}${stopped ? ' is-stopped' : ''}" type="button" data-clip-launch="${clip.id}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name}">
-          <span class="session-clip-name">${clip.name}</span>
-          <span class="session-clip-state">${active ? '● playing' : stopped ? '■ stopped' : 'clip'}</span>
+        const pending = pendingForTrack(state, runtime, track.id);
+        const queued =
+          pending?.kind === 'clip' && pending.clipId === clip.id;
+        const stopping = pending?.kind === 'stop' && active;
+        const leaving =
+          pending?.kind === 'clip' && active && pending.clipId !== clip.id;
+        const classes = [
+          'session-clip',
+          queued ? 'is-queued' : '',
+          stopping ? 'is-stopping' : '',
+          active && !queued && !stopping ? (transportPlaying ? 'is-active' : 'is-armed') : '',
+          stopped && !queued && !stopping ? 'is-stopped' : '',
+          leaving ? 'is-leaving' : ''
+        ]
+          .filter(Boolean)
+          .join(' ');
+        const stateLabel = queued
+          ? 'queued'
+          : stopping
+            ? 'stop'
+            : active
+              ? transportPlaying
+                ? '● playing'
+                : '◼ armed'
+              : stopped
+                ? '■ stopped'
+                : 'clip';
+        const steps = active
+          ? state.pattern.steps[track.id]
+          : scene.pattern.steps[track.id];
+        const preview = Array.from({ length: 16 }, (_, index) =>
+          `<span class="session-preview-step${steps?.[index] ? ' is-on' : ''}"></span>`
+        ).join('');
+        return `<button class="${classes}" type="button" data-clip-launch="${clip.id}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name} · ${stateLabel}" title="${clip.name} · ${scene.name} · ${stateLabel}">
+          <span class="session-clip-preview" aria-hidden="true">${preview}</span>
+          <span class="session-clip-state">${stateLabel}</span>
         </button>`;
       })
       .join('');
 
     return `<div class="session-row">
-      <button class="session-scene-launch" type="button" data-scene-launch="${sceneId}" aria-label="Lanzar escena ${scene.name}">
+      <button class="session-scene-launch${scenePending ? ' is-queued' : ''}" type="button" data-scene-launch="${sceneId}" aria-label="Lanzar escena ${scene.name}">
         <span class="session-scene-play">▶</span>
         <span>${scene.name}</span>
       </button>
@@ -197,13 +257,47 @@ export function renderSession(state: InstrumentState): void {
   }).join('');
 
   grid.innerHTML = head + rows;
-  renderClipInspector(state, selected, activeClip);
+  renderClipInspector(state, selected, activeClip, selectedPending, currentStep);
+}
+
+function pendingForTrack(
+  state: InstrumentState,
+  runtime: PlaybackRuntime | undefined,
+  trackId: string
+): { kind: 'clip'; clipId: string; targetStep: number } | { kind: 'stop'; targetStep: number } | null {
+  if (!runtime) return null;
+  const actions = runtime.pendingClipActions;
+  const stopAll = actions.find(action => action.kind === 'stop-all');
+  if (stopAll) return { kind: 'stop', targetStep: stopAll.targetStep };
+  const action = actions.find(candidate =>
+    candidate.kind === 'stop-track'
+      ? candidate.trackId === trackId
+      : candidate.kind === 'clip'
+        ? state.clips[candidate.clipId]?.trackId === trackId
+        : false
+  );
+  if (!action) return null;
+  return action.kind === 'clip'
+    ? { kind: 'clip', clipId: action.clipId, targetStep: action.targetStep }
+    : { kind: 'stop', targetStep: action.targetStep };
+}
+
+function pendingLabel(targetStep: number, currentStep: number): string {
+  const remaining = Math.max(1, targetStep - currentStep);
+  if (remaining >= 16) {
+    const bars = Math.ceil(remaining / 16);
+    return `en ${bars} compás${bars === 1 ? '' : 'es'}`;
+  }
+  const beats = Math.ceil(remaining / 4);
+  return `en ${beats} beat${beats === 1 ? '' : 's'}`;
 }
 
 function renderClipInspector(
   state: InstrumentState,
   track: TrackState | undefined,
-  clip: ClipState | undefined
+  clip: ClipState | undefined,
+  pending: ReturnType<typeof pendingForTrack>,
+  currentStep: number
 ): void {
   const inspector = q('#clip-inspector');
   if (!inspector) return;
@@ -212,6 +306,20 @@ function renderClipInspector(
     inspector.innerHTML =
       '<p class="lock-empty">Seleccioná un track con patrón para ver su clip.</p>';
     return;
+  }
+
+  if (pending?.kind === 'clip' && pending.clipId) {
+    const pendingClip = state.clips[pending.clipId];
+    if (pendingClip) {
+      inspector.innerHTML = `<div class="clip-inspector-head">
+          <div>
+            <p class="section-label">Clip en cola</p>
+            <p class="sound-readout">${pendingClip.name}</p>
+          </div>
+          <p class="section-meta">${state.scenes[pendingClip.sceneId]?.name ?? pendingClip.sceneId} · ${pendingLabel(pending.targetStep, currentStep)}</p>
+        </div>`;
+      return;
+    }
   }
 
   if (!clip) {
@@ -1696,10 +1804,10 @@ export function renderAll(
   state: InstrumentState,
   catalog: Catalog,
   mixService: MixService,
-  options: { sound?: boolean } = {}
+  options: { sound?: boolean; runtime?: PlaybackRuntime } = {}
 ): void {
   renderPerformance(state, catalog);
-  renderSession(state);
+  renderSession(state, options.runtime);
   renderSequencer(state, catalog);
   if (options.sound !== false) renderSound(state, catalog, mixService);
   renderAutomation(state, catalog);
@@ -1744,6 +1852,19 @@ function statePattern(state: InstrumentState, key: string): Pattern {
 
 function trackName(state: InstrumentState, id: string): string {
   return state.kit.tracks[id]?.name ?? id;
+}
+
+function sessionTrackLabel(track: TrackState): string {
+  if (/^Track \d+$/.test(track.name)) {
+    return track.name.replace('Track ', 'T');
+  }
+  const numbered = /^(.+?)\s+(\d+)$/.exec(track.name);
+  if (numbered) {
+    const base = numbered[1] ?? '';
+    const short = base.length > 5 ? base.slice(0, 3) : base;
+    return `${short}${numbered[2]}`;
+  }
+  return track.name.split(' ')[0] ?? track.name;
 }
 
 function machineLabel(machineId: string): string {

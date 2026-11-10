@@ -103,6 +103,7 @@ async function boot(): Promise<void> {
     playback,
     patterns,
     clips,
+    runtime,
     automation,
     mix,
     sessions,

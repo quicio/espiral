@@ -84,14 +84,18 @@ try {
   }
   await page.locator('[data-scene-launch="deriva"]').click();
   await page.waitForTimeout(300);
-  const activeClips = await page.locator('.session-clip.is-active').count();
+  const activeClips = await page
+    .locator('.session-clip.is-active, .session-clip.is-armed')
+    .count();
   const sessionReadout = (await page.locator('#session-readout').textContent())?.trim();
   if (activeClips === 0 || !sessionReadout?.includes('Deriva')) {
     throw new Error(`La escena Deriva no lanzó clips: ${activeClips}, ${sessionReadout}.`);
   }
   await page.locator('#clip-stop-all').click();
   await page.waitForTimeout(300);
-  const activeAfterStop = await page.locator('.session-clip.is-active').count();
+  const activeAfterStop = await page
+    .locator('.session-clip.is-active, .session-clip.is-armed')
+    .count();
   if (activeAfterStop !== 0) {
     throw new Error(`Stop all dejó ${activeAfterStop} clips activos.`);
   }
