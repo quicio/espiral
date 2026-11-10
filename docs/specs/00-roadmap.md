@@ -1,5 +1,8 @@
 # Roadmap de Espiral
 
+> **Archivo histórico.** El roadmap de producto vigente vive en [`ROADMAP.md`](../../ROADMAP.md).
+> Este documento conserva el detalle de las fases 0–4.
+
 - **Estado:** base 0.2.0 lista, evolución a motor modular en diseño.
 - **Objetivo:** pasar de un instrumento de 7 canales fijos a una plataforma modular de 16 tracks con plugins, buses y routing curado, sin perder la independencia del motor.
 - **Principio rector:** cada fase deja la app funcionando. No hay big bang.

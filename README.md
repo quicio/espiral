@@ -75,6 +75,12 @@ npx playwright install chromium
 
 La build se publica en GitHub Pages en `https://quicio.github.io/espiral/`.
 
+## Roadmap
+
+El norte es llevar lo mejor de Ableton Live a una experiencia web generativa: clip grid,
+browser, device chains, arrangement, capture, MIDI y audio clips. Los milestones y el
+encaje con OpenSpec están en [`ROADMAP.md`](ROADMAP.md).
+
 ## Arquitectura
 
 La regla de dependencia apunta hacia adentro: el dominio no conoce Tone.js, el DOM,

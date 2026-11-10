@@ -24,6 +24,7 @@
 - Drone, pad y lead aceptan máquina, parámetros y sonidos del banco.
 - Drone, pad y lead pueden alternar entre modo generativo y patrón (`+P` / `−P`).
 - Nuevas máquinas `drone-sampler`, `soft-pad` y `lead-synth`.
+- Roadmap de producto con milestones hacia una experiencia Ableton web y encaje con OpenSpec.
 - 132 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
