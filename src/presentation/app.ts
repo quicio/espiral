@@ -193,7 +193,10 @@ export class EspiralApp {
     }
 
     view.renderAll(state, this.deps.catalog, this.deps.mix, {
-      sound: previous.kit !== state.kit || previous.masterVolume !== state.masterVolume
+      sound:
+        previous.kit !== state.kit ||
+        previous.masterVolume !== state.masterVolume ||
+        previous.selected !== state.selected
     });
   }
 
@@ -893,6 +896,17 @@ export class EspiralApp {
         const target = parseInsertRef(ref);
         if (target) mix.moveInsert(target.trackId, target.insertId, move === 'up' ? -1 : 1);
       }
+    });
+
+    view.must('#sound-bank').addEventListener('click', event => {
+      const presetId = attr(event, 'data-sound-preset');
+      if (presetId) tracks.applySoundPreset(presetId);
+    });
+
+    view.must('#sound-bank').addEventListener('change', event => {
+      if (!(event.target instanceof HTMLSelectElement)) return;
+      if (event.target.id !== 'sound-bank-target' || !event.target.value) return;
+      patterns.selectChannel(event.target.value);
     });
   }
 

@@ -99,8 +99,9 @@ todo con migración v1. El siguiente trabajo es calidad de Fase 4.
 **Estado:** render offline en CI, integración Playwright, medidores por nodo, CPU estimada,
 baseline, modulación audio-rate, instrument plugins, export WAV, transiciones con
 crossfade, patch bay de buses con detección de ciclos, gestión de buses, límites de CPU
-documentados y default creativo con grooves curados y capas de percusión. Pendiente: carga
-de plugins de terceros en runtime si el producto lo necesita.
+documentados, default creativo con grooves curados y capas de percusión, y banco de
+sonidos e instrumentos para tracks de usuario. Pendiente: carga de plugins de terceros en
+runtime si el producto lo necesita.
 
 - Render offline en CI con assertions de peak/loudness.
 - Compensación de latencia (PDC) para paths paralelos.

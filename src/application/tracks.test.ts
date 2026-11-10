@@ -109,6 +109,44 @@ describe('TrackService', () => {
     );
   });
 
+  it('applies a sound bank preset to a user track', () => {
+    const { store, engine, status, tracks } = setup();
+
+    tracks.applySoundPreset('acid-bass', 'track-08');
+
+    const track = store.getState().kit.tracks['track-08'];
+    expect(track?.machineId).toBe('bass-synth');
+    expect(track?.machine.kind).toBe('mono');
+    expect(track?.machine.oscillator).toBe('sawtooth');
+    expect(track?.machine.filter?.frequency).toBe(680);
+    expect(track?.noteSource).toEqual({
+      kind: 'chord',
+      degreeOffset: 0,
+      octave: 2,
+      size: 1
+    });
+    expect(engine.machines.at(-1)?.trackId).toBe('track-08');
+    expect(engine.machines.at(-1)?.machine.oscillator).toBe('sawtooth');
+    expect(status.messages.at(-1)).toContain('Acid Bass');
+  });
+
+  it('keeps the bank away from core tracks', () => {
+    const { store, status, tracks } = setup();
+
+    tracks.applySoundPreset('warm-pad', 'kick');
+
+    expect(store.getState().kit.tracks.kick?.machine.kind).toBe('membrane');
+    expect(status.messages.at(-1)).toContain('tracks de usuario');
+  });
+
+  it('rejects unknown sound bank presets', () => {
+    const { status, tracks } = setup();
+
+    tracks.applySoundPreset('missing', 'track-08');
+
+    expect(status.messages.at(-1)).toContain('Sonido desconocido');
+  });
+
   it('refuses to change the machine of a core track', () => {
     const { store, tracks } = setup();
 

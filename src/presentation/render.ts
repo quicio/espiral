@@ -17,6 +17,11 @@ import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } f
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
 import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
 import type { GenerativePort } from '../domain/ports';
+import {
+  SOUND_BANK,
+  SOUND_CATEGORIES,
+  type SoundPreset
+} from '../domain/sound-bank';
 import type { MixService } from '../application/mix';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
 
@@ -294,6 +299,79 @@ export function renderSound(
   }
 
   syncMixValues(state, mixService);
+  renderSoundBank(state, mixService);
+}
+
+function renderSoundBank(state: InstrumentState, mixService: MixService): void {
+  const root = q('#sound-bank');
+  if (!root) return;
+
+  const userTracks = kitTracks(state.kit).filter(track => track.role === 'user');
+  const selected = state.kit.tracks[state.selected];
+  const target = selected?.role === 'user' ? selected : null;
+  const canApply = Boolean(target) && mixService.supportsMachineChange;
+  const active = target
+    ? SOUND_BANK.find(preset => matchesSoundPreset(target, preset))
+    : undefined;
+  const status = !target
+    ? 'Elegí un track de usuario para cargar un sonido.'
+    : active
+      ? `Activo: ${active.name} · ${target.name}`
+      : `Destino: ${target.name}`;
+
+  const options = userTracks
+    .map(
+      track =>
+        `<option value="${track.id}"${track.id === target?.id ? ' selected' : ''}>${track.name}</option>`
+    )
+    .join('');
+
+  root.innerHTML = `<div class="sound-bank-head">
+    <div>
+      <p class="section-label">Banco de sonidos</p>
+      <p id="sound-bank-status" class="section-meta">${status}</p>
+    </div>
+    <label class="sound-bank-target">
+      <span>Destino</span>
+      <select id="sound-bank-target" aria-label="Track destino del banco"${mixService.supportsMachineChange ? '' : ' disabled'}>
+        ${target ? '' : '<option value="">Elegí un track de usuario…</option>'}
+        ${options}
+      </select>
+    </label>
+  </div>
+  <p class="tool-hint">El sonido se aplica al track elegido y conserva su mezcla, inserts y patrón.</p>
+  <div class="sound-bank-categories">${SOUND_CATEGORIES.map(category => {
+    const entries = SOUND_BANK.filter(
+      preset => preset.category === category.id
+    );
+    return `<section class="sound-bank-category">
+      <p class="sound-bank-category-label">${category.label}</p>
+      <div class="sound-bank-grid">${entries
+        .map(
+          preset => `<button class="sound-bank-card${preset === active ? ' is-active' : ''}" type="button" data-sound-preset="${preset.id}" aria-pressed="${preset === active}"${canApply ? '' : ' disabled'}>
+            <span class="sound-bank-name">${preset.name}</span>
+            <span class="sound-bank-desc">${preset.description}</span>
+          </button>`
+        )
+        .join('')}</div>
+    </section>`;
+  }).join('')}</div>`;
+}
+
+function matchesSoundPreset(track: TrackState, preset: SoundPreset): boolean {
+  return soundFingerprint(track) === soundFingerprint(preset);
+}
+
+function soundFingerprint(value: {
+  readonly machineId: string;
+  readonly machine: TrackState['machine'];
+  readonly noteSource: TrackState['noteSource'];
+}): string {
+  return JSON.stringify({
+    machineId: value.machineId,
+    machine: value.machine,
+    noteSource: value.noteSource
+  });
 }
 
 export function renderAutomation(state: InstrumentState, catalog: Catalog): void {

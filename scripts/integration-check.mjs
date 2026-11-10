@@ -69,6 +69,21 @@ try {
   }
 
   await page.locator('#tab-sound').click();
+  const bankCards = await page.locator('[data-sound-preset]').count();
+  if (bankCards === 0) throw new Error('El banco de sonidos no tiene presets.');
+  await page.locator('#sound-bank-target').selectOption('track-08');
+  await page.waitForTimeout(200);
+  await page.locator('[data-sound-preset="warm-pad"]').click();
+  await page.waitForTimeout(400);
+  const bankStatus = (await page.locator('#sound-bank-status').textContent())?.trim();
+  const bankMachine = await page.locator('[data-machine="track-08"]').inputValue();
+  if (!bankStatus?.includes('Warm Pad')) {
+    throw new Error(`El banco no confirmó Warm Pad: ${bankStatus}.`);
+  }
+  if (bankMachine !== 'analog-pad') {
+    throw new Error(`El banco no aplicó Analog Pad: ${bankMachine}.`);
+  }
+
   await page.locator('#mix-preset').selectOption('dub');
   await page.waitForTimeout(700);
   const bpm = (await page.locator('#bpm-value').textContent())?.trim();
@@ -90,6 +105,8 @@ try {
         playing,
         stopped,
         bpm,
+        bankCards,
+        bankMachine,
         samples: samples.length,
         clip
       },

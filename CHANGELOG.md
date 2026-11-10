@@ -19,7 +19,9 @@
 - Grooves curados por escena para el estado inicial, con `pulses` derivados del patrón.
 - Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets iniciales; el lead aparece más seguido.
-- 118 tests unitarios.
+- Banco de 15 sonidos e instrumentos por categoría para tracks de usuario.
+- El banco aplica máquina, nota y registro conservando mezcla, inserts y patrón.
+- 125 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

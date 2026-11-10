@@ -1240,6 +1240,117 @@ body.instrument-page .page-title {
   border-color: var(--umbral-trace);
 }
 
+.sound-bank {
+  padding: 1.1rem 0 1.4rem;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.sound-bank-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.sound-bank-target {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 13rem;
+}
+
+.sound-bank-target span {
+  font-family: var(--font-mono);
+  font-size: var(--instrument-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.sound-bank-target select {
+  min-height: 36px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.sound-bank-target select:hover,
+.sound-bank-target select:focus-visible {
+  border-color: var(--umbral-trace);
+}
+
+.sound-bank-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.sound-bank-category-label {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.sound-bank-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.45rem;
+}
+
+.sound-bank-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.sound-bank-card:hover,
+.sound-bank-card:focus-visible {
+  border-color: var(--umbral-trace);
+  background: color-mix(in srgb, var(--umbral-trace) 8%, transparent);
+}
+
+.sound-bank-card.is-active {
+  border-color: var(--umbral-ink);
+  background: color-mix(in srgb, var(--umbral-ink) 6%, transparent);
+}
+
+.sound-bank-card:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sound-bank-name {
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  line-height: 1.2;
+  color: var(--umbral-ink);
+}
+
+.sound-bank-desc {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--umbral-muted);
+}
+
 .sound-channels {
   display: flex;
   flex-direction: column;

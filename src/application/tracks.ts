@@ -8,6 +8,7 @@ import {
 } from '../domain/machines';
 import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
+import { soundPreset } from '../domain/sound-bank';
 import {
   emptyStepValues,
   emptyTrackLocks,
@@ -117,6 +118,47 @@ export class TrackService {
 
     this.store.update(() => next);
     this.engine.setTrackMachine(trackId, created.machine);
+    this.status.generative(`${track.name} · ${preset.name}.`);
+  }
+
+  applySoundPreset(presetId: string, trackId = this.store.getState().selected): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track) return;
+    if (track.role !== 'user') {
+      this.status.generative('El banco de sonidos se aplica a tracks de usuario.');
+      return;
+    }
+    if (!this.engine.supportsMachineChange) {
+      this.status.generative('Cambiar sonidos no está disponible en este motor.');
+      return;
+    }
+
+    const preset = soundPreset(presetId);
+    if (!preset) {
+      this.status.generative(`Sonido desconocido: ${presetId}.`);
+      return;
+    }
+
+    const next: InstrumentState = {
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          [trackId]: {
+            ...track,
+            machineId: preset.machineId,
+            machine: preset.machine,
+            noteSource: preset.noteSource
+          }
+        }
+      },
+      history: []
+    };
+
+    this.store.update(() => next);
+    this.engine.setTrackMachine(trackId, preset.machine);
     this.status.generative(`${track.name} · ${preset.name}.`);
   }
 

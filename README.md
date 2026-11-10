@@ -23,6 +23,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
+- Banco de 15 sonidos e instrumentos por categoría para tracks de usuario.
 - Instrument plugins con `FM Synth` built-in y dos macros de track para el mod matrix.
 - Modulación audio-rate para parámetros de plugins que exponen `AudioParam`.
 - Los presets pueden definir máquinas por track y variarlas por escena.

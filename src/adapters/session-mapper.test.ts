@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { SessionMapper } from '../adapters/session-mapper';
 import { createInitialState } from '../application/initial-state';
 import { Store } from '../application/store';
+import { TrackService } from '../application/tracks';
 import {
   delayInsert,
   findInsertByPlugin,
   reverbInsert
 } from '../domain/channels';
-import { FakeGenerative } from '../test/fakes';
+import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
   const generative = new FakeGenerative();
@@ -246,6 +247,26 @@ describe('SessionMapper', () => {
     expect(findInsertByPlugin(restored.kit.tracks.hihat!.inserts, 'reverb')?.params).toEqual({
       wet: 0.6,
       decay: 3
+    });
+  });
+
+  it('round-trips a sound bank preset', () => {
+    const { store, mapper } = setup();
+    const tracks = new TrackService(store, new FakeAudioEngine(), new FakeStatus());
+
+    tracks.applySoundPreset('fm-bell', 'track-08');
+
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(store.getState()))),
+      store.getState()
+    );
+
+    expect(restored.kit.tracks['track-08']?.machineId).toBe('plugin-fm-synth');
+    expect(restored.kit.tracks['track-08']?.machine.params?.harmonicity).toBe(3.5);
+    expect(restored.kit.tracks['track-08']?.noteSource).toEqual({
+      kind: 'scale-degree',
+      degree: 0,
+      octave: 5
     });
   });
 
