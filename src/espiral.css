@@ -259,6 +259,26 @@ body.instrument-page .page-title {
   font-variant-numeric: tabular-nums;
 }
 
+.field-number {
+  width: 4.2rem;
+  min-height: 28px;
+  padding: 0.15rem 0.3rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color-scheme: dark;
+}
+
+.field-number:hover,
+.field-number:focus-visible {
+  border-color: var(--umbral-trace);
+}
+
 .master-meter {
   display: flex;
   align-items: center;

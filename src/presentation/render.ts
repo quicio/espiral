@@ -156,6 +156,10 @@ export function renderSession(
   const selectedPending = selected
     ? pendingForTrack(state, runtime, selected.id)
     : null;
+  const anchorId =
+    (selected ? state.activeClips[selected.id] : undefined) ??
+    (selected ? state.clips[clipId('umbral', selected.id)]?.id : undefined) ??
+    state.clips[clipId('umbral', tracks[0]?.id ?? 'kick')]?.id;
   const readout = q('#session-readout');
   if (readout) {
     const pendingClip =
@@ -186,7 +190,7 @@ export function renderSession(
       .join('')}
   </div>`;
 
-  const rows = CLIP_SCENE_ORDER.map(sceneId => {
+  const rows = CLIP_SCENE_ORDER.map((sceneId, rowIndex) => {
     const scene = state.scenes[sceneId];
     if (!scene) return '';
     const scenePending = tracks.some(track => {
@@ -199,7 +203,7 @@ export function renderSession(
     });
 
     const cells = tracks
-      .map(track => {
+      .map((track, trackIndex) => {
         const id = clipId(sceneId, track.id);
         const clip = state.clips[id];
         if (!clip) {
@@ -240,7 +244,7 @@ export function renderSession(
         const preview = Array.from({ length: 16 }, (_, index) =>
           `<span class="session-preview-step${steps?.[index] ? ' is-on' : ''}"></span>`
         ).join('');
-        return `<button class="${classes}" type="button" data-clip-launch="${clip.id}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name} · ${stateLabel}" title="${clip.name} · ${scene.name} · ${stateLabel}">
+        return `<button class="${classes}" type="button" data-clip-launch="${clip.id}" data-session-row="${rowIndex}" data-session-col="${trackIndex}" tabindex="${clip.id === anchorId ? '0' : '-1'}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name} · ${stateLabel}" title="${clip.name} · ${scene.name} · ${stateLabel}">
           <span class="session-clip-preview" aria-hidden="true">${preview}</span>
           <span class="session-clip-state">${stateLabel}</span>
         </button>`;
@@ -703,8 +707,10 @@ export function syncHarmony(state: InstrumentState, catalog: Catalog): void {
 
 export function syncTransport(state: InstrumentState): void {
   const bpm = q<HTMLInputElement>('#bpm-control');
+  const bpmNumber = q<HTMLInputElement>('#bpm-number');
   const bpmValue = q('#bpm-value');
   if (bpm) bpm.value = String(state.transport.bpm);
+  if (bpmNumber) bpmNumber.value = String(state.transport.bpm);
   if (bpmValue) bpmValue.textContent = String(state.transport.bpm);
 
   const swing = q<HTMLInputElement>('#swing-control');

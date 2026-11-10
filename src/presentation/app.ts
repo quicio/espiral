@@ -288,11 +288,24 @@ export class EspiralApp {
       else void playback.start();
     });
 
-    view.must<HTMLInputElement>('#bpm-control').addEventListener('input', event => {
-      const value = Number(inputValue(event));
+    const setBpm = (raw: number): void => {
+      if (!Number.isFinite(raw)) return;
+      const value = Math.max(40, Math.min(240, Math.round(raw)));
       playback.setBpm(value);
+      const range = view.q<HTMLInputElement>('#bpm-control');
+      const number = view.q<HTMLInputElement>('#bpm-number');
       const output = view.q('#bpm-value');
+      if (range) range.value = String(value);
+      if (number) number.value = String(value);
       if (output) output.textContent = String(value);
+    };
+
+    view.must<HTMLInputElement>('#bpm-control').addEventListener('input', event => {
+      setBpm(Number(inputValue(event)));
+    });
+
+    view.must<HTMLInputElement>('#bpm-number').addEventListener('input', event => {
+      setBpm(Number(inputValue(event)));
     });
 
     view.must<HTMLInputElement>('#swing-control').addEventListener('input', event => {
@@ -970,6 +983,61 @@ export class EspiralApp {
       this.refreshSession();
     });
 
+    view.must('#session-grid').addEventListener('keydown', event => {
+      const target =
+        event.target instanceof HTMLElement
+          ? event.target.closest<HTMLElement>('[data-clip-launch]')
+          : null;
+      if (!target) return;
+
+      const row = Number(target.dataset.sessionRow);
+      const col = Number(target.dataset.sessionCol);
+      const clipId = target.getAttribute('data-clip-launch');
+      if (!clipId || !Number.isFinite(row) || !Number.isFinite(col)) return;
+      const trackId = this.deps.store.getState().clips[clipId]?.trackId;
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          if (trackId) patterns.selectChannel(trackId);
+        } else {
+          clips.launchClip(clipId);
+          if (trackId) patterns.selectChannel(trackId);
+        }
+        this.refreshSession();
+        this.focusSessionCell(row, col);
+        return;
+      }
+
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        event.preventDefault();
+        if (trackId) {
+          clips.stopTrack(trackId);
+          this.refreshSession();
+          this.focusSessionCell(row, col);
+        }
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (trackId) {
+          clips.cancelPending(trackId);
+          this.refreshSession();
+          this.focusSessionCell(row, col);
+        }
+        return;
+      }
+
+      const delta = arrowDelta(event.key);
+      if (!delta) return;
+      event.preventDefault();
+      const next = view.q<HTMLButtonElement>(
+        `[data-clip-launch][data-session-row="${row + delta[0]}"][data-session-col="${col + delta[1]}"]`
+      );
+      next?.focus();
+    });
+
     view.must('#clip-inspector').addEventListener('change', event => {
       if (!(event.target instanceof HTMLSelectElement)) return;
       const action = attr(event, 'data-clip-follow-action');
@@ -1060,7 +1128,7 @@ export class EspiralApp {
       if (target?.closest('input, select, textarea, [contenteditable]')) return;
 
       if (event.code === 'Space') {
-        if (target?.closest('button, a')) return;
+        if (event.repeat) return;
         event.preventDefault();
         const state = this.deps.store.getState();
         if (state.transport.playing || state.transport.preparing) this.deps.playback.stop();
@@ -1088,6 +1156,14 @@ export class EspiralApp {
 
   private refreshSession(): void {
     view.renderSession(this.deps.store.getState(), this.deps.runtime);
+  }
+
+  private focusSessionCell(row: number, col: number): void {
+    view
+      .q<HTMLButtonElement>(
+        `[data-clip-launch][data-session-row="${row}"][data-session-col="${col}"]`
+      )
+      ?.focus();
   }
 
   private toggleMute(trackId: string): void {
@@ -1149,6 +1225,14 @@ function isView(value: unknown): value is ViewId {
     value === 'routing' ||
     value === 'modulation'
   );
+}
+
+function arrowDelta(key: string): readonly [number, number] | null {
+  if (key === 'ArrowLeft') return [0, -1];
+  if (key === 'ArrowRight') return [0, 1];
+  if (key === 'ArrowUp') return [-1, 0];
+  if (key === 'ArrowDown') return [1, 0];
+  return null;
 }
 
 function isSceneId(value: string): value is SceneId {

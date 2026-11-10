@@ -19,7 +19,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **149 pasan / 25 archivos** en 2.5 s | `npm test` |
+| tests unitarios | **150 pasan / 25 archivos** en 2.5 s | `npm test` |
 | typecheck | limpio, 3.2 s | `npm run typecheck` |
 | build | 3.7 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 473.83 kB (122.12 kB gzip) | salida de `npm run build` |

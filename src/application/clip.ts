@@ -73,6 +73,21 @@ export class ClipService {
     this.runtime.pendingClipActions = [];
   }
 
+  cancelPending(trackId: string): void {
+    const state = this.store.getState();
+    this.runtime.pendingClipActions = this.runtime.pendingClipActions.filter(
+      action => {
+        if (action.kind === 'stop-all') return true;
+        const id =
+          action.kind === 'clip'
+            ? state.clips[action.clipId]?.trackId
+            : action.trackId;
+        return id !== trackId;
+      }
+    );
+    this.status.generative('Lanzamiento cancelado.');
+  }
+
   applyPending(stepCount: number): void {
     const pending = this.runtime.pendingClipActions;
     if (pending.length === 0) {

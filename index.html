@@ -38,8 +38,9 @@
       <div class="transport-field">
         <label for="bpm-control">Tempo</label>
         <div class="field-range">
-          <input id="bpm-control" type="range" min="70" max="170" step="1" value="120">
-          <output id="bpm-value" for="bpm-control">120</output>
+          <input id="bpm-control" type="range" min="40" max="240" step="1" value="120">
+          <input id="bpm-number" class="field-number" type="number" min="40" max="240" step="1" value="120" inputmode="numeric" aria-label="Tempo exacto">
+          <output id="bpm-value" for="bpm-control" class="sr-only">120</output>
         </div>
       </div>
 
@@ -134,7 +135,7 @@
         <div class="session-head">
           <div>
             <p class="section-label">Clip Grid</p>
-            <p id="session-readout" class="sound-readout">Clips por track y escena.</p>
+            <p id="session-readout" class="sound-readout" role="status" aria-live="polite">Clips por track y escena.</p>
           </div>
           <div class="session-actions">
             <label class="session-quantize">
@@ -150,9 +151,9 @@
           </div>
         </div>
 
-        <div id="session-grid" class="session-grid" role="grid" aria-label="Clip grid"></div>
+        <div id="session-grid" class="session-grid" role="group" aria-label="Clip grid"></div>
         <div id="clip-inspector" class="clip-inspector"></div>
-        <p class="tool-hint">El clip activo se edita en Sequencer. Los clips inactivos guardan su patrón en la escena de origen.</p>
+        <p class="tool-hint">Enter lanza · Shift+Enter selecciona · Backspace detiene · Esc cancela la cola · flechas navegan.</p>
       </section>
 
       <section class="view" id="view-sequencer" role="tabpanel" aria-labelledby="tab-sequencer" tabindex="0" hidden>

@@ -76,7 +76,12 @@ Nueva vista **Session**:
 - stop por track y stop all;
 - selector global de cuantización;
 - inspector del clip activo o en cola, con follow action y compases;
-- readout con cuenta regresiva de lanzamientos pendientes.
+- readout con cuenta regresiva de lanzamientos pendientes;
+- navegación por teclado: flechas mueven foco, Enter lanza, Shift+Enter selecciona,
+  Backspace/Delete detiene, Escape cancela la cola;
+- `Space` controla el transporte globalmente, incluso con foco en un botón;
+- un solo tab stop para la grilla de clips (roving tabindex), además de headers y escenas;
+- tempo con entrada numérica exacta además del slider.
 
 Estados visuales:
 
@@ -117,6 +122,8 @@ antes de escribir el DTO.
 - Stop por track y stop all silencian sin borrar el patrón vivo.
 - Los estados `armed`, `queued`, `playing`, `stopped` reflejan transporte y cola reales.
 - Los 13 tracks con patrón se ven completos a 1440 px; la columna de escenas queda fija al scrollear.
+- `Space` inicia/detiene el transporte después de clickear cualquier botón.
+- La grilla se navega con flechas; Enter lanza, Shift+Enter selecciona, Backspace detiene y Escape cancela.
 - Clips, activos y follow settings sobreviven al round-trip de sesión.
 - `npm test`, `npm run test:audio` y `npm run test:integration` pasan.
 

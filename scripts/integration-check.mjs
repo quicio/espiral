@@ -100,6 +100,42 @@ try {
     throw new Error(`Stop all dejó ${activeAfterStop} clips activos.`);
   }
 
+  await page.locator('#tab-session').focus();
+  await page.keyboard.press('Space');
+  await page.waitForFunction(
+    () =>
+      (document.querySelector('#instrument-status')?.textContent ?? '').trim() ===
+      'Reproduciendo',
+    undefined,
+    { timeout: 6000 }
+  );
+  await page.locator('[data-clip-launch="clip-umbral-kick"]').focus();
+  await page.keyboard.press('ArrowRight');
+  const keyboardCol = await page.evaluate(() =>
+    document.activeElement?.getAttribute('data-session-col')
+  );
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(150);
+  const keyboardQueue = await page.locator('.session-clip.is-queued').count();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(100);
+  const keyboardCancel = await page.locator('.session-clip.is-queued').count();
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(250);
+  const keyboardStopped = (
+    await page.locator('#instrument-status').textContent()
+  )?.trim();
+  if (
+    keyboardCol !== '1' ||
+    keyboardQueue === 0 ||
+    keyboardCancel !== 0 ||
+    keyboardStopped !== 'Detenido'
+  ) {
+    throw new Error(
+      `Teclado de Session falló: col=${keyboardCol}, queue=${keyboardQueue}, cancel=${keyboardCancel}, stop=${keyboardStopped}.`
+    );
+  }
+
   await page.locator('#tab-sound').click();
   const bankCards = await page.locator('[data-sound-preset]').count();
   if (bankCards === 0) throw new Error('El banco de sonidos no tiene presets.');
@@ -141,6 +177,9 @@ try {
         bankMachine,
         clipRows,
         clipCells,
+        keyboardCol,
+        keyboardQueue,
+        keyboardCancel,
         samples: samples.length,
         clip
       },

@@ -30,6 +30,8 @@
 - Persistencia de clips, clips activos y cuantización en sesión v2.
 - Session a pantalla completa, columna de escenas fija, miniaturas de patrón y estados armed/queued/playing/stopped.
 - Feedback de lanzamientos pendientes con countdown y fix del status bar en anchos intermedios.
+- Navegación de Session por teclado, roving tabindex y Space global para transporte.
+- Tempo con entrada numérica exacta además del slider.
 - 149 tests unitarios.
 
 ## 0.6.0 — 2026-11-09

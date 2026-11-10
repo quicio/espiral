@@ -98,6 +98,22 @@ describe('ClipService', () => {
     expect(store.getState().activeClips.kick).toBe(clipId('deriva', 'kick'));
   });
 
+  it('cancels a pending launch for a track', () => {
+    const { store, runtime, clips } = setup();
+    store.update(state => ({
+      ...state,
+      transport: { ...state.transport, playing: true }
+    }));
+    runtime.absoluteStep = 0;
+
+    clips.launchClip(clipId('deriva', 'kick'), 'bar');
+    expect(runtime.pendingClipActions).toHaveLength(1);
+
+    clips.cancelPending('kick');
+
+    expect(runtime.pendingClipActions).toHaveLength(0);
+  });
+
   it('persists quantize and clip follow settings in state', () => {
     const { store, clips } = setup();
     const kick = clipId('umbral', 'kick');
