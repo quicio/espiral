@@ -24,6 +24,7 @@ import { UmbralGenerative } from './infrastructure/generative/umbral-generative'
 import { BrowserFileGateway } from './infrastructure/persistence/browser-file-gateway';
 import { HttpPresetRepository } from './infrastructure/persistence/http-preset-repository';
 import { LocalSessionRepository } from './infrastructure/persistence/local-session-repository';
+import { LocalSoundKitRepository } from './infrastructure/persistence/local-sound-kit-repository';
 import { IntervalTicker } from './infrastructure/time/interval-ticker';
 import { EspiralApp } from './presentation/app';
 import { createCatalog } from './presentation/render';
@@ -108,6 +109,7 @@ async function boot(): Promise<void> {
     mix,
     sessions,
     presets,
+    kits: new LocalSoundKitRepository(),
     scenes,
     tracks,
     routing,

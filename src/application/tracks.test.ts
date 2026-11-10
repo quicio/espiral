@@ -214,6 +214,38 @@ describe('TrackService', () => {
     expect(engine.machines.at(-1)?.trackId).toBe('lead');
   });
 
+  it('applies a drum kit sound to a core track across scenes', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.applyKitSound('kick', 'kick-deep');
+
+    const state = store.getState();
+    expect(state.kit.tracks.kick?.machine.envelope?.decay).toBe(0.5);
+    expect(state.scenes.caos.kit.tracks.kick?.machine.envelope?.decay).toBe(0.5);
+    expect(engine.machines.at(-1)?.trackId).toBe('kick');
+    expect(engine.machines.at(-1)?.machine.envelope?.decay).toBe(0.5);
+  });
+
+  it('applies an editable kit sound across scenes', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.applyKitSound('track-08', 'glass-pad');
+
+    const state = store.getState();
+    expect(state.kit.tracks['track-08']?.machineId).toBe('soft-pad');
+    expect(state.kit.tracks['track-08']?.machine.kind).toBe('poly');
+    expect(state.scenes.deriva.kit.tracks['track-08']?.machineId).toBe('soft-pad');
+    expect(engine.machines.at(-1)?.trackId).toBe('track-08');
+  });
+
+  it('rejects a sound from another core track', () => {
+    const { store, tracks } = setup();
+
+    tracks.applyKitSound('hihat', 'kick-deep');
+
+    expect(store.getState().kit.tracks.hihat?.machine.samples).toHaveLength(8);
+  });
+
   it('refuses to change the machine of a core track', () => {
     const { store, tracks } = setup();
 

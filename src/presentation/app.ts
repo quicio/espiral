@@ -3,7 +3,13 @@ import type { ClipFollowAction, ClipQuantize } from '../domain/clip';
 import type { ModulationState } from '../domain/modulation';
 import { formatMachineParam, machinePreset } from '../domain/machines';
 import { denormalizePluginParam } from '../domain/plugin';
-import type { StatusPort } from '../domain/ports';
+import type { SoundKitRepositoryPort, StatusPort } from '../domain/ports';
+import {
+  DEFAULT_KIT_ID,
+  SOUND_KITS,
+  soundKit,
+  type SoundKit
+} from '../domain/sound-kits';
 import type { AutomationService } from '../application/automation';
 import type { ClipService } from '../application/clip';
 import type { ExportService } from '../application/export';
@@ -42,6 +48,7 @@ interface PresentationDependencies {
   readonly mix: MixService;
   readonly sessions: SessionService;
   readonly presets: PresetService;
+  readonly kits: SoundKitRepositoryPort;
   readonly scenes: SceneService;
   readonly tracks: TrackService;
   readonly routing: RoutingService;
@@ -59,6 +66,12 @@ export class EspiralApp {
   private armState: view.ArmWizardState = {
     presetId: 'techno',
     sceneId: 'umbral',
+    root: 0,
+    scale: 'minor',
+    progression: 'menor',
+    bpm: 128,
+    kitId: DEFAULT_KIT_ID,
+    sounds: { ...(soundKit(DEFAULT_KIT_ID)?.sounds ?? {}) },
     elements: new Set(view.ARM_ELEMENT_IDS),
     canCancel: false,
     hasSavedSession: false
@@ -1091,6 +1104,91 @@ export class EspiralApp {
       this.renderArmWizardState();
     });
 
+    view.must('#arm-music').addEventListener('change', event => {
+      const target = event.target;
+      if (
+        !(target instanceof HTMLInputElement) &&
+        !(target instanceof HTMLSelectElement)
+      ) {
+        return;
+      }
+      if (target.id === 'arm-root') {
+        this.armState = { ...this.armState, root: Number(target.value) };
+      } else if (target.id === 'arm-scale') {
+        this.armState = {
+          ...this.armState,
+          scale: target.value as ScaleId
+        };
+      } else if (target.id === 'arm-progression') {
+        this.armState = {
+          ...this.armState,
+          progression: target.value as ProgressionId
+        };
+      } else if (target.id === 'arm-bpm') {
+        const bpm = Math.max(40, Math.min(240, Math.round(Number(target.value))));
+        this.armState = { ...this.armState, bpm };
+      }
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-kits').addEventListener('click', event => {
+      const removeId = attr(event, 'data-arm-kit-remove');
+      if (removeId) {
+        this.deps.kits.remove(removeId);
+        if (this.armState.kitId === removeId) {
+          this.armState = { ...this.armState, kitId: 'custom' };
+        }
+        this.renderArmWizardState();
+        return;
+      }
+
+      const kitId = attr(event, 'data-arm-kit');
+      if (!kitId) return;
+      if (kitId === 'custom') {
+        this.armState = { ...this.armState, kitId: 'custom' };
+      } else {
+        const kit = [...SOUND_KITS, ...this.deps.kits.list()].find(
+          entry => entry.id === kitId
+        );
+        if (kit) {
+          this.armState = {
+            ...this.armState,
+            kitId,
+            sounds: { ...kit.sounds }
+          };
+        }
+      }
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-sounds').addEventListener('change', event => {
+      if (!(event.target instanceof HTMLSelectElement)) return;
+      const trackId = attr(event, 'data-arm-sound');
+      if (!trackId) return;
+      this.armState = {
+        ...this.armState,
+        kitId: 'custom',
+        sounds: { ...this.armState.sounds, [trackId]: event.target.value }
+      };
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-kit-save').addEventListener('click', () => {
+      const input = view.q<HTMLInputElement>('#arm-kit-name');
+      const name = input?.value.trim() || 'Mi kit';
+      const id = `user-${Date.now().toString(36)}`;
+      this.deps.kits.save({
+        id,
+        name,
+        description: 'Kit propio',
+        sounds: { ...this.armState.sounds },
+        builtin: false
+      });
+      this.armState = { ...this.armState, kitId: id };
+      if (input) input.value = '';
+      this.renderArmWizardState();
+    });
+
     view.must('#arm-build').addEventListener('click', () => void this.buildArmSet());
     view.must('#arm-load-session').addEventListener('click', () => {
       if (this.deps.sessions.load()) this.closeArmWizard();
@@ -1126,10 +1224,12 @@ export class EspiralApp {
   }
 
   private renderArmWizardState(): void {
+    const kits: SoundKit[] = [...SOUND_KITS, ...this.deps.kits.list()];
     view.renderArmWizard(
       this.deps.store.getState(),
       this.deps.catalog,
       this.deps.presets.list(),
+      kits,
       this.armState
     );
   }
@@ -1148,6 +1248,19 @@ export class EspiralApp {
     }
 
     this.deps.scenes.apply(this.armState.sceneId);
+    this.deps.patterns.setHarmony({
+      root: this.armState.root,
+      scale: this.armState.scale,
+      progression: this.armState.progression
+    });
+    this.deps.playback.setBpm(this.armState.bpm);
+
+    view.ARM_ELEMENT_IDS.forEach(trackId => {
+      if (!this.armState.elements.has(trackId)) return;
+      const soundId = this.armState.sounds[trackId];
+      if (soundId) this.deps.tracks.applyKitSound(trackId, soundId);
+    });
+
     const state = this.deps.store.getState();
     view.ARM_ELEMENT_IDS.forEach(trackId => {
       if (!state.kit.tracks[trackId]) return;

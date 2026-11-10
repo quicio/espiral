@@ -35,8 +35,11 @@
 - Sound compacto: mixer de 16 filas, detalle del track seleccionado y banco en drawer.
 - Sound ocupa todo el ancho y reduce su página de ~6.100 px a ~1.000 px.
 - Wizard de armado inicial: base, escena y elementos; no reproduce hasta entrar.
+- Wizard con raíz, escala, progresión, BPM y sonido por elemento.
+- Kits pre-hechos (Techno, Dub, Breaks, Ambient) y kits propios persistidos en local.
+- Aplicación de sonidos de kick, bass, hats y percusión en todas las escenas.
 - El armado mutea los elementos no elegidos en todas las escenas.
-- 151 tests unitarios.
+- 158 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

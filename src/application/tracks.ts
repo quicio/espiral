@@ -22,6 +22,7 @@ import {
 } from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
 import { soundPreset } from '../domain/sound-bank';
+import { drumSound } from '../domain/drum-sounds';
 import {
   countSteps,
   emptyStepValues,
@@ -190,6 +191,49 @@ export class TrackService {
       history: []
     };
 
+    this.store.update(() => next);
+    this.engine.setTrackMachine(trackId, preset.machine);
+    this.status.generative(`${track.name} · ${preset.name}.`);
+  }
+
+  applyKitSound(trackId: string, soundId: string): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track) return;
+
+    const drum = drumSound(soundId);
+    if (drum) {
+      if (drum.trackId !== track.id) return;
+      const scenes = mapScenes(state, scene => ({
+        ...scene,
+        kit: withTrackMachine(scene.kit, trackId, drum.machineId, drum.machine)
+      }));
+      const next: InstrumentState = {
+        ...state,
+        kit: withTrackMachine(state.kit, trackId, drum.machineId, drum.machine),
+        scenes,
+        history: []
+      };
+      this.store.update(() => next);
+      this.engine.setTrackMachine(trackId, drum.machine);
+      this.status.generative(`${track.name} · ${drum.name}.`);
+      return;
+    }
+
+    if (!canEditTrackSound(track)) return;
+    const preset = soundPreset(soundId);
+    if (!preset) return;
+
+    const scenes = mapScenes(state, scene => ({
+      ...scene,
+      kit: withTrackSound(scene.kit, trackId, preset)
+    }));
+    const next: InstrumentState = {
+      ...state,
+      kit: withTrackSound(state.kit, trackId, preset),
+      scenes,
+      history: []
+    };
     this.store.update(() => next);
     this.engine.setTrackMachine(trackId, preset.machine);
     this.status.generative(`${track.name} · ${preset.name}.`);
@@ -465,6 +509,48 @@ function withTrackPattern(
     tracks: {
       ...kit.tracks,
       [trackId]: { ...track, hasPattern }
+    }
+  };
+}
+
+function withTrackMachine(
+  kit: KitState,
+  trackId: string,
+  machineId: string,
+  machine: MachinePreset['machine']
+): KitState {
+  const track = kit.tracks[trackId];
+  if (!track) return kit;
+  return {
+    ...kit,
+    tracks: {
+      ...kit.tracks,
+      [trackId]: { ...track, machineId, machine }
+    }
+  };
+}
+
+function withTrackSound(
+  kit: KitState,
+  trackId: string,
+  preset: {
+    readonly machineId: string;
+    readonly machine: MachinePreset['machine'];
+    readonly noteSource: MachinePreset['noteSource'];
+  }
+): KitState {
+  const track = kit.tracks[trackId];
+  if (!track) return kit;
+  return {
+    ...kit,
+    tracks: {
+      ...kit.tracks,
+      [trackId]: {
+        ...track,
+        machineId: preset.machineId,
+        machine: preset.machine,
+        noteSource: preset.noteSource
+      }
     }
   };
 }

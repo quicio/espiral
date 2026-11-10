@@ -5,7 +5,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 [![Espiral](docs/espiral.png)](https://quicio.github.io/espiral/)
 
 - 16 tracks: kick, bass, hi-hat, perc, drone, pad, lead y 9 tracks de usuario sampler.
-- Wizard de armado inicial: base, escena y elementos antes de reproducir.
+- Wizard de armado inicial: base, escala, tempo, kit y elementos antes de reproducir.
 - Los tracks de usuario se pueden crear y eliminar; los 7 tracks del núcleo son fijos.
 - Routing matrix track × bus con envíos PRE/POST, retorno por bus y dos buses por defecto.
 - Mod matrix con LFO, macros y paso, aplicada a parámetros de plugins a control-rate.

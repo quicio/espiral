@@ -21,6 +21,7 @@ import type {
 import type { Pattern, PatternState } from './pattern';
 import type { LfoShape, ModulationTarget } from './modulation';
 import type { SceneCollection } from './scene';
+import type { SoundKit } from './sound-kits';
 
 export type StepListener = (time: number, stepCount: number) => void;
 
@@ -194,6 +195,12 @@ export interface PresetSummary {
 export interface PresetRepositoryPort {
   list(): readonly PresetSummary[];
   load(id: string): Promise<unknown>;
+}
+
+export interface SoundKitRepositoryPort {
+  list(): readonly SoundKit[];
+  save(kit: SoundKit): void;
+  remove(id: string): void;
 }
 
 export interface FileGatewayPort {

@@ -41,12 +41,20 @@ try {
     undefined,
     { timeout: 6000 }
   );
+  await page.locator('#arm-bpm').fill('130');
+  await page.locator('#arm-bpm').blur();
+  await page.locator('[data-arm-kit="dub-kit"]').click();
   await page.locator('#arm-build').click();
   await page.waitForFunction(
     () => document.querySelector('#arm-wizard')?.hasAttribute('hidden') === true,
     undefined,
     { timeout: 12_000 }
   );
+
+  const armedBpm = (await page.locator('#bpm-value').textContent())?.trim();
+  if (armedBpm !== '130') {
+    throw new Error(`El wizard no aplicó BPM 130: ${armedBpm}.`);
+  }
 
   const trackRows = await page.locator('#activity-list .activity-row').count();
   if (trackRows !== 16) throw new Error(`Se esperaban 16 tracks, hay ${trackRows}.`);
@@ -201,6 +209,7 @@ try {
         playing,
         stopped,
         bpm,
+        armedBpm,
         bankCards,
         bankMachine,
         clipRows,

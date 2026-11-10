@@ -338,6 +338,25 @@ export class PatternService implements PatternEvolver {
     }));
   }
 
+  setHarmony(
+    update: Partial<
+      Pick<InstrumentState['harmony'], 'root' | 'scale' | 'progression'>
+    >
+  ): void {
+    this.store.update(state => {
+      const harmony = { ...state.harmony, ...update };
+      const scenes = Object.fromEntries(
+        Object.entries(state.scenes).map(([id, scene]) => [
+          id,
+          { ...scene, harmony: { ...scene.harmony, ...update } }
+        ])
+      ) as InstrumentState['scenes'];
+      return { ...state, harmony, scenes };
+    });
+    this.runtime.resetHarmony();
+    this.status.generative('Tonalidad actualizada.');
+  }
+
   setRoot(root: number): void {
     if (!Number.isInteger(root) || root < 0 || root >= this.generative.roots.length) return;
     this.store.update(state => ({

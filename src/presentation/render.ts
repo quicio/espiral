@@ -34,6 +34,10 @@ import {
   SOUND_CATEGORIES,
   type SoundPreset
 } from '../domain/sound-bank';
+import {
+  soundOptionsForTrack,
+  type SoundKit
+} from '../domain/sound-kits';
 import type { MixService } from '../application/mix';
 import type { PlaybackRuntime } from '../application/runtime';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
@@ -280,6 +284,12 @@ export const ARM_ELEMENT_IDS = [
 export interface ArmWizardState {
   readonly presetId: string;
   readonly sceneId: SceneId;
+  readonly root: number;
+  readonly scale: ScaleId;
+  readonly progression: ProgressionId;
+  readonly bpm: number;
+  readonly kitId: string;
+  readonly sounds: Readonly<Record<string, string>>;
   readonly elements: ReadonlySet<string>;
   readonly canCancel: boolean;
   readonly hasSavedSession: boolean;
@@ -296,6 +306,7 @@ export function renderArmWizard(
   state: InstrumentState,
   catalog: Catalog,
   presets: readonly PresetSummary[],
+  kits: readonly SoundKit[],
   arm: ArmWizardState
 ): void {
   const presetRoot = q('#arm-presets');
@@ -308,6 +319,31 @@ export function renderArmWizard(
         </button>`
       )
       .join('');
+  }
+
+  const musicRoot = q('#arm-music');
+  if (musicRoot) {
+    musicRoot.innerHTML = `
+      <label class="arm-field"><span>Raíz</span><select id="arm-root">${catalog.roots
+        .map(
+          root =>
+            `<option value="${root.value}"${root.value === arm.root ? ' selected' : ''}>${root.label}</option>`
+        )
+        .join('')}</select></label>
+      <label class="arm-field"><span>Escala</span><select id="arm-scale">${catalog.scales
+        .map(
+          scale =>
+            `<option value="${scale.value}"${scale.value === arm.scale ? ' selected' : ''}>${scale.label}</option>`
+        )
+        .join('')}</select></label>
+      <label class="arm-field"><span>Progresión</span><select id="arm-progression">${catalog.progressions
+        .map(
+          progression =>
+            `<option value="${progression.value}"${progression.value === arm.progression ? ' selected' : ''}>${progression.label}</option>`
+        )
+        .join('')}</select></label>
+      <label class="arm-field"><span>Tempo</span><input id="arm-bpm" type="number" min="40" max="240" step="1" value="${arm.bpm}" inputmode="numeric"></label>
+    `;
   }
 
   const sceneRoot = q('#arm-scenes');
@@ -334,6 +370,64 @@ export function renderArmWizard(
     }).join('');
   }
 
+  const kitRoot = q('#arm-kits');
+  if (kitRoot) {
+    kitRoot.innerHTML =
+      kits
+        .map(
+          kit => `<div class="arm-kit-card${kit.id === arm.kitId ? ' is-selected' : ''}">
+            <button class="arm-kit-select" type="button" data-arm-kit="${kit.id}" aria-pressed="${kit.id === arm.kitId}">
+              <strong>${kit.name}</strong>
+              <span>${kit.description}</span>
+            </button>
+            ${
+              kit.builtin
+                ? ''
+                : `<button class="arm-kit-remove" type="button" data-arm-kit-remove="${kit.id}" aria-label="Eliminar ${kit.name}">×</button>`
+            }
+          </div>`
+        )
+        .join('') +
+      `<div class="arm-kit-card${arm.kitId === 'custom' ? ' is-selected' : ''}">
+        <button class="arm-kit-select" type="button" data-arm-kit="custom" aria-pressed="${arm.kitId === 'custom'}">
+          <strong>Custom</strong>
+          <span>Tu selección actual</span>
+        </button>
+      </div>`;
+  }
+
+  const soundsRoot = q('#arm-sounds');
+  if (soundsRoot) {
+    soundsRoot.innerHTML = ARM_ELEMENT_IDS.flatMap(trackId => {
+      const track = state.kit.tracks[trackId];
+      if (!track) return [];
+      const options = soundOptionsForTrack(trackId);
+      if (options.length === 0) return [];
+      const selected = arm.elements.has(trackId);
+      const value = arm.sounds[trackId] ?? options[0]?.id ?? '';
+      return `<label class="arm-sound${selected ? '' : ' is-disabled'}">
+        <span>${track.name}</span>
+        <select data-arm-sound="${trackId}"${selected ? '' : ' disabled'}>
+          ${options
+            .map(
+              option =>
+                `<option value="${option.id}"${option.id === value ? ' selected' : ''}>${option.name}</option>`
+            )
+            .join('')}
+        </select>
+      </label>`;
+    }).join('');
+  }
+
+  const selectedKit =
+    arm.kitId === 'custom'
+      ? { name: 'Custom' }
+      : kits.find(kit => kit.id === arm.kitId);
+  const kitStatus = q('#arm-kit-status');
+  if (kitStatus) {
+    kitStatus.textContent = `Kit: ${selectedKit?.name ?? 'Custom'}`;
+  }
+
   const build = q<HTMLButtonElement>('#arm-build');
   if (build) build.disabled = arm.elements.size === 0;
 
@@ -347,7 +441,7 @@ export function renderArmWizard(
   if (status) {
     const preset = presets.find(entry => entry.id === arm.presetId);
     const scene = catalog.scenes.find(entry => entry.id === arm.sceneId);
-    status.textContent = `${preset?.name ?? arm.presetId} · ${scene?.label ?? arm.sceneId} · ${arm.elements.size} elementos`;
+    status.textContent = `${preset?.name ?? arm.presetId} · ${scene?.label ?? arm.sceneId} · ${arm.bpm} BPM · ${arm.elements.size} elementos · ${selectedKit?.name ?? 'Custom'}`;
   }
 }
 
