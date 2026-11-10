@@ -13,7 +13,7 @@ Orden de lectura para un agente nuevo:
 |---|---|
 | [`../AGENTS.md`](../AGENTS.md) | comandos y reglas duras (leer primero) |
 | [`HANDOFF.md`](HANDOFF.md) | estado medido, invariantes, deuda, qué no hacer |
-| [`../ROADMAP.md`](../ROADMAP.md) | roadmap de producto vigente (M0–M3) |
+| [`../ROADMAP.md`](../ROADMAP.md) | roadmap de producto vigente (M0–M6) |
 | [`architecture.md`](architecture.md) | capas, puertos, modelo de ejecución |
 | [`adr/`](adr/) | decisiones con contexto y alternativas |
 | [`specs/`](specs/) | especificaciones por fase |

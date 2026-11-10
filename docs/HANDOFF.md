@@ -2,7 +2,7 @@
 id: handoff
 status: vigente
 version: 1.0.0
-updated: 2026-11-03
+updated: 2026-11-10
 ---
 
 # Handoff — Espiral
@@ -15,18 +15,18 @@ AudioWorklet para plugins.
 
 Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
-## Estado medido (2026-11-03)
+## Estado medido (2026-11-10)
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **132 pasan / 23 archivos** en 2.56 s | `npm test` |
+| tests unitarios | **149 pasan / 25 archivos** en 2.5 s | `npm test` |
 | typecheck | limpio, 3.2 s | `npm run typecheck` |
-| build | 10.3 s | `npm run build` |
-| bundle principal | 458.82 kB (117.73 kB gzip) | salida de `npm run build` |
-| código | 94 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 12 en `docs/specs/` | `ls docs/specs` |
-| ADRs | 4 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio, HEAD `b11ac89` | `git status` |
+| build | 3.7 s (Vite, con typecheck previo) | `npm run build` |
+| bundle principal | 471.37 kB (121.29 kB gzip) | salida de `npm run build` |
+| código | 98 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| specs | 14 en `docs/specs/` | `ls docs/specs` |
+| ADRs | 5 en `docs/adr/` | `ls docs/adr` |
+| git | árbol limpio, HEAD `47311ee` al momento de la medición | `git status` |
 
 **Los dos checks de Playwright no corren en un clone fresco.** Verificado hoy:
 `npm run test:audio` y `npm run test:integration` abortan pidiendo
@@ -85,6 +85,7 @@ prueba final de lo visual.
 | Specs 02 (plugin SDK) en diseño | el rack de inserts ya existe en la UI | verificar alcance antes de implementar terceros |
 | Playwright no instalado | bloquea `test:audio` / `test:integration` | `npx playwright install chromium` |
 | Medidores por track / baseline de performance | pendiente declarado en `architecture.md` | Fase 4 |
+| Clip Grid usa escenas como backing store | M1.2 debe desacoplar clip y patrón; editar un track detenido no persiste hasta relanzar | spec 13, ADR-0005 |
 
 ## Qué NO hacer
 
