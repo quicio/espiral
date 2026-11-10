@@ -87,6 +87,10 @@ La regla de dependencia apunta hacia adentro: el dominio no conoce Tone.js, el D
 `localStorage` ni `fetch`. Ver [`docs/architecture.md`](docs/architecture.md) y los
 specs del roadmap en [`docs/specs/`](docs/specs/).
 
+Para trabajar en el repo (humano o agente): [`AGENTS.md`](AGENTS.md) tiene comandos
+y reglas, y [`docs/README.md`](docs/README.md) es el índice de specs, ADRs y
+handoff.
+
 - `src/domain/` — entidades, patrones, automatización y puertos. Sin frameworks.
 - `src/application/` — casos de uso, store inmutable y servicios de reproducción/mezcla.
 - `src/adapters/` — mapeo entre el estado y los formatos de sesión/preset.
