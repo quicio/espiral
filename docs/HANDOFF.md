@@ -22,11 +22,11 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 | tests unitarios | **151 pasan / 25 archivos** en 2.5 s | `npm test` |
 | typecheck | limpio, 3.2 s | `npm run typecheck` |
 | build | 3.7 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 475.69 kB (122.61 kB gzip) | salida de `npm run build` |
+| bundle principal | 481.19 kB (124.00 kB gzip) | salida de `npm run build` |
 | código | 98 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 16 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio, HEAD `a24f300` al momento de la medición | `git status` |
+| git | árbol limpio, HEAD `dfbc2d7` al momento de la medición | `git status` |
 
 **Los dos checks de Playwright no corren en un clone fresco.** Verificado hoy:
 `npm run test:audio` y `npm run test:integration` abortan pidiendo
