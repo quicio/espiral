@@ -1379,6 +1379,244 @@ body.instrument-page .page-title {
   flex-direction: column;
 }
 
+/* --- Session / Clip Grid ------------------------------------------------ */
+
+.session-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.session-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.session-quantize,
+.clip-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 8rem;
+}
+
+.session-quantize span,
+.clip-field span {
+  font-family: var(--font-mono);
+  font-size: var(--instrument-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.session-quantize select,
+.clip-field select {
+  min-height: 36px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.session-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.session-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 58rem;
+}
+
+.session-row--head {
+  min-height: 2.4rem;
+}
+
+.session-scene-head,
+.session-scene-launch {
+  flex: 0 0 8.5rem;
+  min-width: 8.5rem;
+}
+
+.session-scene-head {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.session-scene-launch {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: transparent;
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.session-scene-launch:hover,
+.session-scene-launch:focus-visible {
+  border-color: var(--umbral-trace);
+}
+
+.session-scene-play {
+  color: var(--umbral-trace);
+}
+
+.session-track-head,
+.session-clip,
+.session-cell {
+  flex: 1 1 7rem;
+  min-width: 6.5rem;
+}
+
+.session-track-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding-bottom: 0.2rem;
+}
+
+.session-track-name {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.session-track-name:hover,
+.session-track-name[aria-pressed="true"] {
+  color: var(--umbral-ink);
+}
+
+.session-stop {
+  flex: 0 0 1.4rem;
+  padding: 0.1rem 0;
+  border: 1px solid var(--umbral-rule-faint);
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  cursor: pointer;
+}
+
+.session-stop:hover,
+.session-stop:focus-visible {
+  border-color: var(--umbral-trace);
+  color: var(--umbral-ink);
+}
+
+.session-clip {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-height: 3.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-left: 3px solid var(--clip-color, var(--umbral-trace));
+  border-radius: 0;
+  background: color-mix(in srgb, var(--clip-color, var(--umbral-trace)) 7%, transparent);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+}
+
+.session-clip:hover,
+.session-clip:focus-visible {
+  border-color: var(--umbral-trace);
+  background: color-mix(in srgb, var(--clip-color, var(--umbral-trace)) 14%, transparent);
+}
+
+.session-clip.is-active {
+  border-color: var(--umbral-ink);
+  background: color-mix(in srgb, var(--clip-color, var(--umbral-trace)) 22%, transparent);
+}
+
+.session-clip.is-stopped {
+  opacity: 0.45;
+}
+
+.session-clip-name {
+  overflow: hidden;
+  color: var(--umbral-ink);
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-clip-state {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.session-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.6rem;
+  border: 1px dashed var(--umbral-rule-faint);
+  color: var(--umbral-muted);
+}
+
+.clip-inspector {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.clip-inspector-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.clip-inspector-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.9rem;
+}
+
 .routing-buses {
   display: flex;
   flex-direction: column;

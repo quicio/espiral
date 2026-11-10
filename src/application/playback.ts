@@ -17,6 +17,7 @@ import type {
   StatusPort
 } from '../domain/ports';
 import { PlaybackRuntime } from './runtime';
+import type { ClipService } from './clip';
 import type { Store } from './store';
 import {
   bassVoice,
@@ -44,6 +45,7 @@ export class PlaybackService {
     private readonly status: StatusPort,
     private readonly automation: AutomationRunner,
     private readonly patterns: PatternEvolver,
+    private readonly clips: ClipService,
     private readonly runtime: PlaybackRuntime
   ) {
     this.unsubscribe = this.clock.onStep((time, stepCount) => this.handleStep(time, stepCount));
@@ -105,6 +107,7 @@ export class PlaybackService {
     this.running = false;
     this.clock.stop();
     this.engine.stop();
+    this.clips.clearPending();
     this.restoreLocks();
     this.store.update(current => ({
       ...current,
@@ -159,8 +162,12 @@ export class PlaybackService {
   }
 
   private handleStep(time: number, stepCount: number): void {
+    if (!this.running) return;
+    this.runtime.absoluteStep = stepCount;
+    this.clips.applyPending(stepCount);
+
     const state = this.store.getState();
-    if (!this.running || !state.transport.playing) return;
+    if (!state.transport.playing) return;
 
     const step = normalizeStep(stepCount);
     if (state.transport.currentStep !== step) {
@@ -189,6 +196,7 @@ export class PlaybackService {
 
     Object.values(state.kit.tracks).forEach(track => {
       if (!track.hasPattern) return;
+      if (!isTrackActive(state, track.id)) return;
       if (!patternStep(state.pattern.steps, track.id, stepCount)) return;
 
       locksAt(state.pattern.locks, track.id, step).forEach(lock => {
@@ -463,6 +471,7 @@ export class PlaybackService {
     time: number,
     callback: (time: number, velocity: number) => void
   ): void {
+    if (!isTrackActive(state, trackId)) return;
     if (!patternStep(state.pattern.steps, trackId, stepCount)) return;
 
     const step = normalizeStep(stepCount);
@@ -556,6 +565,10 @@ function isSynthMachineKind(
   kind: string
 ): kind is 'poly' | 'mono' | 'pluck' | 'plugin' {
   return kind === 'poly' || kind === 'mono' || kind === 'pluck' || kind === 'plugin';
+}
+
+function isTrackActive(state: InstrumentState, trackId: string): boolean {
+  return state.activeClips[trackId] !== null;
 }
 
 function lockKey(trackId: string, target: LockTarget): string {

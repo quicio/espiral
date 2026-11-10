@@ -4,6 +4,7 @@ import type {
   PresetSummary,
   StatusPort
 } from '../domain/ports';
+import { activeClipsForScene, createClipsFromScenes } from '../domain/clip';
 import type { MixService } from './mix';
 import type { PlaybackService } from './playback';
 import type { Store } from './store';
@@ -28,6 +29,9 @@ export class PresetService {
       const raw = await this.repository.load(id);
       const state = this.store.getState();
       const config = this.mapper.fromDto(raw, state);
+      const scenes = config.scenes ?? state.scenes;
+      const scene = config.scene ?? state.scene;
+      const clips = createClipsFromScenes(scenes);
       this.mix.beginTransition();
       transitioning = true;
       const next = {
@@ -42,8 +46,10 @@ export class PresetService {
         harmony: config.harmony ?? state.harmony,
         seed: config.seed ?? state.seed,
         params: config.params ?? state.params,
-        scenes: config.scenes ?? state.scenes,
-        scene: config.scene ?? state.scene,
+        scenes,
+        scene,
+        clips,
+        activeClips: activeClipsForScene(clips, scene),
         selected: config.selected ?? state.selected,
         history: [],
         clipboard: null

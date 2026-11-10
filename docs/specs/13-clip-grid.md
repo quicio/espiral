@@ -1,0 +1,123 @@
+---
+id: spec-13
+title: Clip Grid / Session View
+status: implementada
+version: 0.1.0
+updated: 2026-11-10
+fase: 5
+depends_on: [spec-03, spec-12, adr-0005]
+---
+
+# Clip Grid / Session View
+
+## Objetivo
+
+Llevar la performance de Espiral a una grilla de clips: lanzar por track o por escena,
+cuantizar el cambio y dejar que los tracks sigan sonando mientras otros cambian.
+
+Este es el primer corte de M1. Prioriza el comportamiento de performance sobre la
+creación libre de slots.
+
+## Modelo
+
+Un `ClipState` es un slot de performance con metadata:
+
+- `id`: estable, `clip-<escena>-<track>`.
+- `trackId` y `sceneId`.
+- `name`, `color`.
+- `followAction`: `none`, `next`, `previous`, `random` o `stop`.
+- `followAfter`: compases antes de disparar el follow.
+
+Los patrones siguen viviendo en las escenas. La performance usa `state.pattern` como
+patrón vivo:
+
+- `state.activeClips[trackId]` apunta al clip activo.
+- `null` significa track detenido.
+- al cambiar de clip, el patrón vivo saliente se guarda en su escena de origen y se carga
+  el patrón de la escena destino.
+- `materializeScenes()` copia los patrones vivos de todos los clips activos antes de
+  guardar/exportar, sin contaminar escenas de otros clips.
+
+La grilla usa las cuatro escenas actuales como filas (`umbral`, `deriva`, `pulso`, `caos`)
+y los tracks con patrón como columnas.
+
+## Lanzamiento
+
+`ClipService` agenda acciones en `PlaybackRuntime`:
+
+- `launchClip(clipId, quantize)`.
+- `launchScene(sceneId, quantize)`.
+- `stopTrack(trackId, quantize)`.
+- `stopAll(quantize)`.
+
+Cuantizaciones: inmediato, 1 beat, 1 compás y 2 compases. Si el transporte está detenido,
+la acción se aplica en el acto. Si está sonando, se aplica en el próximo borde cuantizado
+antes de disparar el paso.
+
+## Follow actions
+
+Cada clip puede disparar otro clip del mismo track después de N compases:
+
+- `next` y `previous` recorren la columna del track.
+- `random` elige otro clip de la columna.
+- `stop` detiene el track.
+
+El follow se evalúa al comienzo del paso, antes de los disparos de audio.
+
+## UI
+
+Nueva vista **Session**:
+
+- grilla escena × track;
+- botón de lanzamiento por clip;
+- botón de escena por fila;
+- stop por track y stop all;
+- selector global de cuantización;
+- inspector del clip activo con follow action y compases.
+
+Los tracks generativos sin patrón no aparecen en la grilla. Cuando se les agrega un patrón
+con `+P`, se crean sus clips y aparecen como una columna más.
+
+## Persistencia
+
+La sesión v2 agrega campos opcionales:
+
+- `clips`: metadata de clips.
+- `activeClips`: track → clip activo o `null`.
+- `clipQuantize`: cuantización global.
+
+Si una sesión vieja no los trae, se derivan clips desde las escenas y se activa la fila de
+la escena actual. Al guardar, `SessionMapper` materializa los patrones vivos en sus escenas
+antes de escribir el DTO.
+
+## Integración con tracks
+
+- `addTrack` crea clips en las cuatro escenas y activa el de la escena actual.
+- `removeTrack` elimina clips y el estado activo del track.
+- `attachPattern` de drone/pad/lead crea clips en todas las escenas.
+- `detachPattern` elimina sus clips y vuelve a modo generativo.
+- `SceneService.apply` activa la fila de la escena destino.
+
+## Criterios de aceptación
+
+- Dos clips del mismo track se alternan sin detener el transporte.
+- Lanzar una escena mantiene los tracks en fase.
+- Un follow action cambia de clip después de los compases configurados.
+- Stop por track y stop all silencian sin borrar el patrón vivo.
+- Clips, activos y follow settings sobreviven al round-trip de sesión.
+- `npm test`, `npm run test:audio` y `npm run test:integration` pasan.
+
+## Pendiente para M1.2
+
+- Crear, duplicar, renombrar, colorear y eliminar clips fuera de las cuatro escenas.
+- Slots independientes por track, sin depender de una escena completa.
+- Edición de un track detenido que persista en su último clip.
+- Vista de grilla a pantalla completa o con columnas fijas.
+- Indicador visual de lanzamientos pendientes.
+
+## Riesgos
+
+- El modelo actual usa escenas como backing store; migrar a clips con patrón propio requiere
+  una migración de sesión.
+- Editar un track detenido no actualiza su clip hasta que se vuelve a lanzar.
+- La grilla con 13 columnas requiere scroll horizontal en pantallas chicas.

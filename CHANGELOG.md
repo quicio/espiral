@@ -25,7 +25,10 @@
 - Drone, pad y lead pueden alternar entre modo generativo y patrón (`+P` / `−P`).
 - Nuevas máquinas `drone-sampler`, `soft-pad` y `lead-synth`.
 - Roadmap de producto con milestones hacia una experiencia Ableton web y encaje con OpenSpec.
-- 132 tests unitarios.
+- Session / Clip Grid: clips por track y escena, launch cuantizado, follow actions y stop.
+- Los clips activos usan el patrón vivo y se materializan en sus escenas antes de guardar.
+- Persistencia de clips, clips activos y cuantización en sesión v2.
+- 149 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

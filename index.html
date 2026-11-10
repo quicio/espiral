@@ -91,13 +91,14 @@
     <div class="view-bar">
       <div class="view-switch" role="tablist" aria-label="Contexto del instrumento">
         <button class="view-tab is-active" id="tab-performance" type="button" role="tab" aria-selected="true" aria-controls="view-performance" data-view="performance">Performance</button>
+        <button class="view-tab" id="tab-session" type="button" role="tab" aria-selected="false" aria-controls="view-session" data-view="session">Session</button>
         <button class="view-tab" id="tab-sequencer" type="button" role="tab" aria-selected="false" aria-controls="view-sequencer" data-view="sequencer">Sequencer</button>
         <button class="view-tab" id="tab-sound" type="button" role="tab" aria-selected="false" aria-controls="view-sound" data-view="sound">Sound</button>
         <button class="view-tab" id="tab-routing" type="button" role="tab" aria-selected="false" aria-controls="view-routing" data-view="routing">Routing</button>
         <button class="view-tab" id="tab-modulation" type="button" role="tab" aria-selected="false" aria-controls="view-modulation" data-view="modulation">Mod</button>
       </div>
       <p class="view-keys">
-        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><kbd>5</kbd>
+        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><kbd>5</kbd><kbd>6</kbd>
         <span>cambiar contexto</span>
       </p>
     </div>
@@ -125,6 +126,33 @@
           <div id="activity-list" class="activity-list"></div>
           <p class="performance-legend">M silencia · F congela · el nombre selecciona el track para editar.</p>
         </div>
+      </section>
+
+      <section class="view" id="view-session" role="tabpanel" aria-labelledby="tab-session" tabindex="0" hidden>
+        <h2 class="sr-only">Session</h2>
+
+        <div class="session-head">
+          <div>
+            <p class="section-label">Clip Grid</p>
+            <p id="session-readout" class="sound-readout">Clips por track y escena.</p>
+          </div>
+          <div class="session-actions">
+            <label class="session-quantize">
+              <span>Launch</span>
+              <select id="clip-quantize" aria-label="Cuantización de lanzamiento">
+                <option value="immediate">Inmediato</option>
+                <option value="beat">1 beat</option>
+                <option value="bar">1 compás</option>
+                <option value="2bar">2 compases</option>
+              </select>
+            </label>
+            <button id="clip-stop-all" class="line-action" type="button">Stop all</button>
+          </div>
+        </div>
+
+        <div id="session-grid" class="session-grid" role="grid" aria-label="Clip grid"></div>
+        <div id="clip-inspector" class="clip-inspector"></div>
+        <p class="tool-hint">El clip activo se edita en Sequencer. Los clips inactivos guardan su patrón en la escena de origen.</p>
       </section>
 
       <section class="view" id="view-sequencer" role="tabpanel" aria-labelledby="tab-sequencer" tabindex="0" hidden>

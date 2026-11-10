@@ -4,6 +4,11 @@ import {
   PATTERN_LENGTH
 } from '../domain/channels';
 import { DEFAULT_AUTOMATION_VALUES } from '../domain/automation';
+import {
+  DEFAULT_CLIP_QUANTIZE,
+  activeClipsForScene,
+  createClipsFromScenes
+} from '../domain/clip';
 import { createDefaultKit } from '../domain/default-kit';
 import { cloneKit, kitTracks } from '../domain/kit';
 import { createDefaultModulation } from '../domain/modulation';
@@ -87,6 +92,7 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
   ) as unknown as SceneCollection;
 
   const initial = scenes.umbral;
+  const clips = createClipsFromScenes(scenes);
 
   return {
     selected: 'kick',
@@ -113,6 +119,9 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     kit: initial.kit,
     modulation: createDefaultModulation(),
     masterVolume: initial.masterVolume,
+    clips,
+    activeClips: activeClipsForScene(clips, 'umbral'),
+    clipQuantize: DEFAULT_CLIP_QUANTIZE,
     history: [],
     clipboard: null,
     mutationCount: 0,

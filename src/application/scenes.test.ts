@@ -5,6 +5,7 @@ import { PatternService } from '../application/patterns';
 import { PlaybackRuntime } from '../application/runtime';
 import { SceneService } from '../application/scenes';
 import { Store } from '../application/store';
+import { clipId } from '../domain/clip';
 import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
@@ -46,5 +47,18 @@ describe('SceneService', () => {
     scenes.captureCurrent();
 
     expect(store.getState().scenes.umbral.kit.tracks.bass?.gainDb).toBe(-14);
+  });
+
+  it('sets active clips to the applied scene row', () => {
+    const { store, scenes } = setup();
+
+    scenes.apply('deriva');
+
+    const state = store.getState();
+    expect(state.activeClips.kick).toBe(clipId('deriva', 'kick'));
+    expect(state.activeClips['track-08']).toBe(clipId('deriva', 'track-08'));
+    expect(state.pattern.steps.kick).toEqual(
+      state.scenes.deriva.pattern.steps.kick
+    );
   });
 });

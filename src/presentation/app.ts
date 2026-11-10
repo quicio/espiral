@@ -1,9 +1,11 @@
 import type { GenerativeParams, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
+import type { ClipFollowAction, ClipQuantize } from '../domain/clip';
 import type { ModulationState } from '../domain/modulation';
 import { formatMachineParam, machinePreset } from '../domain/machines';
 import { denormalizePluginParam } from '../domain/plugin';
 import type { StatusPort } from '../domain/ports';
 import type { AutomationService } from '../application/automation';
+import type { ClipService } from '../application/clip';
 import type { ExportService } from '../application/export';
 import type { MixService } from '../application/mix';
 import type { LocksService } from '../application/locks';
@@ -20,13 +22,20 @@ import * as view from './render';
 import { CpuMeter, cpuSeverity } from './cpu-meter';
 import { formatPluginParam } from './plugin-controls';
 
-type ViewId = 'performance' | 'sequencer' | 'sound' | 'routing' | 'modulation';
+type ViewId =
+  | 'performance'
+  | 'session'
+  | 'sequencer'
+  | 'sound'
+  | 'routing'
+  | 'modulation';
 
 interface PresentationDependencies {
   readonly store: Store;
   readonly catalog: view.Catalog;
   readonly playback: PlaybackService;
   readonly patterns: PatternService;
+  readonly clips: ClipService;
   readonly automation: AutomationService;
   readonly mix: MixService;
   readonly sessions: SessionService;
@@ -370,6 +379,7 @@ export class EspiralApp {
     this.bindLocks();
     this.bindDynamics();
     this.bindChannelActions();
+    this.bindClipActions();
     this.bindSessionActions();
     this.bindViewControls();
     this.bindKeyboard();
@@ -917,6 +927,48 @@ export class EspiralApp {
     });
   }
 
+  private bindClipActions(): void {
+    const { clips, patterns } = this.deps;
+
+    view.must<HTMLSelectElement>('#clip-quantize').addEventListener('change', event => {
+      if (!(event.target instanceof HTMLSelectElement)) return;
+      clips.setQuantize(event.target.value as ClipQuantize);
+    });
+
+    view.must('#clip-stop-all').addEventListener('click', () => clips.stopAll());
+
+    view.must('#session-grid').addEventListener('click', event => {
+      const clip = attr(event, 'data-clip-launch');
+      const stop = attr(event, 'data-clip-stop');
+      const scene = attr(event, 'data-scene-launch');
+      const select = attr(event, 'data-select');
+
+      if (clip) {
+        clips.launchClip(clip);
+        const trackId = this.deps.store.getState().clips[clip]?.trackId;
+        if (trackId) patterns.selectChannel(trackId);
+      } else if (stop) {
+        clips.stopTrack(stop);
+      } else if (scene && isSceneId(scene)) {
+        clips.launchScene(scene);
+      } else if (select) {
+        patterns.selectChannel(select);
+      }
+    });
+
+    view.must('#clip-inspector').addEventListener('change', event => {
+      if (!(event.target instanceof HTMLSelectElement)) return;
+      const action = attr(event, 'data-clip-follow-action');
+      const after = attr(event, 'data-clip-follow-after');
+      if (action) {
+        clips.setFollowAction(action, event.target.value as ClipFollowAction);
+      }
+      if (after) {
+        clips.setFollowAfter(after, Number(event.target.value));
+      }
+    });
+  }
+
   private bindSessionActions(): void {
     const { sessions, exportService } = this.deps;
     view.must('#save-session').addEventListener('click', () => sessions.save());
@@ -1003,10 +1055,11 @@ export class EspiralApp {
       }
 
       if (event.key === '1') this.setView('performance');
-      else if (event.key === '2') this.setView('sequencer');
-      else if (event.key === '3') this.setView('sound');
-      else if (event.key === '4') this.setView('routing');
-      else if (event.key === '5') this.setView('modulation');
+      else if (event.key === '2') this.setView('session');
+      else if (event.key === '3') this.setView('sequencer');
+      else if (event.key === '4') this.setView('sound');
+      else if (event.key === '5') this.setView('routing');
+      else if (event.key === '6') this.setView('modulation');
       else if (event.key.toLowerCase() === 'r') this.deps.patterns.mutateSelected();
       else if (event.key.toLowerCase() === 'f') this.deps.patterns.toggleFreeze();
       else if (event.key.toLowerCase() === 'm') this.toggleMute(this.deps.store.getState().selected);
@@ -1032,13 +1085,14 @@ export class EspiralApp {
       tab.setAttribute('aria-selected', active ? 'true' : 'false');
       tab.classList.toggle('is-active', active);
     });
-    (['performance', 'sequencer', 'sound', 'routing', 'modulation'] as const).forEach(name => {
+    (['performance', 'session', 'sequencer', 'sound', 'routing', 'modulation'] as const).forEach(name => {
       const section = view.q(`#view-${name}`);
       if (section) section.hidden = name !== id;
     });
 
     const state = this.deps.store.getState();
     if (id === 'performance') view.renderPerformance(state, this.deps.catalog);
+    if (id === 'session') view.renderSession(state);
     if (id === 'sequencer') {
       view.renderSequencer(state, this.deps.catalog);
       view.renderAutomation(state, this.deps.catalog);
@@ -1070,10 +1124,20 @@ export class EspiralApp {
 function isView(value: unknown): value is ViewId {
   return (
     value === 'performance' ||
+    value === 'session' ||
     value === 'sequencer' ||
     value === 'sound' ||
     value === 'routing' ||
     value === 'modulation'
+  );
+}
+
+function isSceneId(value: string): value is SceneId {
+  return (
+    value === 'umbral' ||
+    value === 'deriva' ||
+    value === 'pulso' ||
+    value === 'caos'
   );
 }
 

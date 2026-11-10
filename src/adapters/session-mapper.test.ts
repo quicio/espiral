@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SessionMapper } from '../adapters/session-mapper';
+import { ClipService } from '../application/clip';
 import { createInitialState } from '../application/initial-state';
+import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
 import { TrackService } from '../application/tracks';
 import {
@@ -8,6 +10,7 @@ import {
   findInsertByPlugin,
   reverbInsert
 } from '../domain/channels';
+import { clipId } from '../domain/clip';
 import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
@@ -268,6 +271,30 @@ describe('SessionMapper', () => {
       degree: 0,
       octave: 5
     });
+  });
+
+  it('round-trips clips, active clips and follow settings', () => {
+    const { store, mapper } = setup();
+    const clips = new ClipService(store, new PlaybackRuntime(), new FakeStatus());
+    const derivaKick = clipId('deriva', 'kick');
+
+    clips.launchClip(derivaKick);
+    clips.setFollowAction(derivaKick, 'next');
+    clips.setFollowAfter(derivaKick, 2);
+    clips.setQuantize('beat');
+
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(store.getState()))),
+      store.getState()
+    );
+
+    expect(restored.activeClips.kick).toBe(derivaKick);
+    expect(restored.clips[derivaKick]?.followAction).toBe('next');
+    expect(restored.clips[derivaKick]?.followAfter).toBe(2);
+    expect(restored.clipQuantize).toBe('beat');
+    expect(restored.pattern.steps.kick).toEqual(
+      restored.scenes.deriva.pattern.steps.kick
+    );
   });
 
   it('ignores invalid session values', () => {

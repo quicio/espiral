@@ -6,6 +6,12 @@ import {
   type ChannelKey
 } from '../domain/channels';
 import {
+  CLIP_SCENE_ORDER,
+  clipId,
+  type ClipFollowAction,
+  type ClipState
+} from '../domain/clip';
+import {
   canEditTrackSound,
   isGenerativeRole,
   kitHasSolo,
@@ -128,6 +134,138 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
       ${track.hasPattern ? `<button class="activity-action" type="button" data-freeze="${track.id}" aria-pressed="${state.pattern.frozen[track.id] ?? false}" aria-label="Congelar ${track.name}">F</button>` : ''}
     </div>`;
   }).join('');
+}
+
+export function renderSession(state: InstrumentState): void {
+  const grid = q('#session-grid');
+  if (!grid) return;
+
+  const tracks = kitTracks(state.kit).filter(track => track.hasPattern);
+  const quantize = q<HTMLSelectElement>('#clip-quantize');
+  if (quantize) quantize.value = state.clipQuantize;
+
+  const selected = state.kit.tracks[state.selected];
+  const activeId = selected ? state.activeClips[selected.id] : undefined;
+  const activeClip = activeId ? state.clips[activeId] : undefined;
+  const readout = q('#session-readout');
+  if (readout) {
+    readout.textContent = activeClip
+      ? `${activeClip.name} · ${state.scenes[activeClip.sceneId]?.name ?? activeClip.sceneId}`
+      : selected?.hasPattern
+        ? `${selected.name} detenido`
+        : 'Clips por track y escena.';
+  }
+
+  const head = `<div class="session-row session-row--head">
+    <div class="session-scene-head"><span>Escena</span></div>
+    ${tracks
+      .map(
+        track => `<div class="session-track-head">
+          <button class="session-track-name" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}">${track.name}</button>
+          <button class="session-stop" type="button" data-clip-stop="${track.id}" aria-label="Detener ${track.name}">■</button>
+        </div>`
+      )
+      .join('')}
+  </div>`;
+
+  const rows = CLIP_SCENE_ORDER.map(sceneId => {
+    const scene = state.scenes[sceneId];
+    if (!scene) return '';
+    const cells = tracks
+      .map(track => {
+        const id = clipId(sceneId, track.id);
+        const clip = state.clips[id];
+        if (!clip) {
+          return `<div class="session-cell session-cell--empty"><span>—</span></div>`;
+        }
+        const active = state.activeClips[track.id] === clip.id;
+        const stopped = state.activeClips[track.id] === null;
+        return `<button class="session-clip${active ? ' is-active' : ''}${stopped ? ' is-stopped' : ''}" type="button" data-clip-launch="${clip.id}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name}">
+          <span class="session-clip-name">${clip.name}</span>
+          <span class="session-clip-state">${active ? '● playing' : stopped ? '■ stopped' : 'clip'}</span>
+        </button>`;
+      })
+      .join('');
+
+    return `<div class="session-row">
+      <button class="session-scene-launch" type="button" data-scene-launch="${sceneId}" aria-label="Lanzar escena ${scene.name}">
+        <span class="session-scene-play">▶</span>
+        <span>${scene.name}</span>
+      </button>
+      ${cells}
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = head + rows;
+  renderClipInspector(state, selected, activeClip);
+}
+
+function renderClipInspector(
+  state: InstrumentState,
+  track: TrackState | undefined,
+  clip: ClipState | undefined
+): void {
+  const inspector = q('#clip-inspector');
+  if (!inspector) return;
+
+  if (!track || !track.hasPattern) {
+    inspector.innerHTML =
+      '<p class="lock-empty">Seleccioná un track con patrón para ver su clip.</p>';
+    return;
+  }
+
+  if (!clip) {
+    inspector.innerHTML = `<p class="lock-empty">${track.name} está detenido. Lanzá un clip para editarlo.</p>`;
+    return;
+  }
+
+  const scene = state.scenes[clip.sceneId];
+  inspector.innerHTML = `<div class="clip-inspector-head">
+      <div>
+        <p class="section-label">Clip activo</p>
+        <p class="sound-readout">${clip.name}</p>
+      </div>
+      <p class="section-meta">${scene?.name ?? clip.sceneId}</p>
+    </div>
+    <div class="clip-inspector-controls">
+      <label class="clip-field">
+        <span>Follow</span>
+        <select data-clip-follow-action="${clip.id}" aria-label="Follow action de ${clip.name}">
+          ${followActionOptions(clip.followAction)}
+        </select>
+      </label>
+      <label class="clip-field">
+        <span>Cada</span>
+        <select data-clip-follow-after="${clip.id}" aria-label="Compases de follow de ${clip.name}">
+          ${followAfterOptions(clip.followAfter)}
+        </select>
+      </label>
+    </div>`;
+}
+
+function followActionOptions(current: ClipFollowAction): string {
+  const options: readonly { value: ClipFollowAction; label: string }[] = [
+    { value: 'none', label: 'No follow' },
+    { value: 'next', label: 'Siguiente' },
+    { value: 'previous', label: 'Anterior' },
+    { value: 'random', label: 'Aleatorio' },
+    { value: 'stop', label: 'Stop' }
+  ];
+  return options
+    .map(
+      option =>
+        `<option value="${option.value}"${option.value === current ? ' selected' : ''}>${option.label}</option>`
+    )
+    .join('');
+}
+
+function followAfterOptions(current: number): string {
+  return [0, 1, 2, 4, 8, 16]
+    .map(
+      bars =>
+        `<option value="${bars}"${bars === current ? ' selected' : ''}>${bars === 0 ? '—' : `${bars} ${bars === 1 ? 'compás' : 'compases'}`}</option>`
+    )
+    .join('');
 }
 
 export function renderSequencer(state: InstrumentState, _catalog: Catalog): void {
@@ -1561,6 +1699,7 @@ export function renderAll(
   options: { sound?: boolean } = {}
 ): void {
   renderPerformance(state, catalog);
+  renderSession(state);
   renderSequencer(state, catalog);
   if (options.sound !== false) renderSound(state, catalog, mixService);
   renderAutomation(state, catalog);

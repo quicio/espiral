@@ -7,6 +7,12 @@ import {
   type MachinePreset
 } from '../domain/machines';
 import {
+  addClipsForTrack,
+  clipId,
+  removeClipsForTrack,
+  withoutActiveTrack
+} from '../domain/clip';
+import {
   canEditTrackSound,
   isGenerativeRole,
   trackToConfig,
@@ -59,6 +65,10 @@ export class TrackService {
     const preset = this.resolvePreset(machineId) ?? machinePreset('sampler');
     const track = createUserTrack(nextTrackIndex(state.kit), preset.id, preset);
     const empty = emptyPattern();
+    const scenes = mapScenes(state, scene => addTrackToScene(scene, track, empty));
+    const clips = addClipsForTrack(state.clips, scenes, track.id);
+    const activeClip =
+      clips[clipId(state.scene, track.id)] ?? clips[clipId('umbral', track.id)];
     const next: InstrumentState = {
       ...state,
       kit: {
@@ -77,7 +87,11 @@ export class TrackService {
         },
         ratchets: { ...state.pattern.ratchets, [track.id]: emptyStepValues(1) }
       },
-      scenes: mapScenes(state, scene => addTrackToScene(scene, track, empty)),
+      scenes,
+      clips,
+      activeClips: activeClip
+        ? { ...state.activeClips, [track.id]: activeClip.id }
+        : state.activeClips,
       selected: track.id,
       history: []
     };
@@ -206,15 +220,23 @@ export class TrackService {
           GENERATIVE_PATTERN_SEEDS[role][index] === 'x' ? 1 : 0
       )
     );
+    const scenes = mapScenes(state, scene => ({
+      ...scene,
+      kit: withTrackPattern(scene.kit, trackId, true),
+      pattern: withPattern(scene.pattern, trackId, pattern)
+    }));
+    const clips = addClipsForTrack(state.clips, scenes, trackId);
+    const activeClip =
+      clips[clipId(state.scene, trackId)] ?? clips[clipId('umbral', trackId)];
     const next: InstrumentState = {
       ...state,
       kit: withTrackPattern(state.kit, trackId, true),
       pattern: withPattern(state.pattern, trackId, pattern),
-      scenes: mapScenes(state, scene => ({
-        ...scene,
-        kit: withTrackPattern(scene.kit, trackId, true),
-        pattern: withPattern(scene.pattern, trackId, pattern)
-      })),
+      scenes,
+      clips,
+      activeClips: activeClip
+        ? { ...state.activeClips, [trackId]: activeClip.id }
+        : state.activeClips,
       selected: trackId,
       history: []
     };
@@ -237,6 +259,8 @@ export class TrackService {
         kit: withTrackPattern(scene.kit, trackId, false),
         pattern: removeTrackFromPattern(scene.pattern, trackId)
       })),
+      clips: removeClipsForTrack(state.clips, trackId),
+      activeClips: withoutActiveTrack(state.activeClips, trackId),
       history: []
     };
 
@@ -335,6 +359,8 @@ export class TrackService {
       },
       pattern,
       scenes: mapScenes(state, scene => removeTrackFromScene(scene, trackId)),
+      clips: removeClipsForTrack(state.clips, trackId),
+      activeClips: withoutActiveTrack(state.activeClips, trackId),
       modulation: {
         ...state.modulation,
         routes: state.modulation.routes.filter(

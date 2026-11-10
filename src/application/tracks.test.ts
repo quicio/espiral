@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createInitialState } from './initial-state';
 import { Store } from './store';
 import { TrackService } from './tracks';
+import { clipId } from '../domain/clip';
 import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
@@ -28,6 +29,8 @@ describe('TrackService', () => {
     expect(state.pattern.steps['track-17']?.every(step => step === 0)).toBe(true);
     expect(state.scenes.deriva.kit.tracks['track-17']).toBeDefined();
     expect(state.scenes.caos.pattern.steps['track-17']).toBeDefined();
+    expect(state.clips[clipId('umbral', 'track-17')]).toBeDefined();
+    expect(state.activeClips['track-17']).toBe(clipId('umbral', 'track-17'));
     expect(engine.added.at(-1)?.id).toBe('track-17');
   });
 
@@ -174,6 +177,8 @@ describe('TrackService', () => {
     expect(withPattern.scenes.deriva.pattern.steps.pad).toEqual(
       withPattern.pattern.steps.pad
     );
+    expect(withPattern.clips[clipId('umbral', 'pad')]).toBeDefined();
+    expect(withPattern.activeClips.pad).toBe(clipId('umbral', 'pad'));
     expect(withPattern.selected).toBe('pad');
     expect(status.messages.at(-1)).toContain('patrón');
 
@@ -183,6 +188,8 @@ describe('TrackService', () => {
     expect(withoutPattern.kit.tracks.pad?.hasPattern).toBe(false);
     expect(withoutPattern.pattern.steps.pad).toBeUndefined();
     expect(withoutPattern.scenes.caos.pattern.steps.pad).toBeUndefined();
+    expect(withoutPattern.clips[clipId('umbral', 'pad')]).toBeUndefined();
+    expect(withoutPattern.activeClips.pad).toBeUndefined();
     expect(withoutPattern.selected).toBe('pad');
   });
 
@@ -259,6 +266,8 @@ describe('TrackService', () => {
     expect(state.pattern.frozen['track-09']).toBeUndefined();
     expect(state.scenes.umbral.kit.tracks['track-09']).toBeUndefined();
     expect(state.scenes.umbral.pattern.steps['track-09']).toBeUndefined();
+    expect(state.clips[clipId('umbral', 'track-09')]).toBeUndefined();
+    expect(state.activeClips['track-09']).toBeUndefined();
     expect(state.selected).not.toBe('track-09');
     expect(engine.removed.at(-1)).toBe('track-09');
   });

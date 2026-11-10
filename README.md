@@ -29,6 +29,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Modulación audio-rate para parámetros de plugins que exponen `AudioParam`.
 - Los presets pueden definir máquinas por track y variarlas por escena.
 - Performances por escenas: `Umbral`, `Deriva`, `Pulso`, `Caos contenido`.
+- Session / Clip Grid con lanzamiento cuantizado, follow actions y stop por track.
 - Semilla reproducible, Euclid, densidad, mutación, freeze y evolución.
 - Tonalidad: 12 raíces, 7 escalas y 4 progresiones.
 - Duración de notas para pad, lead y bass.

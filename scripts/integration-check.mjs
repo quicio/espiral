@@ -41,7 +41,14 @@ try {
   if (trackRows !== 16) throw new Error(`Se esperaban 16 tracks, hay ${trackRows}.`);
 
   await page.locator('#transport-play').click();
-  await page.waitForTimeout(2500);
+  await page
+    .waitForFunction(
+      () => (document.querySelector('#pulse-step')?.textContent ?? '').trim() !== '00',
+      undefined,
+      { timeout: 6000 }
+    )
+    .catch(() => undefined);
+  await page.waitForTimeout(300);
 
   const pulse = (await page.locator('#pulse-step').textContent())?.trim();
   const playing = (await page.locator('#instrument-status').textContent())?.trim();
@@ -58,6 +65,7 @@ try {
   if (stoppedPulse !== '00') throw new Error(`El pulso no se reinició: ${stoppedPulse}.`);
 
   for (const tab of [
+    '#tab-session',
     '#tab-sequencer',
     '#tab-sound',
     '#tab-routing',
@@ -66,6 +74,26 @@ try {
   ]) {
     await page.locator(tab).click();
     await page.waitForTimeout(80);
+  }
+
+  await page.locator('#tab-session').click();
+  const clipRows = await page.locator('.session-row').count();
+  const clipCells = await page.locator('[data-clip-launch]').count();
+  if (clipRows !== 5 || clipCells === 0) {
+    throw new Error(`Clip grid incompleto: ${clipRows} filas, ${clipCells} clips.`);
+  }
+  await page.locator('[data-scene-launch="deriva"]').click();
+  await page.waitForTimeout(300);
+  const activeClips = await page.locator('.session-clip.is-active').count();
+  const sessionReadout = (await page.locator('#session-readout').textContent())?.trim();
+  if (activeClips === 0 || !sessionReadout?.includes('Deriva')) {
+    throw new Error(`La escena Deriva no lanzó clips: ${activeClips}, ${sessionReadout}.`);
+  }
+  await page.locator('#clip-stop-all').click();
+  await page.waitForTimeout(300);
+  const activeAfterStop = await page.locator('.session-clip.is-active').count();
+  if (activeAfterStop !== 0) {
+    throw new Error(`Stop all dejó ${activeAfterStop} clips activos.`);
   }
 
   await page.locator('#tab-sound').click();
@@ -107,6 +135,8 @@ try {
         bpm,
         bankCards,
         bankMachine,
+        clipRows,
+        clipCells,
         samples: samples.length,
         clip
       },

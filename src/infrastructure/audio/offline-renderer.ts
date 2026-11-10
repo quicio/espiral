@@ -1,5 +1,6 @@
 import * as Tone from 'tone';
 import { AutomationService } from '../../application/automation';
+import { ClipService } from '../../application/clip';
 import { PlaybackService } from '../../application/playback';
 import { PlaybackRuntime } from '../../application/runtime';
 import { Store } from '../../application/store';
@@ -86,6 +87,7 @@ export class ToneOfflineRenderer implements AudioExportPort {
       );
       const automation = new AutomationService(store, engine, status);
       const evolver = { evolve(): void {} };
+      const clips = new ClipService(store, runtime, status);
       const playback = new PlaybackService(
         store,
         clock,
@@ -94,6 +96,7 @@ export class ToneOfflineRenderer implements AudioExportPort {
         status,
         automation,
         evolver,
+        clips,
         runtime
       );
 

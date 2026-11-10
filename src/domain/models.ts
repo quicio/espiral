@@ -1,4 +1,5 @@
 import type { AutomationTargetId } from './automation';
+import type { ActiveClips, ClipCollection, ClipQuantize } from './clip';
 import type { KitState } from './kit';
 import type { ModulationState } from './modulation';
 import type { Pattern, PatternState, PatternSteps } from './pattern';
@@ -85,6 +86,9 @@ export interface InstrumentState {
   readonly kit: KitState;
   readonly modulation: ModulationState;
   readonly masterVolume: number;
+  readonly clips: ClipCollection;
+  readonly activeClips: ActiveClips;
+  readonly clipQuantize: ClipQuantize;
   readonly history: readonly PatternSteps[];
   readonly clipboard: Pattern | null;
   readonly mutationCount: number;

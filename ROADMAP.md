@@ -77,6 +77,11 @@ Specs relacionadas: `docs/specs/01` a `docs/specs/12`.
 **Resultado:** cada track puede tener clips independientes en una grilla. Lanzar un clip
 o una escena no reinicia el resto de la música.
 
+**Estado:** primer corte implementado (spec 13 / ADR-0005). Grilla, launch quantize,
+follow actions, stop y persistencia funcionando. Pendiente para M1.2: crear/duplicar/
+renombrar/colorear/eliminar clips fuera de las cuatro escenas y desacoplar el patrón del
+backing store de escenas.
+
 ### Alcance
 
 - Entidad `ClipState`: id, track, slot de escena, patrón, longitud, loop, nombre, color y

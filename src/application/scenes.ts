@@ -1,4 +1,5 @@
 import { cloneKit } from '../domain/kit';
+import { activeClipsForScene, materializeScenes } from '../domain/clip';
 import type { InstrumentState, SceneId } from '../domain/models';
 import { clonePatternState } from '../domain/pattern';
 import type { StatusPort } from '../domain/ports';
@@ -21,7 +22,14 @@ export class SceneService {
     const target = state.scenes[sceneId];
     if (!target) return;
 
-    const currentSnapshot = captureScene(state);
+    const materialized = materializeScenes(state);
+    const currentPattern =
+      materialized[state.scene]?.pattern ?? state.pattern;
+    const currentSnapshot = captureScene({
+      ...state,
+      scenes: materialized,
+      pattern: currentPattern
+    });
     const nextScene = cloneScene(target);
     const firstTrack = Object.keys(nextScene.pattern.steps)[0] ?? 'kick';
     const selectedTrack =
@@ -32,7 +40,7 @@ export class SceneService {
     const next: InstrumentState = {
       ...state,
       scene: sceneId,
-      scenes: { ...state.scenes, [state.scene]: currentSnapshot },
+      scenes: { ...materialized, [state.scene]: currentSnapshot },
       kit: nextScene.kit,
       pattern: nextScene.pattern,
       harmony: nextScene.harmony,
@@ -40,6 +48,7 @@ export class SceneService {
       params: nextScene.params,
       masterVolume: nextScene.masterVolume,
       selected: selectedTrack,
+      activeClips: activeClipsForScene(state.clips, sceneId),
       history: [],
       clipboard: null
     };

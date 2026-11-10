@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState } from '../application/initial-state';
+import { ClipService } from '../application/clip';
 import { PlaybackService } from '../application/playback';
 import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
 import { TrackService } from '../application/tracks';
+import { clipId } from '../domain/clip';
 import {
   FakeAudioEngine,
   FakeAutomation,
@@ -22,6 +24,7 @@ function setup() {
   const status = new FakeStatus();
   const automation = new FakeAutomation();
   const evolver = new FakeEvolver();
+  const clips = new ClipService(store, runtime, status);
   const playback = new PlaybackService(
     store,
     clock,
@@ -30,9 +33,10 @@ function setup() {
     status,
     automation,
     evolver,
+    clips,
     runtime
   );
-  return { store, runtime, clock, engine, status, automation, evolver, playback };
+  return { store, runtime, clock, engine, status, automation, evolver, clips, playback };
 }
 
 describe('PlaybackService', () => {
@@ -67,6 +71,31 @@ describe('PlaybackService', () => {
     expect(
       engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
     ).toBe(true);
+  });
+
+  it('applies a quantized clip launch at the bar boundary', async () => {
+    const { playback, clock, store, clips } = setup();
+    await playback.start();
+
+    clips.launchClip(clipId('deriva', 'kick'), 'bar');
+
+    clock.fire(1, 0);
+    expect(store.getState().activeClips.kick).toBe(clipId('umbral', 'kick'));
+
+    clock.fire(2, 16);
+    expect(store.getState().activeClips.kick).toBe(clipId('deriva', 'kick'));
+  });
+
+  it('does not trigger a stopped clip', async () => {
+    const { playback, clock, engine, store, clips } = setup();
+    clips.stopTrack('kick');
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    expect(store.getState().activeClips.kick).toBeNull();
+    expect(engine.events.some(event => event.type === 'kick')).toBe(false);
   });
 
   it('plays the generative drone through a synth machine', async () => {

@@ -38,6 +38,7 @@ el código y la spec se corrige.
 | [10](specs/10-default-groove.md) | Default groove | sin estado declarado |
 | [11](specs/11-sound-bank.md) | Banco de sonidos | sin estado declarado |
 | [12](specs/12-generative-tracks.md) | Tracks generativos editables | sin estado declarado |
+| [13](specs/13-clip-grid.md) | Clip Grid / Session View | implementada (primer corte) |
 
 ## ADR
 
@@ -47,6 +48,7 @@ el código y la spec se corrige.
 | [0002](adr/0002-tone-detras-de-puerto.md) | Tone.js encapsulado detrás de `AudioEnginePort` | aceptada |
 | [0003](adr/0003-plugins-con-schema.md) | Plugins por schema de parámetros, terceros fuera de alcance | aceptada |
 | [0004](adr/0004-verificacion-audio-offline.md) | Verificación por render offline determinista + Playwright | aceptada |
+| [0005](adr/0005-clips-respaldados-por-escenas.md) | Clips respaldados por escenas y patrón vivo | aceptada |
 
 ## Cómo agregar una spec o un ADR
 

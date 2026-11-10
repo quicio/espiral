@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import { PresetMapper } from '../adapters/preset-mapper';
 import { AutomationService } from '../application/automation';
+import { ClipService } from '../application/clip';
 import { createInitialState } from '../application/initial-state';
 import { PlaybackService } from '../application/playback';
 import { PlaybackRuntime } from '../application/runtime';
@@ -112,6 +113,7 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
     const status = new NullStatus();
     const automation = new AutomationService(store, engine, status);
     const evolver = { evolve(): void {} };
+    const clips = new ClipService(store, runtime, status);
     const playback = new PlaybackService(
       store,
       clock,
@@ -120,6 +122,7 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
       status,
       automation,
       evolver,
+      clips,
       runtime
     );
 
