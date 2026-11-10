@@ -19,6 +19,8 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Buffer/lookahead configurable de 20–300 ms.
 - Patch bay de buses con detección de ciclos y creación/eliminación de buses.
 - Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
+- Grooves curados por escena con velocity, probabilidad y ratchets desde el estado inicial.
+- Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, pad, bajo sintetizado y pluck, con editor de parámetros.
 - Instrument plugins con `FM Synth` built-in y dos macros de track para el mod matrix.

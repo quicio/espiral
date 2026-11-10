@@ -16,7 +16,10 @@
 - Crear y eliminar buses desde Routing; al quitarlos se limpian sus sends.
 - Conexiones bus → bus persistentes en sesión y escenas.
 - Medidor de CPU con estados normal/warning/critical y límites documentados.
-- 112 tests unitarios.
+- Grooves curados por escena para el estado inicial, con `pulses` derivados del patrón.
+- Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
+- Velocity, probabilidad y ratchets iniciales; el lead aparece más seguido.
+- 118 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

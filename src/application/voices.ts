@@ -130,7 +130,7 @@ export function leadNote(
   counter: number,
   chordDegree: number
 ): string | null {
-  if (generative.hash01(state.seed, 'lead', counter, 7) <= 0.76) return null;
+  if (generative.hash01(state.seed, 'lead', counter, 7) <= 0.68) return null;
 
   if (generative.hash01(state.seed, 'lead', counter, 10) < 0.35) {
     const degrees = progressionDegrees(state, generative);

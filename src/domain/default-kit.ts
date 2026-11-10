@@ -6,7 +6,7 @@ import {
   reverbInsert,
   type ChannelKey
 } from './channels';
-import type { MachineConfig } from './graph';
+import type { MachineConfig, SendConfig } from './graph';
 import type { BusState, KitState, TrackState } from './kit';
 import { machinePreset, type MachinePreset, type NoteSource } from './machines';
 
@@ -82,6 +82,44 @@ const MACHINES: Record<ChannelKey, MachineConfig> = {
   }
 };
 
+const CORE_PAN: Record<ChannelKey, number> = {
+  kick: 0,
+  bass: -0.04,
+  hihat: 0.16,
+  perc: -0.18,
+  drone: 0.06,
+  pad: -0.08,
+  lead: 0.12
+};
+
+interface LayerCharacter {
+  readonly name: string;
+  readonly gainDb: number;
+  readonly pan: number;
+  readonly sends: readonly SendConfig[];
+}
+
+const LAYER_CHARACTER: Readonly<Record<string, LayerCharacter>> = {
+  'track-08': {
+    name: 'Shaker 08',
+    gainDb: -15,
+    pan: 0.24,
+    sends: [
+      { busId: 'reverb-bus', amount: 0.22, preFader: false },
+      { busId: 'delay-bus', amount: 0.1, preFader: false }
+    ]
+  },
+  'track-09': {
+    name: 'Perc 09',
+    gainDb: -13,
+    pan: -0.26,
+    sends: [
+      { busId: 'delay-bus', amount: 0.18, preFader: false },
+      { busId: 'reverb-bus', amount: 0.12, preFader: false }
+    ]
+  }
+};
+
 export function createDefaultKit(): KitState {
   const tracks = Object.fromEntries(
     CHANNEL_KEYS.map(key => {
@@ -96,7 +134,7 @@ export function createDefaultKit(): KitState {
         noteSource: coreNoteSource(key),
         macros: [0.5, 0.5],
         gainDb: mix.volumeDb,
-        pan: 0,
+        pan: CORE_PAN[key],
         muted: mix.muted,
         solo: mix.solo,
         inserts: mix.inserts,
@@ -108,7 +146,8 @@ export function createDefaultKit(): KitState {
 
   for (let index = 8; index <= 16; index += 1) {
     const track = createUserTrack(index);
-    tracks[track.id] = track;
+    const character = LAYER_CHARACTER[track.id];
+    tracks[track.id] = character ? { ...track, ...character } : track;
   }
 
   return { id: 'default', name: 'Default', tracks, buses: createDefaultBuses() };

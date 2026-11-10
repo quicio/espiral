@@ -55,13 +55,16 @@ describe('PlaybackService', () => {
     expect(automation.calls).toEqual([{ step: 0, time: 1 }]);
     expect(engine.events.some(event => event.type === 'kick')).toBe(true);
     expect(
-      engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
-    ).toBe(true);
-    expect(
       engine.events.some(event => event.type === 'sample' && event.channel === 'drone')
     ).toBe(true);
     expect(
       engine.events.some(event => event.type === 'synth' && event.channel === 'pad')
+    ).toBe(true);
+
+    clock.fire(1.25, 2);
+
+    expect(
+      engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
     ).toBe(true);
   });
 
@@ -289,7 +292,7 @@ describe('PlaybackService', () => {
         channel: 'pad',
         trackId: 'track-08',
         notes: 'C4',
-        velocity: 1
+        velocity: 0.42
       })
     );
   });

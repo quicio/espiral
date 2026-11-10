@@ -8,14 +8,19 @@ import { createDefaultKit } from '../domain/default-kit';
 import { cloneKit, kitTracks } from '../domain/kit';
 import { createDefaultModulation } from '../domain/modulation';
 import {
-  emptyStepValues,
+  countSteps,
   emptyTrackLocks,
-  INITIAL_PATTERNS,
   type Pattern,
   type PatternLocks,
   type PatternSteps,
   type StepValues
 } from '../domain/pattern';
+import {
+  defaultGroovePattern,
+  defaultProbability,
+  defaultRatchets,
+  defaultVelocity
+} from '../domain/default-groove';
 import type { InstrumentState, SceneId } from '../domain/models';
 import type { GenerativePort } from '../domain/ports';
 import type { SceneCollection } from '../domain/scene';
@@ -29,33 +34,31 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     .map(track => track.id);
   const emptyPattern = (): Pattern =>
     Array.from({ length: PATTERN_LENGTH }, () => 0);
-  const pulses = Object.fromEntries(
-    patternTracks.map(key => [
-      key,
-      isPatternChannel(key) ? generative.channelSeeds[key].pulses : 4
-    ])
-  ) as Record<string, number>;
   const frozen = Object.fromEntries(
     patternTracks.map(key => [key, false])
   ) as Record<string, boolean>;
 
   const scenes = Object.fromEntries(
     Object.entries(generative.scenes).map(([id, scene]) => {
+      const grooves = Object.fromEntries(
+        patternTracks.map(key => [
+          key,
+          defaultGroovePattern(id as SceneId, key)
+        ])
+      ) as Record<string, Pattern | null>;
       const steps: PatternSteps = Object.fromEntries(
+        patternTracks.map(key => [key, grooves[key] ?? emptyPattern()])
+      );
+      const pulses = Object.fromEntries(
         patternTracks.map(key => {
-          if (!isPatternChannel(key)) return [key, emptyPattern()];
-          if (id === 'umbral') return [key, INITIAL_PATTERNS[key]];
+          const groove = grooves[key];
+          if (groove) return [key, countSteps(groove)];
           return [
             key,
-            generative.generatePattern(
-              key,
-              scene.params,
-              pulses[key] ?? 4,
-              INITIAL_SEED
-            )
+            isPatternChannel(key) ? generative.channelSeeds[key].pulses : 4
           ];
         })
-      );
+      ) as Record<string, number>;
 
       return [
         id,
@@ -65,14 +68,14 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
           kit: cloneKit(kitTemplate),
           pattern: {
             steps,
-            pulses: { ...pulses },
+            pulses,
             frozen: { ...frozen },
             locks: Object.fromEntries(
               patternTracks.map(key => [key, emptyTrackLocks()])
             ) as PatternLocks,
-            velocity: patternValues(patternTracks, 1),
-            probability: patternValues(patternTracks, 1),
-            ratchets: patternValues(patternTracks, 1)
+            velocity: stepValues(patternTracks, defaultVelocity),
+            probability: stepValues(patternTracks, defaultProbability),
+            ratchets: stepValues(patternTracks, defaultRatchets)
           },
           harmony: { ...scene.harmony },
           seed: INITIAL_SEED,
@@ -118,11 +121,11 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
   };
 }
 
-function patternValues(
+function stepValues(
   tracks: readonly string[],
-  value: number
+  factory: (trackId: string) => StepValues
 ): Record<string, StepValues> {
   return Object.fromEntries(
-    tracks.map(trackId => [trackId, emptyStepValues(value)])
+    tracks.map(trackId => [trackId, [...factory(trackId)]])
   );
 }
