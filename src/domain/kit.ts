@@ -10,6 +10,23 @@ import type { NoteSource } from './machines';
 
 export type TrackRole = ChannelKey | 'user';
 
+export const GENERATIVE_ROLES = ['drone', 'pad', 'lead'] as const;
+export type GenerativeRole = (typeof GENERATIVE_ROLES)[number];
+
+export const DRUM_ROLES = ['kick', 'bass', 'hihat', 'perc'] as const;
+
+export function isGenerativeRole(role: TrackRole): role is GenerativeRole {
+  return (GENERATIVE_ROLES as readonly string[]).includes(role);
+}
+
+export function isDrumRole(role: TrackRole): boolean {
+  return (DRUM_ROLES as readonly string[]).includes(role);
+}
+
+export function canEditTrackSound(track: TrackState): boolean {
+  return track.role === 'user' || isGenerativeRole(track.role);
+}
+
 export interface TrackState {
   readonly id: string;
   readonly name: string;

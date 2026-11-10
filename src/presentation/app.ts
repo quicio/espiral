@@ -738,10 +738,12 @@ export class EspiralApp {
 
     view.must('#activity-list').addEventListener('click', event => {
       const select = attr(event, 'data-select');
+      const patternToggle = attr(event, 'data-pattern-toggle');
       const mute = attr(event, 'data-mute');
       const freeze = attr(event, 'data-freeze');
 
       if (select) patterns.selectChannel(select);
+      else if (patternToggle) tracks.togglePattern(patternToggle);
       else if (mute) this.toggleMute(mute);
       else if (freeze) patterns.toggleFreeze(freeze);
     });
@@ -757,6 +759,11 @@ export class EspiralApp {
     });
 
     view.must('#radial-editor').addEventListener('click', event => {
+      const patternToggle = attr(event, 'data-pattern-toggle');
+      if (patternToggle) {
+        tracks.togglePattern(patternToggle);
+        return;
+      }
       const step = attr(event, 'data-radial-step');
       if (step === null) return;
       const channel = attr(event, 'data-pattern-channel');

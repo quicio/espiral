@@ -5,7 +5,13 @@ import {
   PATTERN_LENGTH,
   type ChannelKey
 } from '../domain/channels';
-import { kitHasSolo, kitTracks, type TrackState } from '../domain/kit';
+import {
+  canEditTrackSound,
+  isGenerativeRole,
+  kitHasSolo,
+  kitTracks,
+  type TrackState
+} from '../domain/kit';
 import {
   formatMachineParam,
   instrumentMachinePreset,
@@ -117,6 +123,7 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
       <button class="activity-name" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}">${track.name}</button>
       <span class="activity-meta">${track.hasPattern ? 'patrón' : 'generativo'}</span>
       ${steps}
+      ${isGenerativeRole(track.role) ? `<button class="activity-action" type="button" data-pattern-toggle="${track.id}" aria-pressed="${track.hasPattern}" aria-label="${track.hasPattern ? 'Quitar patrón a' : 'Agregar patrón a'} ${track.name}">${track.hasPattern ? '−P' : '+P'}</button>` : ''}
       <button class="activity-action" type="button" data-mute="${track.id}" aria-pressed="${track.muted}" aria-label="Silenciar ${track.name}">M</button>
       ${track.hasPattern ? `<button class="activity-action" type="button" data-freeze="${track.id}" aria-pressed="${state.pattern.frozen[track.id] ?? false}" aria-label="Congelar ${track.name}">F</button>` : ''}
     </div>`;
@@ -125,24 +132,37 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
 
 export function renderSequencer(state: InstrumentState, _catalog: Catalog): void {
   const keys = Object.keys(state.pattern.steps);
+  const tracks = kitTracks(state.kit);
   const tabs = q('#sequencer-channel-list');
   if (tabs) {
-    tabs.innerHTML = keys
+    tabs.innerHTML = tracks
       .map(
-        key =>
-          `<button class="channel-tab${key === state.selected ? ' is-active' : ''}" type="button" data-select="${key}" aria-pressed="${key === state.selected}">${trackName(state, key)}</button>`
+        track =>
+          `<button class="channel-tab${track.id === state.selected ? ' is-active' : ''}${track.hasPattern ? '' : ' is-generative'}" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}">${track.name}</button>`
       )
       .join('');
   }
 
+  const selected = state.kit.tracks[state.selected];
+  const selectedPattern = state.pattern.steps[state.selected];
   const radial = q('#radial-editor');
   if (radial) {
-    radial.innerHTML = `<div class="radial-ring">${statePattern(state, state.selected)
-      .map(
-        (_, index) =>
-          `<button class="radial-step${statePattern(state, state.selected)[index] === 1 ? ' is-active' : ''}" type="button" data-pattern-channel="${state.selected}" data-pattern-step="${index}" data-radial-step="${index}" style="--i:${index}" aria-label="Paso ${index + 1}" aria-pressed="${statePattern(state, state.selected)[index] === 1}">${index + 1}</button>`
-      )
-      .join('')}<div class="radial-center"><strong id="radial-center-name">${trackName(state, state.selected)}</strong><span id="radial-center-count">${countSteps(statePattern(state, state.selected))}/${PATTERN_LENGTH}</span></div></div>`;
+    radial.innerHTML = selectedPattern
+      ? `<div class="radial-ring">${selectedPattern
+          .map(
+            (_, index) =>
+              `<button class="radial-step${selectedPattern[index] === 1 ? ' is-active' : ''}" type="button" data-pattern-channel="${state.selected}" data-pattern-step="${index}" data-radial-step="${index}" style="--i:${index}" aria-label="Paso ${index + 1}" aria-pressed="${selectedPattern[index] === 1}">${index + 1}</button>`
+          )
+          .join('')}<div class="radial-center"><strong id="radial-center-name">${trackName(state, state.selected)}</strong><span id="radial-center-count">${countSteps(selectedPattern)}/${PATTERN_LENGTH}</span></div></div>`
+      : `<div class="seq-empty-pattern">
+          <p class="section-label">Modo generativo</p>
+          <p class="seq-readout">${trackName(state, state.selected)} no tiene patrón.</p>
+          ${
+            selected && isGenerativeRole(selected.role)
+              ? `<button class="line-action" type="button" data-pattern-toggle="${selected.id}">+ agregar patrón</button>`
+              : ''
+          }
+        </div>`;
   }
 
   const matrix = q('#seq-matrix');
@@ -226,22 +246,20 @@ export function renderSound(
               .join('')}</div>`
           : '';
 
-      const machineControl =
-        track.role === 'user'
-          ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
-              mixService
+      const machineControl = canEditTrackSound(track)
+        ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
+            mixService
+          )
+            .map(
+              option =>
+                `<option value="${option.id}"${track.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
             )
-              .map(
-                option =>
-                  `<option value="${option.id}"${track.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
-              )
-              .join('')}</select>`
-          : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
+            .join('')}</select>`
+        : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
 
-      const machineParams =
-        track.role === 'user'
-          ? renderMachineParams(track, mixService)
-          : '';
+      const machineParams = canEditTrackSound(track)
+        ? renderMachineParams(track, mixService)
+        : '';
 
       const macroEnabled = mixService.supportsRouting;
       const trackMacros = track.macros
@@ -306,20 +324,20 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
   const root = q('#sound-bank');
   if (!root) return;
 
-  const userTracks = kitTracks(state.kit).filter(track => track.role === 'user');
+  const editableTracks = kitTracks(state.kit).filter(canEditTrackSound);
   const selected = state.kit.tracks[state.selected];
-  const target = selected?.role === 'user' ? selected : null;
+  const target = selected && canEditTrackSound(selected) ? selected : null;
   const canApply = Boolean(target) && mixService.supportsMachineChange;
   const active = target
     ? SOUND_BANK.find(preset => matchesSoundPreset(target, preset))
     : undefined;
   const status = !target
-    ? 'Elegí un track de usuario para cargar un sonido.'
+    ? 'Elegí un track editable para cargar un sonido.'
     : active
       ? `Activo: ${active.name} · ${target.name}`
       : `Destino: ${target.name}`;
 
-  const options = userTracks
+  const options = editableTracks
     .map(
       track =>
         `<option value="${track.id}"${track.id === target?.id ? ' selected' : ''}>${track.name}</option>`
@@ -334,12 +352,12 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
     <label class="sound-bank-target">
       <span>Destino</span>
       <select id="sound-bank-target" aria-label="Track destino del banco"${mixService.supportsMachineChange ? '' : ' disabled'}>
-        ${target ? '' : '<option value="">Elegí un track de usuario…</option>'}
+        ${target ? '' : '<option value="">Elegí un track editable…</option>'}
         ${options}
       </select>
     </label>
   </div>
-  <p class="tool-hint">El sonido se aplica al track elegido y conserva su mezcla, inserts y patrón.</p>
+  <p class="tool-hint">El sonido se aplica al track elegido y conserva su mezcla, inserts y patrón. Drone, pad y lead también aceptan sonidos.</p>
   <div class="sound-bank-categories">${SOUND_CATEGORIES.map(category => {
     const entries = SOUND_BANK.filter(
       preset => preset.category === category.id
@@ -503,6 +521,19 @@ export function syncSelected(state: InstrumentState): void {
   const pulsesValue = q('#euclid-pulses-value');
   if (pulses) pulses.value = String(state.pattern.pulses[state.selected] ?? 4);
   if (pulsesValue) pulsesValue.textContent = String(state.pattern.pulses[state.selected] ?? 4);
+
+  const hasPattern = state.pattern.steps[state.selected] !== undefined;
+  [
+    '#mutate-selected',
+    '#density-up',
+    '#density-down',
+    '#rotate-pattern',
+    '#copy-pattern',
+    '#apply-euclid'
+  ].forEach(selector => {
+    const button = q<HTMLButtonElement>(selector);
+    if (button) button.disabled = !hasPattern;
+  });
 }
 
 export function syncFreeze(state: InstrumentState): void {
@@ -513,10 +544,19 @@ export function syncFreeze(state: InstrumentState): void {
     });
   });
 
-  const freezeButton = q('#freeze-selected');
+  const freezeButton = q<HTMLButtonElement>('#freeze-selected');
   if (freezeButton) {
-    freezeButton.setAttribute('aria-pressed', state.pattern.frozen[state.selected] ? 'true' : 'false');
-    freezeButton.textContent = state.pattern.frozen[state.selected] ? 'Descongelar track' : 'Congelar track';
+    const hasPattern = state.pattern.steps[state.selected] !== undefined;
+    freezeButton.disabled = !hasPattern;
+    freezeButton.setAttribute(
+      'aria-pressed',
+      state.pattern.frozen[state.selected] ? 'true' : 'false'
+    );
+    freezeButton.textContent = hasPattern
+      ? state.pattern.frozen[state.selected]
+        ? 'Descongelar track'
+        : 'Congelar track'
+      : 'Sin patrón';
   }
 }
 
@@ -527,7 +567,11 @@ export function syncUndo(state: InstrumentState): void {
 
 export function syncPaste(state: InstrumentState): void {
   const button = q<HTMLButtonElement>('#paste-pattern');
-  if (button) button.disabled = state.clipboard === null;
+  if (button) {
+    button.disabled =
+      state.clipboard === null ||
+      state.pattern.steps[state.selected] === undefined;
+  }
 }
 
 export function updatePatternClasses(state: InstrumentState, catalog: Catalog): void {
@@ -583,7 +627,10 @@ export function updatePatternClasses(state: InstrumentState, catalog: Catalog): 
 
   const readout = q('#sequencer-readout');
   if (readout) {
-    readout.textContent = `${trackName(state, state.selected)} · ${countSteps(statePattern(state, state.selected))} pasos${state.pattern.frozen[state.selected] ? ' · congelado' : ''}`;
+    readout.textContent =
+      state.pattern.steps[state.selected] === undefined
+        ? `${trackName(state, state.selected)} · generativo`
+        : `${trackName(state, state.selected)} · ${countSteps(statePattern(state, state.selected))} pasos${state.pattern.frozen[state.selected] ? ' · congelado' : ''}`;
   }
   const performanceReadout = q('#performance-readout');
   if (performanceReadout) {
@@ -594,10 +641,19 @@ export function updatePatternClasses(state: InstrumentState, catalog: Catalog): 
   }
   const selectedLabel = q('#selected-channel-label');
   if (selectedLabel) selectedLabel.textContent = trackName(state, state.selected);
-  const freezeButton = q('#freeze-selected');
+  const freezeButton = q<HTMLButtonElement>('#freeze-selected');
   if (freezeButton) {
-    freezeButton.setAttribute('aria-pressed', state.pattern.frozen[state.selected] ? 'true' : 'false');
-    freezeButton.textContent = state.pattern.frozen[state.selected] ? 'Descongelar track' : 'Congelar track';
+    const hasPattern = state.pattern.steps[state.selected] !== undefined;
+    freezeButton.disabled = !hasPattern;
+    freezeButton.setAttribute(
+      'aria-pressed',
+      state.pattern.frozen[state.selected] ? 'true' : 'false'
+    );
+    freezeButton.textContent = hasPattern
+      ? state.pattern.frozen[state.selected]
+        ? 'Descongelar track'
+        : 'Congelar track'
+      : 'Sin patrón';
   }
 
   syncUndo(state);

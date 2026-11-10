@@ -136,7 +136,7 @@ describe('TrackService', () => {
     tracks.applySoundPreset('warm-pad', 'kick');
 
     expect(store.getState().kit.tracks.kick?.machine.kind).toBe('membrane');
-    expect(status.messages.at(-1)).toContain('tracks de usuario');
+    expect(status.messages.at(-1)).toContain('editables');
   });
 
   it('rejects unknown sound bank presets', () => {
@@ -145,6 +145,66 @@ describe('TrackService', () => {
     tracks.applySoundPreset('missing', 'track-08');
 
     expect(status.messages.at(-1)).toContain('Sonido desconocido');
+  });
+
+  it('changes the machine of generative tracks', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.setMachine('pad', 'pluck');
+
+    const pad = store.getState().kit.tracks.pad;
+    expect(pad?.machineId).toBe('pluck');
+    expect(pad?.machine.kind).toBe('pluck');
+    expect(pad?.noteSource.kind).toBe('scale-degree');
+    expect(engine.machines.at(-1)?.trackId).toBe('pad');
+  });
+
+  it('adds and removes a pattern on generative tracks', () => {
+    const { store, status, tracks } = setup();
+
+    expect(store.getState().kit.tracks.pad?.hasPattern).toBe(false);
+
+    tracks.togglePattern('pad');
+
+    const withPattern = store.getState();
+    expect(withPattern.kit.tracks.pad?.hasPattern).toBe(true);
+    expect(withPattern.pattern.steps.pad).toHaveLength(16);
+    expect(withPattern.pattern.pulses.pad).toBeGreaterThan(0);
+    expect(withPattern.scenes.deriva.kit.tracks.pad?.hasPattern).toBe(true);
+    expect(withPattern.scenes.deriva.pattern.steps.pad).toEqual(
+      withPattern.pattern.steps.pad
+    );
+    expect(withPattern.selected).toBe('pad');
+    expect(status.messages.at(-1)).toContain('patrón');
+
+    tracks.togglePattern('pad');
+
+    const withoutPattern = store.getState();
+    expect(withoutPattern.kit.tracks.pad?.hasPattern).toBe(false);
+    expect(withoutPattern.pattern.steps.pad).toBeUndefined();
+    expect(withoutPattern.scenes.caos.pattern.steps.pad).toBeUndefined();
+    expect(withoutPattern.selected).toBe('pad');
+  });
+
+  it('does not toggle patterns on drum tracks', () => {
+    const { store, status, tracks } = setup();
+
+    tracks.togglePattern('kick');
+
+    expect(store.getState().kit.tracks.kick?.hasPattern).toBe(true);
+    expect(status.messages.at(-1)).toContain('drone, pad y lead');
+  });
+
+  it('applies a sound bank preset to a generative track', () => {
+    const { store, engine, tracks } = setup();
+
+    tracks.applySoundPreset('fm-bell', 'lead');
+
+    const lead = store.getState().kit.tracks.lead;
+    expect(lead?.machineId).toBe('plugin-fm-synth');
+    expect(lead?.machine.kind).toBe('plugin');
+    expect(lead?.machine.params?.harmonicity).toBe(3.5);
+    expect(engine.machines.at(-1)?.trackId).toBe('lead');
   });
 
   it('refuses to change the machine of a core track', () => {

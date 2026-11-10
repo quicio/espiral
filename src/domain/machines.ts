@@ -182,6 +182,39 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
       envelopeParam('release', 'Release', 0.05, 10, 0.05)
     ]
   },
+  'soft-pad': {
+    id: 'soft-pad',
+    name: 'Soft Pad',
+    description: 'Poli-sinte de seno con ataque lento',
+    machine: {
+      kind: 'poly',
+      oscillator: 'sine',
+      envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 },
+      maxPolyphony: 8
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 },
+    params: [
+      oscillatorParam(),
+      envelopeParam('attack', 'Attack', 0.01, 5, 0.01),
+      envelopeParam('decay', 'Decay', 0.02, 5, 0.01),
+      envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
+      envelopeParam('release', 'Release', 0.05, 10, 0.05)
+    ]
+  },
+  'drone-sampler': {
+    id: 'drone-sampler',
+    name: 'Drone Sampler',
+    description: 'Sample de drone con voces y cola larga',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/drone.wav'],
+      voices: 2,
+      fadeIn: 0.01,
+      fadeOut: 0.2
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 },
+    params: []
+  },
   'bass-synth': {
     id: 'bass-synth',
     name: 'Bass Synth',
@@ -201,6 +234,25 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
       envelopeParam('release', 'Release', 0.01, 3, 0.01),
       filterParam(),
       resonanceParam()
+    ]
+  },
+  'lead-synth': {
+    id: 'lead-synth',
+    name: 'Lead Synth',
+    description: 'Poli-sinte brillante con envolvente media',
+    machine: {
+      kind: 'poly',
+      oscillator: 'triangle',
+      envelope: { attack: 0.05, decay: 0.25, sustain: 0.35, release: 1.4 },
+      maxPolyphony: 12
+    },
+    noteSource: { kind: 'scale-degree', degree: 4, octave: 4 },
+    params: [
+      oscillatorParam(),
+      envelopeParam('attack', 'Attack', 0.001, 2, 0.001),
+      envelopeParam('decay', 'Decay', 0.01, 3, 0.01),
+      envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
+      envelopeParam('release', 'Release', 0.01, 6, 0.01)
     ]
   },
   pluck: {
@@ -332,8 +384,11 @@ export function formatMachineParam(
 
 export const USER_MACHINE_IDS = [
   'sampler',
+  'drone-sampler',
   'analog-pad',
+  'soft-pad',
   'bass-synth',
+  'lead-synth',
   'pluck'
 ] as const;
 

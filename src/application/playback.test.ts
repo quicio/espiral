@@ -3,6 +3,7 @@ import { createInitialState } from '../application/initial-state';
 import { PlaybackService } from '../application/playback';
 import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
+import { TrackService } from '../application/tracks';
 import {
   FakeAudioEngine,
   FakeAutomation,
@@ -66,6 +67,57 @@ describe('PlaybackService', () => {
     expect(
       engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
     ).toBe(true);
+  });
+
+  it('plays the generative drone through a synth machine', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => {
+      const drone = state.kit.tracks.drone!;
+      return {
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: {
+            ...state.kit.tracks,
+            drone: {
+              ...drone,
+              machineId: 'analog-pad',
+              machine: {
+                kind: 'poly',
+                oscillator: 'sine',
+                envelope: { attack: 1, decay: 1, sustain: 0.8, release: 4 },
+                maxPolyphony: 8
+              }
+            }
+          }
+        }
+      };
+    });
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    const event = engine.events.find(
+      entry => entry.type === 'synth' && entry.trackId === 'drone'
+    );
+    expect(event).toBeDefined();
+  });
+
+  it('plays a pattern on the pad and skips its generative rule', async () => {
+    const { playback, clock, engine, store, status } = setup();
+    const tracks = new TrackService(store, engine, status);
+    tracks.togglePattern('pad');
+
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    const padEvents = engine.events.filter(
+      entry => entry.type === 'synth' && entry.trackId === 'pad'
+    );
+    expect(padEvents).toHaveLength(1);
   });
 
   it('triggers a user track sample when its step is active', async () => {

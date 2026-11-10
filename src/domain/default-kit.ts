@@ -72,7 +72,8 @@ const MACHINES: Record<ChannelKey, MachineConfig> = {
   pad: {
     kind: 'poly',
     oscillator: 'sine',
-    envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 }
+    envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 },
+    maxPolyphony: 8
   },
   lead: {
     kind: 'poly',
@@ -120,6 +121,16 @@ const LAYER_CHARACTER: Readonly<Record<string, LayerCharacter>> = {
   }
 };
 
+const CORE_MACHINE_IDS: Record<ChannelKey, string> = {
+  kick: 'core-kick',
+  bass: 'core-bass',
+  hihat: 'core-hihat',
+  perc: 'core-perc',
+  drone: 'drone-sampler',
+  pad: 'soft-pad',
+  lead: 'lead-synth'
+};
+
 export function createDefaultKit(): KitState {
   const tracks = Object.fromEntries(
     CHANNEL_KEYS.map(key => {
@@ -129,7 +140,7 @@ export function createDefaultKit(): KitState {
         name: channelName(key),
         role: key,
         hasPattern: key === 'kick' || key === 'bass' || key === 'hihat' || key === 'perc',
-        machineId: `core-${key}`,
+        machineId: CORE_MACHINE_IDS[key],
         machine: MACHINES[key],
         noteSource: coreNoteSource(key),
         macros: [0.5, 0.5],

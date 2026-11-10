@@ -81,6 +81,19 @@ describe('PatternService', () => {
     expect(store.getState().seed).toBe(1234);
   });
 
+  it('selects a generative track but refuses to edit a missing pattern', () => {
+    const { store, patterns, status } = setup();
+
+    patterns.selectChannel('pad');
+
+    expect(store.getState().selected).toBe('pad');
+
+    patterns.mutateSelected();
+
+    expect(store.getState().pattern.steps.pad).toBeUndefined();
+    expect(status.messages.at(-1)).toContain('generativo');
+  });
+
   it('updates velocity, probability and ratchets for a step', () => {
     const { store, patterns } = setup();
 

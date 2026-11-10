@@ -1,6 +1,6 @@
 import type { NoteDuration } from '../domain/audio';
 import type { InstrumentState } from '../domain/models';
-import type { TrackState } from '../domain/kit';
+import { isDrumRole, type TrackState } from '../domain/kit';
 import {
   locksAt,
   lockTargetKey,
@@ -274,6 +274,7 @@ export class PlaybackService {
 
   private triggerStep(state: InstrumentState, time: number, stepCount: number): void {
     const quarter = stepCount % 4 === 0;
+    const tracks = state.kit.tracks;
 
     this.eachPatternHit(state, 'kick', stepCount, time, (at, velocity) => {
       this.engine.trigger({ type: 'kick', time: at, velocity });
@@ -309,27 +310,34 @@ export class PlaybackService {
       });
     });
 
-    if (quarter) {
+    const drone = tracks.drone;
+    if (quarter && drone && !drone.hasPattern) {
       this.runtime.droneStep += 1;
       if ((this.runtime.droneStep - 1) % 16 === 0) {
-        this.engine.trigger({
-          type: 'sample',
-          channel: 'drone',
-          time,
-          playbackRate: dronePlaybackRate(state, this.generative, this.runtime.droneStep)
+        this.triggerGenerative(drone, time, {
+          notes: notesForTrack(
+            state,
+            this.generative,
+            drone,
+            this.runtime.currentChordDegree
+          ),
+          duration: noteDuration('pad', state.harmony.sustain),
+          playbackRate: dronePlaybackRate(
+            state,
+            this.generative,
+            this.runtime.droneStep
+          )
         });
       }
     }
 
-    if (quarter) {
+    const pad = tracks.pad;
+    if (quarter && pad && !pad.hasPattern) {
       this.runtime.padStep += 1;
       if ((this.runtime.padStep - 1) % 8 === 0) {
         const chord = padChord(state, this.generative, this.runtime.lastPadChord);
         this.runtime.currentChordDegree = this.runtime.lastPadChord;
-        this.engine.trigger({
-          type: 'synth',
-          channel: 'pad',
-          time,
+        this.triggerGenerative(pad, time, {
           notes: chord.notes,
           duration: noteDuration('pad', state.harmony.sustain)
         });
@@ -349,8 +357,8 @@ export class PlaybackService {
       });
     });
 
-    Object.values(state.kit.tracks).forEach(track => {
-      if (track.role !== 'user' || !track.hasPattern) return;
+    Object.values(tracks).forEach(track => {
+      if (!track.hasPattern || isDrumRole(track.role)) return;
       if (track.machine.kind === 'sampler') {
         this.eachPatternHit(state, track.id, stepCount, time, (at, velocity) => {
           this.engine.trigger({
@@ -366,14 +374,7 @@ export class PlaybackService {
         });
         return;
       }
-      if (
-        track.machine.kind !== 'poly' &&
-        track.machine.kind !== 'mono' &&
-        track.machine.kind !== 'pluck' &&
-        track.machine.kind !== 'plugin'
-      ) {
-        return;
-      }
+      if (!isSynthMachineKind(track.machine.kind)) return;
 
       const notes = notesForTrack(
         state,
@@ -403,7 +404,8 @@ export class PlaybackService {
       });
     });
 
-    if (quarter) {
+    const lead = tracks.lead;
+    if (quarter && lead && !lead.hasPattern) {
       this.runtime.leadCounter += 1;
       const note = leadNote(
         state,
@@ -412,15 +414,46 @@ export class PlaybackService {
         this.runtime.currentChordDegree
       );
       if (note) {
-        this.engine.trigger({
-          type: 'synth',
-          channel: 'lead',
-          time,
+        this.triggerGenerative(lead, time, {
           notes: note,
           duration: noteDuration('lead', state.harmony.sustain)
         });
       }
     }
+  }
+
+  private triggerGenerative(
+    track: TrackState,
+    time: number,
+    options: {
+      readonly notes: string | readonly string[] | null;
+      readonly duration: NoteDuration;
+      readonly playbackRate?: number;
+    }
+  ): void {
+    if (track.machine.kind === 'sampler') {
+      this.engine.trigger({
+        type: 'sample',
+        channel: track.role === 'drone' ? 'drone' : 'perc',
+        trackId: track.id,
+        time,
+        sampleIndex: 0,
+        playbackRate: options.playbackRate ?? 1
+      });
+      return;
+    }
+    if (!options.notes || !isSynthMachineKind(track.machine.kind)) return;
+    this.engine.trigger({
+      type: 'synth',
+      channel:
+        track.machine.kind === 'poly' || track.machine.kind === 'plugin'
+          ? 'pad'
+          : 'lead',
+      trackId: track.id,
+      time,
+      notes: options.notes,
+      duration: options.duration
+    });
   }
 
   private eachPatternHit(
@@ -517,6 +550,12 @@ function machineNoteDuration(
   if (kind === 'pluck') return '8n';
   if (kind === 'plugin') return noteDuration('lead', sustain);
   return noteDuration('pad', sustain);
+}
+
+function isSynthMachineKind(
+  kind: string
+): kind is 'poly' | 'mono' | 'pluck' | 'plugin' {
+  return kind === 'poly' || kind === 'mono' || kind === 'pluck' || kind === 'plugin';
 }
 
 function lockKey(trackId: string, target: LockTarget): string {

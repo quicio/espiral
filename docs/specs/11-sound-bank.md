@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Cargar un sonido completo en un track de usuario sin tener que configurar máquina,
+Cargar un sonido completo en un track editable sin tener que configurar máquina,
 oscilador, envolvente, nota y rango a mano.
 
 ## Catálogo
@@ -28,7 +28,7 @@ usan el instrument plugin `fm-synth`.
 
 En **Sound** aparece el bloque **Banco de sonidos**:
 
-- selector **Destino** con los tracks de usuario;
+- selector **Destino** con los tracks editables (usuario, drone, pad y lead);
 - tarjetas por categoría;
 - estado `Activo: <sonido> · <track>` cuando el track usa exactamente ese preset;
 - las tarjetas quedan deshabilitadas si el track seleccionado es del núcleo.

@@ -164,7 +164,7 @@ export const SOUND_BANK: readonly SoundPreset[] = [
     name: 'Glass Pad',
     description: 'Seno cristalino con ataque lento',
     category: 'keys',
-    machineId: 'analog-pad',
+    machineId: 'soft-pad',
     machine: {
       kind: 'poly',
       oscillator: 'sine',
@@ -249,15 +249,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
     name: 'Drone Bed',
     description: 'Colchón grave de drone para capas',
     category: 'textures',
-    machineId: 'sampler',
+    machineId: 'drone-sampler',
     machine: {
       kind: 'sampler',
       samples: [`${SAMPLE_PATH}drone.wav`],
       voices: 2,
       fadeIn: 0.01,
-      fadeOut: 0.8
+      fadeOut: 0.2
     },
-    noteSource: { kind: 'fixed', note: 'C4' }
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 }
   }
 ];
 

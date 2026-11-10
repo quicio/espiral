@@ -33,52 +33,60 @@ export class PatternService implements PatternEvolver {
 
   toggleStep(channel: string, index: number): void {
     if (index < 0 || index >= PATTERN_LENGTH) return;
-    this.store.update(state => {
-      const pattern = state.pattern.steps[channel]?.slice() ?? [];
-      pattern[index] = pattern[index] ? 0 : 1;
-      return {
-        ...state,
-        pattern: {
-          ...state.pattern,
-          steps: { ...state.pattern.steps, [channel]: pattern }
-        },
-        history: pushHistory(state)
-      };
-    });
+    const state = this.store.getState();
+    const pattern = state.pattern.steps[channel];
+    if (!pattern) {
+      this.status.generative('El track es generativo. Agregá un patrón para editarlo.');
+      return;
+    }
+    const next = pattern.slice();
+    next[index] = next[index] ? 0 : 1;
+    this.store.update(current => ({
+      ...current,
+      pattern: {
+        ...current.pattern,
+        steps: { ...current.pattern.steps, [channel]: next }
+      },
+      history: pushHistory(current)
+    }));
   }
 
   mutateSelected(): void {
     const state = this.store.getState();
+    const pattern = this.selectedPattern(state);
+    if (!pattern) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
     }
     const mutationCount = state.mutationCount + 1;
-    const pattern = this.generative.mutatePattern(
-      state.pattern.steps[state.selected] ?? [],
+    const mutated = this.generative.mutatePattern(
+      pattern,
       state.params,
       state.seed + mutationCount,
       state.selected
     );
-    this.commitSelected(state.selected, pattern, { mutationCount }, 'Patrón mutado.');
+    this.commitSelected(state.selected, mutated, { mutationCount }, 'Patrón mutado.');
   }
 
   densifySelected(): void {
     const state = this.store.getState();
+    const pattern = this.selectedPattern(state);
+    if (!pattern) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
     }
     const mutationCount = state.mutationCount + 1;
-    const pattern = this.generative.fillPattern(
-      state.pattern.steps[state.selected] ?? [],
+    const dense = this.generative.fillPattern(
+      pattern,
       state.params,
       state.seed + state.mutationCount,
       state.selected
     );
     this.commitSelected(
       state.selected,
-      pattern,
+      dense,
       { mutationCount },
       `Densidad aumentada en ${trackName(state, state.selected)}.`
     );
@@ -86,20 +94,22 @@ export class PatternService implements PatternEvolver {
 
   thinSelected(): void {
     const state = this.store.getState();
+    const pattern = this.selectedPattern(state);
+    if (!pattern) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
     }
     const mutationCount = state.mutationCount + 1;
-    const pattern = this.generative.thinPattern(
-      state.pattern.steps[state.selected] ?? [],
+    const thin = this.generative.thinPattern(
+      pattern,
       state.params,
       state.seed + state.mutationCount,
       state.selected
     );
     this.commitSelected(
       state.selected,
-      pattern,
+      thin,
       { mutationCount },
       `Densidad reducida en ${trackName(state, state.selected)}.`
     );
@@ -107,22 +117,23 @@ export class PatternService implements PatternEvolver {
 
   rotateSelected(): void {
     const state = this.store.getState();
+    const pattern = this.selectedPattern(state);
+    if (!pattern) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
     }
-    const pattern = this.generative.rotatePattern(
-      state.pattern.steps[state.selected] ?? [],
-      1
-    );
-    this.commitSelected(state.selected, pattern, {}, 'Patrón girado.');
+    const rotated = this.generative.rotatePattern(pattern, 1);
+    this.commitSelected(state.selected, rotated, {}, 'Patrón girado.');
   }
 
   copySelected(): void {
     const state = this.store.getState();
+    const pattern = this.selectedPattern(state);
+    if (!pattern) return;
     this.store.update(current => ({
       ...current,
-      clipboard: state.pattern.steps[state.selected] ?? null
+      clipboard: pattern
     }));
     this.status.generative(`Patrón de ${trackName(state, state.selected)} copiado.`);
   }
@@ -130,6 +141,7 @@ export class PatternService implements PatternEvolver {
   pasteSelected(): void {
     const state = this.store.getState();
     if (!state.clipboard) return;
+    if (!this.selectedPattern(state)) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
@@ -156,6 +168,7 @@ export class PatternService implements PatternEvolver {
 
   applyEuclid(): void {
     const state = this.store.getState();
+    if (!this.selectedPattern(state)) return;
     if (state.pattern.frozen[state.selected]) {
       this.status.generative(`${trackName(state, state.selected)} está congelado.`);
       return;
@@ -233,6 +246,10 @@ export class PatternService implements PatternEvolver {
 
   toggleFreeze(channel: string = this.store.getState().selected): void {
     const state = this.store.getState();
+    if (state.pattern.steps[channel] === undefined) {
+      this.status.generative('El track es generativo. Agregá un patrón para congelarlo.');
+      return;
+    }
     const frozen = !state.pattern.frozen[channel];
     this.store.update(current => ({
       ...current,
@@ -257,12 +274,13 @@ export class PatternService implements PatternEvolver {
   }
 
   selectChannel(channel: string): void {
-    if (this.store.getState().pattern.steps[channel] === undefined) return;
+    if (this.store.getState().kit.tracks[channel] === undefined) return;
     this.store.update(state => ({ ...state, selected: channel }));
   }
 
   setPulses(value: number): void {
     const state = this.store.getState();
+    if (state.pattern.steps[state.selected] === undefined) return;
     const pulses = clamp(Math.round(value), 1, PATTERN_LENGTH);
     this.store.update(current => ({
       ...current,
@@ -355,6 +373,17 @@ export class PatternService implements PatternEvolver {
       ...state,
       harmony: { ...state.harmony, sustain: clamp(sustain, 0, 1) }
     }));
+  }
+
+  private selectedPattern(state: InstrumentState): Pattern | null {
+    const pattern = state.pattern.steps[state.selected];
+    if (!pattern) {
+      this.status.generative(
+        `${trackName(state, state.selected)} es generativo. Agregá un patrón para editarlo.`
+      );
+      return null;
+    }
+    return pattern;
   }
 
   private commitSelected(

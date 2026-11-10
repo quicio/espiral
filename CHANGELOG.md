@@ -19,9 +19,12 @@
 - Grooves curados por escena para el estado inicial, con `pulses` derivados del patrón.
 - Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets iniciales; el lead aparece más seguido.
-- Banco de 15 sonidos e instrumentos por categoría para tracks de usuario.
+- Banco de 15 sonidos e instrumentos por categoría para tracks editables.
 - El banco aplica máquina, nota y registro conservando mezcla, inserts y patrón.
-- 125 tests unitarios.
+- Drone, pad y lead aceptan máquina, parámetros y sonidos del banco.
+- Drone, pad y lead pueden alternar entre modo generativo y patrón (`+P` / `−P`).
+- Nuevas máquinas `drone-sampler`, `soft-pad` y `lead-synth`.
+- 132 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

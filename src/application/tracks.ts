@@ -6,12 +6,21 @@ import {
   machinePreset,
   type MachinePreset
 } from '../domain/machines';
-import { trackToConfig, type KitState, type TrackState } from '../domain/kit';
+import {
+  canEditTrackSound,
+  isGenerativeRole,
+  trackToConfig,
+  type GenerativeRole,
+  type KitState,
+  type TrackState
+} from '../domain/kit';
 import type { InstrumentState } from '../domain/models';
 import { soundPreset } from '../domain/sound-bank';
 import {
+  countSteps,
   emptyStepValues,
   emptyTrackLocks,
+  toPattern,
   type Pattern,
   type PatternState,
   type PatternSteps
@@ -21,6 +30,12 @@ import type { SceneSnapshot } from '../domain/scene';
 import type { Store } from './store';
 
 const MAX_TRACKS = 32;
+
+const GENERATIVE_PATTERN_SEEDS: Record<GenerativeRole, string> = {
+  drone: 'x.......x.......',
+  pad: 'x.....x.....x...',
+  lead: '..x...x...x...x.'
+};
 
 export class TrackService {
   constructor(
@@ -80,8 +95,10 @@ export class TrackService {
     const state = this.store.getState();
     const track = state.kit.tracks[trackId];
     if (!track) return;
-    if (track.role !== 'user') {
-      this.status.generative('La máquina solo se puede cambiar en tracks de usuario.');
+    if (!canEditTrackSound(track)) {
+      this.status.generative(
+        'La máquina de bombo, bajo, hats y percusión es fija.'
+      );
       return;
     }
     if (!this.engine.supportsMachineChange) {
@@ -125,8 +142,10 @@ export class TrackService {
     const state = this.store.getState();
     const track = state.kit.tracks[trackId];
     if (!track) return;
-    if (track.role !== 'user') {
-      this.status.generative('El banco de sonidos se aplica a tracks de usuario.');
+    if (!canEditTrackSound(track)) {
+      this.status.generative(
+        'El banco de sonidos se aplica a tracks editables: usuario, drone, pad y lead.'
+      );
       return;
     }
     if (!this.engine.supportsMachineChange) {
@@ -160,6 +179,69 @@ export class TrackService {
     this.store.update(() => next);
     this.engine.setTrackMachine(trackId, preset.machine);
     this.status.generative(`${track.name} · ${preset.name}.`);
+  }
+
+  togglePattern(trackId: string): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track) return;
+    if (!isGenerativeRole(track.role)) {
+      this.status.generative('Solo drone, pad y lead pueden alternar patrón.');
+      return;
+    }
+    if (track.hasPattern) this.detachPattern(trackId);
+    else this.attachPattern(trackId);
+  }
+
+  private attachPattern(trackId: string): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || !isGenerativeRole(track.role) || track.hasPattern) return;
+    const role = track.role;
+
+    const pattern = toPattern(
+      Array.from(
+        { length: PATTERN_LENGTH },
+        (_, index) =>
+          GENERATIVE_PATTERN_SEEDS[role][index] === 'x' ? 1 : 0
+      )
+    );
+    const next: InstrumentState = {
+      ...state,
+      kit: withTrackPattern(state.kit, trackId, true),
+      pattern: withPattern(state.pattern, trackId, pattern),
+      scenes: mapScenes(state, scene => ({
+        ...scene,
+        kit: withTrackPattern(scene.kit, trackId, true),
+        pattern: withPattern(scene.pattern, trackId, pattern)
+      })),
+      selected: trackId,
+      history: []
+    };
+
+    this.store.update(() => next);
+    this.status.generative(`${track.name} ahora tiene patrón.`);
+  }
+
+  private detachPattern(trackId: string): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || !isGenerativeRole(track.role) || !track.hasPattern) return;
+
+    const next: InstrumentState = {
+      ...state,
+      kit: withTrackPattern(state.kit, trackId, false),
+      pattern: removeTrackFromPattern(state.pattern, trackId),
+      scenes: mapScenes(state, scene => ({
+        ...scene,
+        kit: withTrackPattern(scene.kit, trackId, false),
+        pattern: removeTrackFromPattern(scene.pattern, trackId)
+      })),
+      history: []
+    };
+
+    this.store.update(() => next);
+    this.status.generative(`${track.name} vuelve a modo generativo.`);
   }
 
   setTrackMacro(trackId: string, index: number, value: number): void {
@@ -342,6 +424,42 @@ function removeTrackFromPattern(
     velocity: omit(pattern.velocity, trackId),
     probability: omit(pattern.probability, trackId),
     ratchets: omit(pattern.ratchets, trackId)
+  };
+}
+
+function withTrackPattern(
+  kit: KitState,
+  trackId: string,
+  hasPattern: boolean
+): KitState {
+  const track = kit.tracks[trackId];
+  if (!track) return kit;
+  return {
+    ...kit,
+    tracks: {
+      ...kit.tracks,
+      [trackId]: { ...track, hasPattern }
+    }
+  };
+}
+
+function withPattern(
+  pattern: PatternState,
+  trackId: string,
+  steps: Pattern
+): PatternState {
+  return {
+    ...pattern,
+    steps: { ...pattern.steps, [trackId]: steps },
+    pulses: { ...pattern.pulses, [trackId]: countSteps(steps) },
+    frozen: { ...pattern.frozen, [trackId]: false },
+    locks: { ...pattern.locks, [trackId]: emptyTrackLocks() },
+    velocity: { ...pattern.velocity, [trackId]: emptyStepValues(1) },
+    probability: {
+      ...pattern.probability,
+      [trackId]: emptyStepValues(1)
+    },
+    ratchets: { ...pattern.ratchets, [trackId]: emptyStepValues(1) }
   };
 }
 
