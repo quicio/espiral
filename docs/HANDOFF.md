@@ -26,7 +26,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 | código | 98 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 16 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio, HEAD `a52bd42` al momento de la medición | `git status` |
+| git | árbol limpio, HEAD `8c7b923` al momento de la medición | `git status` |
 
 **Los dos checks de Playwright no corren en un clone fresco.** Verificado hoy:
 `npm run test:audio` y `npm run test:integration` abortan pidiendo
