@@ -1,6 +1,7 @@
 import type { EffectKind } from '../domain/audio';
 import type { InsertConfig } from '../domain/graph';
 import {
+  busToConfig,
   kitEffectiveMute,
   trackToConfig,
   type TrackState
@@ -215,6 +216,7 @@ export class MixService {
       if (syncChains) void this.engine.setTrackInserts(track.id, track.inserts);
     });
 
+    this.engine.syncBuses(state.kit.buses.map(bus => busToConfig(bus)));
     state.kit.buses.forEach(bus => {
       this.engine.setBusReturn(bus.id, bus.returnDb);
       if (syncChains) void this.engine.setBusInserts(bus.id, bus.inserts);

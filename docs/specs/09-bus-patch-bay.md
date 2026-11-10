@@ -50,6 +50,9 @@ interface BusState {
 - La diagonal se muestra con `—`.
 - Faders de cantidad por celda.
 - Estado con cantidad de conexiones activas.
+- Botón `+ bus` para crear buses vacíos.
+- Botón `×` por bus para eliminarlo.
+- Al quitar un bus se limpian sus sends de tracks y de otros buses.
 - Al rechazar un ciclo, el fader vuelve al valor real del estado.
 
 ## Tareas
@@ -59,6 +62,6 @@ interface BusState {
 - [x] `Bus` con sends y reconciliación.
 - [x] `RoutingService.setBusSend`.
 - [x] Matriz de patch bay en Routing.
+- [x] Crear/eliminar buses desde la UI.
 - [x] Persistencia en sesión y escenas.
 - [x] Tests de ciclos, routing y sesión.
-- [ ] Agregar/eliminar buses desde la UI.

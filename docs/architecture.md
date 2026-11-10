@@ -71,7 +71,7 @@ fuente; los inserts cambian con crossfade y los tracks se reconcilian con `syncT
 al cargar presets, escenas o sesiones. Los cambios estructurales hacen un duck breve de
 master para evitar clicks. El lookahead del scheduler es configurable y se persiste en
 el transporte. El patch bay de buses conecta salidas de bus a entradas de otros buses con
-validación de ciclos.
+validación de ciclos; los buses se pueden crear y eliminar desde Routing.
 
 El estado guarda un `KitState` con `TrackState` por track (máquina, inserts, gain, pan,
 mute, solo, sends, `hasPattern`) y un `PatternState` (pasos, pulsos, freeze). El kit por

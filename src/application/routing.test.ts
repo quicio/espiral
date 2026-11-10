@@ -96,6 +96,35 @@ describe('RoutingService', () => {
     expect(status.messages.at(-1)).toContain('ciclo');
   });
 
+  it('creates and removes buses across scenes', () => {
+    const { store, engine, status, routing } = setup();
+
+    routing.addBus();
+
+    const state = store.getState();
+    expect(state.kit.buses.at(-1)?.id).toBe('bus-03');
+    expect(state.scenes.deriva.kit.buses.at(-1)?.id).toBe('bus-03');
+    expect(engine.addedBuses.at(-1)?.id).toBe('bus-03');
+    expect(status.messages.at(-1)).toContain('creado');
+
+    routing.setSend('pad', 'bus-03', 0.5);
+    routing.setBusSend('reverb-bus', 'bus-03', 0.4);
+    routing.removeBus('bus-03');
+
+    const removed = store.getState();
+    expect(removed.kit.buses.some(bus => bus.id === 'bus-03')).toBe(false);
+    expect(
+      removed.scenes.caos.kit.buses.some(bus => bus.id === 'bus-03')
+    ).toBe(false);
+    expect(removed.kit.tracks.pad?.sends.some(send => send.busId === 'bus-03')).toBe(
+      false
+    );
+    expect(
+      removed.kit.buses[0]?.sends.some(send => send.busId === 'bus-03')
+    ).toBe(false);
+    expect(engine.removedBuses.at(-1)).toBe('bus-03');
+  });
+
   it('keeps scene snapshots until the scene is captured', () => {
     const { store, routing } = setup();
     routing.setSend('perc', 'delay-bus', 0.2);

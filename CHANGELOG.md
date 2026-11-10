@@ -13,8 +13,9 @@
 - BPM rampeado al cargar presets, escenas y sesiones.
 - Buffer/lookahead configurable (20–300 ms) y persistente en la sesión.
 - Patch bay de buses con detección de ciclos y matriz dedicada en Routing.
+- Crear y eliminar buses desde Routing; al quitarlos se limpian sus sends.
 - Conexiones bus → bus persistentes en sesión y escenas.
-- 110 tests unitarios.
+- 111 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

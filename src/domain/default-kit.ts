@@ -133,6 +133,17 @@ export function createDefaultBuses(): readonly BusState[] {
   ];
 }
 
+export function createBus(index: number): BusState {
+  const label = String(index).padStart(2, '0');
+  return {
+    id: `bus-${label}`,
+    name: `Bus ${label}`,
+    returnDb: -12,
+    inserts: [],
+    sends: []
+  };
+}
+
 export function createUserTrack(
   index: number,
   machineId = 'sampler',

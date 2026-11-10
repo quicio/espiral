@@ -1,7 +1,9 @@
+import { createBus } from '../domain/default-kit';
 import type { SendConfig } from '../domain/graph';
-import type { TrackState } from '../domain/kit';
+import { busToConfig, type KitState, type TrackState } from '../domain/kit';
 import { wouldCreateCycle } from '../domain/patch';
 import type { AudioEnginePort, StatusPort } from '../domain/ports';
+import type { SceneSnapshot } from '../domain/scene';
 import type { Store } from './store';
 
 export class RoutingService {
@@ -46,6 +48,39 @@ export class RoutingService {
       sends: upsertSend(current.sends, send)
     }));
     this.engine.setTrackSend(trackId, busId, send.amount, preFader);
+  }
+
+  addBus(): void {
+    const state = this.store.getState();
+    const bus = createBus(nextBusIndex(state.kit.buses));
+    const next = {
+      ...state,
+      kit: { ...state.kit, buses: [...state.kit.buses, bus] },
+      scenes: mapScenes(state, scene => ({
+        ...scene,
+        kit: { ...scene.kit, buses: [...scene.kit.buses, bus] }
+      }))
+    };
+    this.store.update(() => next);
+    this.engine.addBus(busToConfig(bus));
+    this.status?.generative(`${bus.name} creado.`);
+  }
+
+  removeBus(busId: string): void {
+    const state = this.store.getState();
+    const bus = state.kit.buses.find(entry => entry.id === busId);
+    if (!bus) return;
+    const next = {
+      ...state,
+      kit: removeBusFromKit(state.kit, busId),
+      scenes: mapScenes(state, scene => ({
+        ...scene,
+        kit: removeBusFromKit(scene.kit, busId)
+      }))
+    };
+    this.store.update(() => next);
+    this.engine.removeBus(busId);
+    this.status?.generative(`${bus.name} eliminado.`);
   }
 
   setBusReturn(busId: string, db: number): void {
@@ -139,4 +174,41 @@ function upsertSend(
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function nextBusIndex(buses: readonly { id: string }[]): number {
+  let max = 2;
+  buses.forEach(bus => {
+    const match = /^bus-(\d+)$/.exec(bus.id);
+    if (match) max = Math.max(max, Number(match[1]));
+  });
+  return max + 1;
+}
+
+function removeBusFromKit(kit: KitState, busId: string): KitState {
+  const buses = kit.buses
+    .filter(bus => bus.id !== busId)
+    .map(bus => ({
+      ...bus,
+      sends: bus.sends.filter(send => send.busId !== busId)
+    }));
+  const tracks = Object.fromEntries(
+    Object.entries(kit.tracks).map(([id, track]) => [
+      id,
+      {
+        ...track,
+        sends: track.sends.filter(send => send.busId !== busId)
+      }
+    ])
+  );
+  return { ...kit, buses, tracks };
+}
+
+function mapScenes(
+  state: ReturnType<Store['getState']>,
+  mapper: (scene: SceneSnapshot) => SceneSnapshot
+): ReturnType<Store['getState']>['scenes'] {
+  return Object.fromEntries(
+    Object.entries(state.scenes).map(([id, scene]) => [id, mapper(scene)])
+  ) as ReturnType<Store['getState']>['scenes'];
 }

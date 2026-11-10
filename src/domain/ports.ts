@@ -2,7 +2,7 @@ import type { EffectKind, SoundEvent } from './audio';
 import type {
   PatternChannel
 } from './channels';
-import type { InsertConfig, MachineConfig, TrackConfig } from './graph';
+import type { BusConfig, InsertConfig, MachineConfig, TrackConfig } from './graph';
 import type { KitState, BusState } from './kit';
 import type { PluginDefinition } from './plugin';
 import type {
@@ -36,6 +36,9 @@ export interface AudioEnginePort {
   removeTrack(trackId: string): void;
   syncTracks(tracks: readonly TrackConfig[]): void;
   setTrackMachine(trackId: string, machine: MachineConfig): void;
+  addBus(bus: BusConfig): void;
+  removeBus(busId: string): void;
+  syncBuses(buses: readonly BusConfig[]): void;
   trigger(event: SoundEvent): void;
   setChannelVolume(trackId: string, db: number, time?: number): void;
   setChannelPan(trackId: string, pan: number, time?: number): void;

@@ -162,6 +162,16 @@ export class ModularAudioEngine implements AudioEnginePort {
     });
   }
 
+  syncBuses(buses: readonly BusConfig[]): void {
+    const desired = new Set(buses.map(bus => bus.id));
+    Array.from(this.buses.keys()).forEach(id => {
+      if (!desired.has(id)) this.removeBus(id);
+    });
+    buses.forEach(bus => {
+      if (!this.buses.has(bus.id)) this.addBus(bus);
+    });
+  }
+
   async prepare(): Promise<void> {
     if (this.prepared) return;
     if (!isOfflineContext()) await Tone.start();

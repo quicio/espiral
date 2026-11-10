@@ -660,7 +660,13 @@ export function renderRouting(
     buses.innerHTML = state.kit.buses
       .map(
         bus => `<div class="routing-bus" data-bus="${bus.id}">
-          <div class="routing-bus-name"><strong>${bus.name}</strong><span>return</span></div>
+          <div class="routing-bus-name">
+            <div class="routing-bus-title">
+              <strong>${bus.name}</strong>
+              <button class="routing-bus-remove" type="button" data-bus-remove="${bus.id}" aria-label="Eliminar ${bus.name}">×</button>
+            </div>
+            <span>return</span>
+          </div>
           <input class="routing-range" type="range" min="-60" max="6" step="0.5" value="${bus.returnDb}" data-bus-return="${bus.id}" aria-label="Retorno de ${bus.name}"${supports ? '' : ' disabled'}>
           <output class="routing-value" data-bus-value="${bus.id}">${bus.returnDb.toFixed(1)} dB</output>
           <div class="node-meter" data-bus-meter="${bus.id}" aria-label="Nivel de ${bus.name}">

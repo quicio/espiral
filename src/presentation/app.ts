@@ -413,6 +413,12 @@ export class EspiralApp {
       if (output) output.textContent = `${db.toFixed(1)} dB`;
     });
 
+    view.must('#add-bus').addEventListener('click', () => routing.addBus());
+    view.must('#routing-buses').addEventListener('click', event => {
+      const busId = attr(event, 'data-bus-remove');
+      if (busId) routing.removeBus(busId);
+    });
+
     view.must('#patch-matrix').addEventListener('input', event => {
       const ref = attr(event, 'data-bus-send');
       const value = inputValue(event);

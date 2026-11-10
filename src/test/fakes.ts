@@ -3,7 +3,7 @@ import type {
   ChannelKey,
   PatternChannel
 } from '../domain/channels';
-import type { InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
+import type { BusConfig, InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
 import type { BusState } from '../domain/kit';
 import type {
   ChannelSeed,
@@ -214,6 +214,9 @@ export class FakeAudioEngine implements AudioEnginePort {
     amount: number;
   }[] = [];
   readonly syncedBuses: (readonly BusState[])[] = [];
+  readonly addedBuses: BusConfig[] = [];
+  readonly removedBuses: string[] = [];
+  readonly syncedBusCollections: (readonly BusConfig[])[] = [];
   readonly params: {
     trackId: string;
     insertId: string;
@@ -308,6 +311,18 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   syncTracks(tracks: readonly TrackConfig[]): void {
     this.syncedTracks.push(tracks);
+  }
+
+  addBus(bus: BusConfig): void {
+    this.addedBuses.push(bus);
+  }
+
+  removeBus(busId: string): void {
+    this.removedBuses.push(busId);
+  }
+
+  syncBuses(buses: readonly BusConfig[]): void {
+    this.syncedBusCollections.push(buses);
   }
 
   setTrackSend(

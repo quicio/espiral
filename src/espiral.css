@@ -1235,6 +1235,35 @@ body.instrument-page .page-title {
   border-top: 1px solid var(--umbral-rule-faint);
 }
 
+.routing-head-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.routing-bus-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.routing-bus-remove {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.routing-bus-remove:hover {
+  color: var(--poem-cinnabar, #c0816e);
+}
+
 .routing-bus {
   display: grid;
   grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr) 5rem minmax(6rem, 8rem);
