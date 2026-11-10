@@ -324,6 +324,22 @@ body.instrument-page .page-title {
   background: linear-gradient(90deg, var(--umbral-trace), var(--poem-cinnabar, #c0816e));
 }
 
+.cpu-meter.is-warning .master-meter__fill {
+  background: linear-gradient(90deg, #b98a4a, #d6a24e);
+}
+
+.cpu-meter.is-critical .master-meter__fill {
+  background: var(--poem-cinnabar, #c0816e);
+}
+
+.cpu-meter.is-warning .master-meter__value {
+  color: #d6a24e;
+}
+
+.cpu-meter.is-critical .master-meter__value {
+  color: var(--poem-cinnabar, #c0816e);
+}
+
 .instrument-error {
   grid-column: 1 / -1;
   margin: 0;

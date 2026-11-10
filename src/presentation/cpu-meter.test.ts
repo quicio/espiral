@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CpuMeter } from './cpu-meter';
+import { CpuMeter, cpuSeverity } from './cpu-meter';
 
 describe('CpuMeter', () => {
   it('starts at zero and stays low with regular frames', () => {
@@ -44,5 +44,11 @@ describe('CpuMeter', () => {
     meter.reset();
 
     expect(meter.sample(500)).toBe(0);
+  });
+
+  it('classifies load for UI warnings', () => {
+    expect(cpuSeverity(0.2)).toBe('normal');
+    expect(cpuSeverity(0.6)).toBe('warning');
+    expect(cpuSeverity(0.85)).toBe('critical');
   });
 });

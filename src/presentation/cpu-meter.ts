@@ -1,5 +1,13 @@
 const FRAME_BUDGET_MS = 1000 / 60;
 
+export type CpuSeverity = 'normal' | 'warning' | 'critical';
+
+export function cpuSeverity(load: number): CpuSeverity {
+  if (load >= 0.85) return 'critical';
+  if (load >= 0.6) return 'warning';
+  return 'normal';
+}
+
 export class CpuMeter {
   private last: number | null = null;
   private smoothed = 0;

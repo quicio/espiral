@@ -15,7 +15,8 @@
 - Patch bay de buses con detección de ciclos y matriz dedicada en Routing.
 - Crear y eliminar buses desde Routing; al quitarlos se limpian sus sends.
 - Conexiones bus → bus persistentes en sesión y escenas.
-- 111 tests unitarios.
+- Medidor de CPU con estados normal/warning/critical y límites documentados.
+- 112 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 
@@ -26,7 +27,8 @@
 - Clip latch por nodo con reset individual.
 - Test Playwright de integración de la app principal (`npm run test:integration`).
 - El workflow de audio ejecuta también la integración.
-- Audio check ampliado a 6 escenarios: initial, automation, ambient, max, solo+mute y scene change.
+- Audio check ampliado a 7 escenarios: initial, automation, ambient, max, solo+mute, scene change y stress.
+- Nuevo escenario `modular-stress` con 4 inserts extra por track.
 - Cada escenario reporta `renderMs`; baseline offline documentado.
 - Motor modular único: `ToneAudioEngine`, `VITE_ENGINE`, `dev:tone` y el A/B offline fueron retirados.
 - Medidor de CPU estimada en la UI (jitter del hilo principal + underruns de audio).

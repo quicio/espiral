@@ -266,13 +266,58 @@ async function run(): Promise<void> {
     }));
   };
 
+  const stressInserts = (store: Store): void => {
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: Object.fromEntries(
+          Object.entries(state.kit.tracks).map(([id, track]) => [
+            id,
+            {
+              ...track,
+              inserts: [
+                ...track.inserts,
+                {
+                  id: 'stress-filter',
+                  pluginId: 'filter',
+                  bypass: false,
+                  params: { cutoff: 2200, q: 1 }
+                },
+                {
+                  id: 'stress-drive',
+                  pluginId: 'drive',
+                  bypass: false,
+                  params: { drive: 0.3, mix: 0.3 }
+                },
+                {
+                  id: 'stress-compressor',
+                  pluginId: 'compressor',
+                  bypass: false,
+                  params: { threshold: -18, ratio: 3, attack: 0.02, release: 0.2 }
+                },
+                {
+                  id: 'stress-tremolo',
+                  pluginId: 'tremolo',
+                  bypass: false,
+                  params: { rate: 3, depth: 0.35, wet: 0.25 }
+                }
+              ]
+            }
+          ])
+        )
+      }
+    }));
+  };
+
   const scenarios: Scenario[] = [
     { name: 'modular-initial' },
     { name: 'modular-automation', setup: enableAutomation },
     { name: 'modular-ambient', bpm: 90, setup: loadAmbient },
     { name: 'modular-max', setup: everythingMax },
     { name: 'modular-solo-mute', setup: soloAndMute },
-    { name: 'modular-scene-change', onStep: sceneMidway }
+    { name: 'modular-scene-change', onStep: sceneMidway },
+    { name: 'modular-stress', setup: stressInserts }
   ];
 
   const results: Metrics[] = [];

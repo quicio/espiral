@@ -51,7 +51,8 @@ try {
     'modular-ambient',
     'modular-max',
     'modular-solo-mute',
-    'modular-scene-change'
+    'modular-scene-change',
+    'modular-stress'
   ];
   for (const name of expected) {
     if (!metrics.some(metric => metric.name === name)) {

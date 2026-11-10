@@ -12,8 +12,8 @@
 - Fades en `Tone.Player`.
 - Reverb con `decay` real y presets con `feedback`/`delayTime`/`decay`.
 - PDC por track/send en el motor modular.
-- Harness offline `npm run test:audio`: 8 compases y 6 escenarios — inicial, automatización,
-  Ambient, todo al máximo, solo+mute y cambio de escena a mitad del render.
+- Harness offline `npm run test:audio`: 8 compases y 7 escenarios — inicial, automatización,
+  Ambient, todo al máximo, solo+mute, cambio de escena y stress con 4 inserts por track.
   Verifica peak ≤ −1 dBFS, sin NaN, DC < 0.001 y que el render no sea silencio.
 - Cada escenario reporta `renderMs` para detectar regresiones de performance.
 - Motor modular único; el A/B contra el motor legacy quedó obsoleto al retirarlo.
@@ -112,20 +112,38 @@ La UI muestra una **CPU estimada** combinando jitter del hilo principal y underr
 - Cachear IRs de reverb por `decay` y regenerarlas en idle. Hoy cargar el preset
   `ambient` regenera 4 IRs largas y puede demorar el arranque varios segundos.
 
-**Baseline offline local** (Chromium headless, macOS arm64, 2026-11-09):
+**Baseline offline local** (Chromium headless, macOS arm64, 2026-11-10):
 
 ```text
-modular-initial      3673 ms
-modular-automation   4176 ms
-modular-ambient      7874 ms
-modular-max          3407 ms
-modular-solo-mute    3465 ms
-modular-scene-change 3796 ms
+modular-initial       8816 ms
+modular-automation    7740 ms
+modular-ambient      14475 ms
+modular-max           7703 ms
+modular-solo-mute     8508 ms
+modular-scene-change  9786 ms
+modular-stress       44507 ms   (16 tracks + 4 inserts por track)
 ```
 
 El audio check imprime `Render baseline (ms)` en cada corrida. El valor no es un
 criterio de fallo porque depende de la máquina; sirve para detectar regresiones
 grandes entre corridas.
+
+## Límites de CPU
+
+- La UI muestra CPU estimada y colorea:
+  - normal: < 60%;
+  - warning: 60–85%;
+  - critical: ≥ 85%.
+- Referencia cómoda: 16 tracks, hasta 2 inserts por track y lookahead 100 ms.
+- El escenario `modular-stress` usa 16 tracks + 4 inserts extra por track y sirve como
+  baseline de carga alta, no como tiempo real.
+- Si aparece warning/critical:
+  - bajar la cantidad de inserts por track;
+  - reducir reverb/delay;
+  - subir el Buffer/lookahead;
+  - congelar tracks generativos.
+- Los navegadores no exponen CPU real del audio thread: la métrica combina jitter del
+  hilo principal y underruns.
 
 ## Criterios de aceptación
 
@@ -147,4 +165,5 @@ grandes entre corridas.
 - [x] Clip latch por nodo.
 - [x] Baseline de performance offline.
 - [x] Medidor de CPU estimada en la UI.
+- [x] Límites y umbrales de CPU documentados.
 - [x] Escenarios adicionales: preset `ambient`, todo al máximo, solo+mute combinados y cambio de escena.

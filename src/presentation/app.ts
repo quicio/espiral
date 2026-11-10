@@ -17,7 +17,7 @@ import type { SessionService } from '../application/sessions';
 import type { Store } from '../application/store';
 import type { TrackService } from '../application/tracks';
 import * as view from './render';
-import { CpuMeter } from './cpu-meter';
+import { CpuMeter, cpuSeverity } from './cpu-meter';
 import { formatPluginParam } from './plugin-controls';
 
 type ViewId = 'performance' | 'sequencer' | 'sound' | 'routing' | 'modulation';
@@ -114,6 +114,16 @@ export class EspiralApp {
       if (cpuFill) cpuFill.style.setProperty('--level', cpu.toFixed(3));
       const cpuValue = view.q('#cpu-value');
       if (cpuValue) cpuValue.textContent = `${Math.round(cpu * 100)}%`;
+      const cpuBar = view.q('.cpu-meter');
+      if (cpuBar) {
+        const severity = cpuSeverity(cpu);
+        cpuBar.classList.toggle('is-warning', severity === 'warning');
+        cpuBar.classList.toggle('is-critical', severity === 'critical');
+        cpuBar.setAttribute(
+          'aria-label',
+          `Carga de CPU estimada: ${Math.round(cpu * 100)}%`
+        );
+      }
 
       view.qa('[data-track-meter]').forEach(element => {
         const trackId = element.getAttribute('data-track-meter');

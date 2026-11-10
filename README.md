@@ -12,6 +12,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Locks sobre parámetros de inserts y sobre gain/pan de cada track.
 - Medidores y clip latch por track/bus, además del master.
 - Medidor de CPU estimada y motor modular único, sin fallback legacy.
+- CPU normal/warning/critical con límites documentados.
 - Export WAV offline de la performance actual, con escena y duración configurables.
 - Cambios de máquina/track con crossfade para evitar clicks y cortes.
 - Cambios de preset/escena con duck breve de master y BPM rampeado.
@@ -60,7 +61,7 @@ npm run test:audio
 npm run test:integration
 ```
 
-`test:audio` renderiza 6 escenarios en un `OfflineAudioContext` real y verifica peak,
+`test:audio` renderiza 7 escenarios en un `OfflineAudioContext` real y verifica peak,
 NaN, DC, silencio y tiempos de render. `test:integration` levanta Vite, reproduce la app
 y verifica tracks, transporte, presets, samples y errores de consola. La primera vez requiere:
 
