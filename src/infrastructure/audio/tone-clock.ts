@@ -27,7 +27,7 @@ export class ToneClock implements ClockPort {
 
   setBpm(bpm: number): void {
     this.bpm = bpm;
-    Tone.Transport.bpm.value = bpm;
+    Tone.Transport.bpm.rampTo(bpm, 0.08);
   }
 
   getBpm(): number {

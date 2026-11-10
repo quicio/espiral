@@ -50,6 +50,8 @@ export interface AudioEnginePort {
   setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void>;
   setEffectWet(trackId: string, effect: EffectKind, wet: number, time?: number): void;
   setMasterVolume(db: number, time?: number): void;
+  beginTransition(fadeOutMs?: number): void;
+  endTransition(fadeInMs?: number): void;
   getMasterLevel(): number;
   getTrackLevel(trackId: string): number;
   getBusLevel(busId: string): number;

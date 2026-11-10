@@ -9,7 +9,9 @@
 - Botón `Exportar WAV` con estados de render/exportación.
 - Crossfade de fuente al cambiar máquinas y fade-out al eliminar tracks.
 - `syncTracks` reconcilia altas, bajas y máquinas al cargar presets/escenas/sesiones.
-- 103 tests unitarios.
+- Duck de master de 6 ms y restauración de 30 ms en cambios estructurales.
+- BPM rampeado al cargar presets, escenas y sesiones.
+- 104 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

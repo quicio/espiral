@@ -44,10 +44,17 @@ export class SceneService {
       clipboard: null
     };
 
-    this.store.update(() => next);
-    this.mix.syncAll(next, true);
-    this.runtime.resetHarmony();
-    this.status.generative(`Escena ${nextScene.name} · semilla ${nextScene.seed}.`);
+    this.mix.beginTransition();
+    try {
+      this.store.update(() => next);
+      this.mix.syncAll(next, true);
+      this.runtime.resetHarmony();
+      this.status.generative(
+        `Escena ${nextScene.name} · semilla ${nextScene.seed}.`
+      );
+    } finally {
+      this.mix.endTransition();
+    }
   }
 
   captureCurrent(): void {

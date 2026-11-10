@@ -70,9 +70,14 @@ export class SessionService {
 
   private apply(raw: unknown): void {
     const next: InstrumentState = this.mapper.fromDto(raw, this.store.getState());
-    this.store.update(() => next);
-    this.playback.setBpm(next.transport.bpm);
-    this.mix.syncAll(next, true);
-    this.runtime.resetHarmony();
+    this.mix.beginTransition();
+    try {
+      this.store.update(() => next);
+      this.playback.setBpm(next.transport.bpm);
+      this.mix.syncAll(next, true);
+      this.runtime.resetHarmony();
+    } finally {
+      this.mix.endTransition();
+    }
   }
 }

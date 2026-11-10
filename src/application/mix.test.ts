@@ -80,6 +80,15 @@ describe('MixService', () => {
     expect(mix.getTrackLevel('nope')).toBe(-Infinity);
   });
 
+  it('ducks and restores the master around transitions', () => {
+    const { engine, mix } = setup();
+
+    mix.beginTransition();
+    mix.endTransition();
+
+    expect(engine.transitions).toBe(2);
+  });
+
   it('adds, edits, bypasses, moves and removes inserts', () => {
     const { store, mix, engine } = setup();
 

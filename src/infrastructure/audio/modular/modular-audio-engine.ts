@@ -267,6 +267,14 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.master.setVolume(db);
   }
 
+  beginTransition(fadeOutMs = 6): void {
+    this.master.beginTransition(fadeOutMs);
+  }
+
+  endTransition(fadeInMs = 30): void {
+    this.master.endTransition(fadeInMs);
+  }
+
   getMasterLevel(): number {
     return this.master.getLevel();
   }

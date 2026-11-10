@@ -43,6 +43,9 @@ o presets durante la reproducción.
 
 - La cadena mantiene HPF, glue compressor, limiter y safety clipper.
 - Los cambios de master usan rampas de 50 ms.
+- Presets, escenas y sesiones hacen un **duck** de master de 6 ms y restauran en 30 ms
+  con 10 ms de margen para que el cambio estructural no se escuche como click.
+- El BPM se rampa en 80 ms al cargar un preset o sesión.
 
 ## Límites
 
@@ -65,5 +68,6 @@ o presets durante la reproducción.
 - [x] Fade-out al eliminar track.
 - [x] `syncTracks` para presets/escenas/sesiones.
 - [x] Firma de máquina para evitar rebuilds innecesarios.
-- [ ] Fade global de master durante cambios estructurales masivos.
+- [x] Fade global de master durante cambios estructurales masivos.
+- [x] BPM rampeado al cargar presets/sesiones.
 - [ ] Buffer/lookahead configurable para scheduling.

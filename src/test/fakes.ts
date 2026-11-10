@@ -219,6 +219,7 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly effects: { channel: ChannelKey; effect: EffectKind; wet: number }[] = [];
   readonly inserts: { channel: ChannelKey; inserts: readonly InsertConfig[] }[] = [];
   readonly master: number[] = [];
+  transitions = 0;
   masterLevel = -60;
   readonly trackLevels: Record<string, number> = {};
   readonly busLevels: Record<string, number> = {};
@@ -344,6 +345,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setMasterVolume(db: number): void {
     this.master.push(db);
+  }
+
+  beginTransition(): void {
+    this.transitions += 1;
+  }
+
+  endTransition(): void {
+    this.transitions += 1;
   }
 
   getMasterLevel(): number {

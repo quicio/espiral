@@ -23,24 +23,28 @@ export class PresetService {
   }
 
   async load(id: string): Promise<void> {
+    let transitioning = false;
     try {
       const raw = await this.repository.load(id);
-      const config = this.mapper.fromDto(raw, this.store.getState());
+      const state = this.store.getState();
+      const config = this.mapper.fromDto(raw, state);
+      this.mix.beginTransition();
+      transitioning = true;
       const next = {
-        ...this.store.getState(),
+        ...state,
         transport: {
-          ...this.store.getState().transport,
+          ...state.transport,
           bpm: config.bpm
         },
         kit: config.kit,
         masterVolume: config.masterVolume,
-        pattern: config.pattern ?? this.store.getState().pattern,
-        harmony: config.harmony ?? this.store.getState().harmony,
-        seed: config.seed ?? this.store.getState().seed,
-        params: config.params ?? this.store.getState().params,
-        scenes: config.scenes ?? this.store.getState().scenes,
-        scene: config.scene ?? this.store.getState().scene,
-        selected: config.selected ?? this.store.getState().selected,
+        pattern: config.pattern ?? state.pattern,
+        harmony: config.harmony ?? state.harmony,
+        seed: config.seed ?? state.seed,
+        params: config.params ?? state.params,
+        scenes: config.scenes ?? state.scenes,
+        scene: config.scene ?? state.scene,
+        selected: config.selected ?? state.selected,
         history: [],
         clipboard: null
       };
@@ -53,6 +57,8 @@ export class PresetService {
     } catch (error) {
       console.error(error);
       this.status.error('No se pudo cargar el preset.');
+    } finally {
+      if (transitioning) this.mix.endTransition();
     }
   }
 }

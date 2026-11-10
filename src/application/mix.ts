@@ -176,6 +176,14 @@ export class MixService {
     this.engine.setMasterVolume(masterVolume);
   }
 
+  beginTransition(): void {
+    this.engine.beginTransition();
+  }
+
+  endTransition(): void {
+    this.engine.endTransition();
+  }
+
   toggleMute(trackId: string): void {
     const track = this.store.getState().kit.tracks[trackId];
     if (!track) return;
