@@ -38,6 +38,20 @@ describe('MixService', () => {
     expect(lastMutes.find(entry => entry.channel === 'kick')?.muted).toBe(true);
   });
 
+  it('mutes a track across the kit and every scene', () => {
+    const { store, engine, mix } = setup();
+
+    mix.setTrackMuted('hihat', true);
+
+    const state = store.getState();
+    expect(state.kit.tracks.hihat?.muted).toBe(true);
+    expect(state.scenes.deriva.kit.tracks.hihat?.muted).toBe(true);
+    expect(state.scenes.caos.kit.tracks.hihat?.muted).toBe(true);
+    expect(
+      engine.mutes.slice(-16).find(entry => entry.channel === 'hihat')?.muted
+    ).toBe(true);
+  });
+
   it('keeps the user mute independent from solo isolation', () => {
     const { store, mix } = setup();
 

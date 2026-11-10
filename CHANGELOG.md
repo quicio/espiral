@@ -32,7 +32,11 @@
 - Feedback de lanzamientos pendientes con countdown y fix del status bar en anchos intermedios.
 - Navegación de Session por teclado, roving tabindex y Space global para transporte.
 - Tempo con entrada numérica exacta además del slider.
-- 149 tests unitarios.
+- Sound compacto: mixer de 16 filas, detalle del track seleccionado y banco en drawer.
+- Sound ocupa todo el ancho y reduce su página de ~6.100 px a ~1.000 px.
+- Wizard de armado inicial: base, escena y elementos; no reproduce hasta entrar.
+- El armado mutea los elementos no elegidos en todas las escenas.
+- 151 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

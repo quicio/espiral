@@ -55,6 +55,14 @@ export class EspiralApp {
   private lastState: InstrumentState | null = null;
   private unsubscribe: (() => void) | null = null;
   private meterFrame: number | null = null;
+  private armRequired = true;
+  private armState: view.ArmWizardState = {
+    presetId: 'techno',
+    sceneId: 'umbral',
+    elements: new Set(view.ARM_ELEMENT_IDS),
+    canCancel: false,
+    hasSavedSession: false
+  };
 
   constructor(private readonly deps: PresentationDependencies) {}
 
@@ -71,6 +79,7 @@ export class EspiralApp {
     });
     const initial = (location.hash || '').replace('#', '');
     this.setView(isView(initial) ? initial : 'performance', { scroll: false });
+    this.openArmWizard(true);
     this.deps.status.instrument('Detenido');
     this.deps.status.generative(
       `Semilla ${this.lastState.seed} · escena ${this.deps.catalog.sceneLabel(this.lastState.scene)}.`
@@ -404,6 +413,7 @@ export class EspiralApp {
     this.bindChannelActions();
     this.bindClipActions();
     this.bindSessionActions();
+    this.bindArmWizard();
     this.bindViewControls();
     this.bindKeyboard();
   }
@@ -905,6 +915,7 @@ export class EspiralApp {
     });
 
     view.must('#sound-channels').addEventListener('click', event => {
+      const select = attr(event, 'data-sound-select');
       const mute = attr(event, 'data-sound-mute');
       const solo = attr(event, 'data-sound-solo');
       const freeze = attr(event, 'data-sound-freeze');
@@ -913,7 +924,9 @@ export class EspiralApp {
       const move = attr(event, 'data-insert-move');
       const ref = attr(event, 'data-insert-ref');
 
-      if (mute) this.toggleMute(mute);
+      if (select) {
+        patterns.selectChannel(select);
+      } else if (mute) this.toggleMute(mute);
       else if (solo) {
         mix.toggleSolo(solo);
         this.deps.status.generative(
@@ -1049,6 +1062,118 @@ export class EspiralApp {
         clips.setFollowAfter(after, Number(event.target.value));
       }
     });
+  }
+
+  private bindArmWizard(): void {
+    view.must('#arm-wizard-open').addEventListener('click', () => this.openArmWizard(false));
+
+    view.must('#arm-presets').addEventListener('click', event => {
+      const presetId = attr(event, 'data-arm-preset');
+      if (!presetId) return;
+      this.armState = { ...this.armState, presetId };
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-scenes').addEventListener('click', event => {
+      const scene = attr(event, 'data-arm-scene');
+      if (!scene || !isSceneId(scene)) return;
+      this.armState = { ...this.armState, sceneId: scene };
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-elements').addEventListener('click', event => {
+      const trackId = attr(event, 'data-arm-element');
+      if (!trackId) return;
+      const elements = new Set(this.armState.elements);
+      if (elements.has(trackId)) elements.delete(trackId);
+      else elements.add(trackId);
+      this.armState = { ...this.armState, elements };
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-build').addEventListener('click', () => void this.buildArmSet());
+    view.must('#arm-load-session').addEventListener('click', () => {
+      if (this.deps.sessions.load()) this.closeArmWizard();
+    });
+    view.must('#arm-cancel').addEventListener('click', () => {
+      if (!this.armRequired) this.closeArmWizard();
+    });
+  }
+
+  private openArmWizard(required: boolean): void {
+    this.armRequired = required;
+    this.armState = {
+      ...this.armState,
+      canCancel: !required,
+      hasSavedSession: this.deps.sessions.hasSaved()
+    };
+    this.renderArmWizardState();
+    const wizard = view.q<HTMLElement>('#arm-wizard');
+    if (wizard) wizard.hidden = false;
+    this.setShellInert(true);
+    requestAnimationFrame(() =>
+      view.q<HTMLButtonElement>('#arm-presets .arm-card')?.focus()
+    );
+  }
+
+  private closeArmWizard(): void {
+    const wizard = view.q<HTMLElement>('#arm-wizard');
+    if (wizard) wizard.hidden = true;
+    this.setShellInert(false);
+    this.armRequired = false;
+    this.armState = { ...this.armState, canCancel: true };
+    view.q<HTMLButtonElement>('#transport-play')?.focus();
+  }
+
+  private renderArmWizardState(): void {
+    view.renderArmWizard(
+      this.deps.store.getState(),
+      this.deps.catalog,
+      this.deps.presets.list(),
+      this.armState
+    );
+  }
+
+  private async buildArmSet(): Promise<void> {
+    const build = view.q<HTMLButtonElement>('#arm-build');
+    const statusLabel = view.q('#arm-status');
+    if (build) build.disabled = true;
+    if (statusLabel) statusLabel.textContent = 'Armando set…';
+
+    const loaded = await this.deps.presets.load(this.armState.presetId);
+    if (!loaded) {
+      if (build) build.disabled = false;
+      if (statusLabel) statusLabel.textContent = 'No se pudo cargar la base. Probá otra.';
+      return;
+    }
+
+    this.deps.scenes.apply(this.armState.sceneId);
+    const state = this.deps.store.getState();
+    view.ARM_ELEMENT_IDS.forEach(trackId => {
+      if (!state.kit.tracks[trackId]) return;
+      this.deps.mix.setTrackMuted(
+        trackId,
+        !this.armState.elements.has(trackId)
+      );
+    });
+
+    const preset = this.deps.presets
+      .list()
+      .find(entry => entry.id === this.armState.presetId);
+    const mixPreset = view.q<HTMLSelectElement>('#mix-preset');
+    if (mixPreset) mixPreset.value = this.armState.presetId;
+    this.closeArmWizard();
+    this.setView('session');
+    this.deps.status.generative(
+      `Set armado: ${preset?.name ?? this.armState.presetId} · ${this.deps.catalog.sceneLabel(this.armState.sceneId)} · ${this.armState.elements.size} elementos.`
+    );
+  }
+
+  private setShellInert(inert: boolean): void {
+    const shell = view.q<HTMLElement>('.espiral-shell');
+    if (!shell) return;
+    if (inert) shell.setAttribute('inert', '');
+    else shell.removeAttribute('inert');
   }
 
   private bindSessionActions(): void {

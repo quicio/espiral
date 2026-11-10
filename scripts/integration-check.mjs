@@ -36,6 +36,17 @@ try {
 
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForSelector('#transport-play');
+  await page.waitForFunction(
+    () => document.querySelectorAll('[data-arm-preset]').length > 0,
+    undefined,
+    { timeout: 6000 }
+  );
+  await page.locator('#arm-build').click();
+  await page.waitForFunction(
+    () => document.querySelector('#arm-wizard')?.hasAttribute('hidden') === true,
+    undefined,
+    { timeout: 12_000 }
+  );
 
   const trackRows = await page.locator('#activity-list .activity-row').count();
   if (trackRows !== 16) throw new Error(`Se esperaban 16 tracks, hay ${trackRows}.`);
@@ -137,6 +148,23 @@ try {
   }
 
   await page.locator('#tab-sound').click();
+  const mixerRows = await page.locator('.mixer-row').count();
+  const bankDrawerOpen = await page
+    .locator('#sound-bank-drawer')
+    .evaluate(el => el.hasAttribute('open'));
+  if (mixerRows !== 16 || bankDrawerOpen) {
+    throw new Error(
+      `Sound compacto inesperado: ${mixerRows} filas, drawer abierto=${bankDrawerOpen}.`
+    );
+  }
+  await page.locator('[data-sound-select="bass"]').click();
+  await page.waitForTimeout(150);
+  const detailTrack = (await page.locator('.sound-detail-title').textContent())?.trim();
+  if (detailTrack !== 'Bass') {
+    throw new Error(`El detalle de Sound no siguió la selección: ${detailTrack}.`);
+  }
+  await page.locator('#sound-bank-drawer summary').click();
+  await page.waitForTimeout(150);
   const bankCards = await page.locator('[data-sound-preset]').count();
   if (bankCards === 0) throw new Error('El banco de sonidos no tiene presets.');
   await page.locator('#sound-bank-target').selectOption('track-08');
@@ -180,6 +208,8 @@ try {
         keyboardCol,
         keyboardQueue,
         keyboardCancel,
+        mixerRows,
+        bankDrawerOpen,
         samples: samples.length,
         clip
       },

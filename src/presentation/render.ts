@@ -28,7 +28,7 @@ import type { ModulationRoute } from '../domain/modulation';
 import type { HarmonyState, InstrumentState, ProgressionId, ScaleId, SceneId } from '../domain/models';
 import { countSteps, type Pattern, type Step } from '../domain/pattern';
 import { normalizePluginParam, type PluginDefinition } from '../domain/plugin';
-import type { GenerativePort } from '../domain/ports';
+import type { GenerativePort, PresetSummary } from '../domain/ports';
 import {
   SOUND_BANK,
   SOUND_CATEGORIES,
@@ -264,6 +264,93 @@ export function renderSession(
   renderClipInspector(state, selected, activeClip, selectedPending, currentStep);
 }
 
+export const ARM_ELEMENT_IDS = [
+  'kick',
+  'bass',
+  'hihat',
+  'perc',
+  'track-08',
+  'track-09',
+  'track-10',
+  'drone',
+  'pad',
+  'lead'
+] as const;
+
+export interface ArmWizardState {
+  readonly presetId: string;
+  readonly sceneId: SceneId;
+  readonly elements: ReadonlySet<string>;
+  readonly canCancel: boolean;
+  readonly hasSavedSession: boolean;
+}
+
+const ARM_PRESET_DESCRIPTIONS: Readonly<Record<string, string>> = {
+  techno: '4/4, hats offbeat y bajo rodante',
+  dub: 'Espacio largo, delays y graves',
+  ambient: 'Texturas lentas y aire',
+  breaks: 'Síncopa y batería rota'
+};
+
+export function renderArmWizard(
+  state: InstrumentState,
+  catalog: Catalog,
+  presets: readonly PresetSummary[],
+  arm: ArmWizardState
+): void {
+  const presetRoot = q('#arm-presets');
+  if (presetRoot) {
+    presetRoot.innerHTML = presets
+      .map(
+        preset => `<button class="arm-card${preset.id === arm.presetId ? ' is-selected' : ''}" type="button" data-arm-preset="${preset.id}" aria-pressed="${preset.id === arm.presetId}">
+          <strong>${preset.name}</strong>
+          <span>${ARM_PRESET_DESCRIPTIONS[preset.id] ?? 'Preset musical'}</span>
+        </button>`
+      )
+      .join('');
+  }
+
+  const sceneRoot = q('#arm-scenes');
+  if (sceneRoot) {
+    sceneRoot.innerHTML = catalog.scenes
+      .map(
+        scene => `<button class="arm-card${scene.id === arm.sceneId ? ' is-selected' : ''}" type="button" data-arm-scene="${scene.id}" aria-pressed="${scene.id === arm.sceneId}">
+          <strong>${scene.label}</strong>
+          <span>${scene.description}</span>
+        </button>`
+      )
+      .join('');
+  }
+
+  const elementRoot = q('#arm-elements');
+  if (elementRoot) {
+    elementRoot.innerHTML = ARM_ELEMENT_IDS.flatMap(trackId => {
+      const track = state.kit.tracks[trackId];
+      if (!track) return [];
+      return `<button class="arm-element${arm.elements.has(trackId) ? ' is-selected' : ''}" type="button" data-arm-element="${trackId}" aria-pressed="${arm.elements.has(trackId)}">
+        <strong>${track.name}</strong>
+        <span>${track.hasPattern ? 'patrón' : 'generativo'}</span>
+      </button>`;
+    }).join('');
+  }
+
+  const build = q<HTMLButtonElement>('#arm-build');
+  if (build) build.disabled = arm.elements.size === 0;
+
+  const load = q<HTMLButtonElement>('#arm-load-session');
+  if (load) load.disabled = !arm.hasSavedSession;
+
+  const cancel = q<HTMLButtonElement>('#arm-cancel');
+  if (cancel) cancel.hidden = !arm.canCancel;
+
+  const status = q('#arm-status');
+  if (status) {
+    const preset = presets.find(entry => entry.id === arm.presetId);
+    const scene = catalog.scenes.find(entry => entry.id === arm.sceneId);
+    status.textContent = `${preset?.name ?? arm.presetId} · ${scene?.label ?? arm.sceneId} · ${arm.elements.size} elementos`;
+  }
+}
+
 function pendingForTrack(
   state: InstrumentState,
   runtime: PlaybackRuntime | undefined,
@@ -446,122 +533,148 @@ export function renderSound(
   if (!container) return;
 
   const plugins = mixService.listPlugins().filter(plugin => plugin.kind === 'effect');
+  const tracks = kitTracks(state.kit);
   const anySolo = kitHasSolo(state.kit);
+  const selected = state.kit.tracks[state.selected] ?? tracks[0];
+  if (!selected) {
+    container.innerHTML = '';
+    return;
+  }
 
-  container.innerHTML = kitTracks(state.kit)
+  const mixer = tracks
     .map(track => {
       const isolated = anySolo && !track.solo;
-      const inserts = mixService.supportsInserts ? track.inserts : [];
-
-      const rack = inserts
-        .map(insert => {
-          const plugin = plugins.find(definition => definition.id === insert.pluginId);
-          const name = plugin?.name ?? insert.pluginId;
-          const ref = `${track.id}:${insert.id}`;
-          return `<div class="insert-row">
-          <div class="insert-head">
-            <strong>${name}</strong>
-            <div class="insert-actions">
-              <button class="small-toggle${insert.bypass ? ' is-active' : ''}" type="button" data-insert-move="up" data-insert-ref="${ref}" aria-label="Mover ${name} hacia arriba">↑</button>
-              <button class="small-toggle" type="button" data-insert-move="down" data-insert-ref="${ref}" aria-label="Mover ${name} hacia abajo">↓</button>
-              <button class="small-toggle${insert.bypass ? ' is-active' : ''}" type="button" data-insert-bypass="${ref}" aria-pressed="${insert.bypass}" aria-label="Bypass ${name}">BYP</button>
-              <button class="small-toggle" type="button" data-insert-remove="${ref}" aria-label="Quitar ${name}">×</button>
-            </div>
-          </div>
-          <div class="insert-params" data-insert-params="${ref}"></div>
-        </div>`;
-        })
-        .join('');
-
-      const add = mixService.supportsInserts
-        ? `<select class="insert-add" data-add-insert="${track.id}" aria-label="Agregar plugin a ${track.name}">
-          <option value="">+ insert</option>
-          ${plugins.map(plugin => `<option value="${plugin.id}">${plugin.name}</option>`).join('')}
-        </select>`
-        : '<span class="sound-none">rack no disponible</span>';
-
-      const sends =
-        mixService.supportsRouting && state.kit.buses.length > 0
-          ? `<div class="sound-sends">${state.kit.buses
-              .map(bus => {
-                const ref = `${track.id}:${bus.id}`;
-                const send = track.sends.find(entry => entry.busId === bus.id);
-                const amount = Math.round((send?.amount ?? 0) * 100);
-                return `<label class="sound-send">
-                  <span>${bus.name}</span>
-                  <input type="range" min="0" max="100" step="1" value="${amount}" data-sound-send="${ref}" aria-label="Enviar ${track.name} a ${bus.name}">
-                  <output data-sound-send-value="${ref}">${amount}%</output>
-                </label>`;
-              })
-              .join('')}</div>`
-          : '';
-
-      const machineControl = canEditTrackSound(track)
-        ? `<select class="machine-select" data-machine="${track.id}" aria-label="Máquina de ${track.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
-            mixService
-          )
-            .map(
-              option =>
-                `<option value="${option.id}"${track.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
-            )
-            .join('')}</select>`
-        : `<span class="machine-label">${machineLabel(track.machineId)}</span>`;
-
-      const machineParams = canEditTrackSound(track)
-        ? renderMachineParams(track, mixService)
-        : '';
-
-      const macroEnabled = mixService.supportsRouting;
-      const trackMacros = track.macros
-        .map((value, index) => {
-          const ref = `${track.id}:${index}`;
-          const percent = Math.round(value * 100);
-          return `<label class="track-macro">
-            <span>M${index + 1}</span>
-            <input type="range" min="0" max="100" step="1" value="${percent}" data-track-macro="${ref}" aria-label="Macro ${index + 1} de ${track.name}"${macroEnabled ? '' : ' disabled'}>
-            <output data-track-macro-value="${ref}">${percent}%</output>
-          </label>`;
-        })
-        .join('');
-
-      return `<div class="sound-channel${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
-      <div class="sound-name"><strong>${track.name}</strong><span>${track.hasPattern ? 'patrón' : 'generativo'}</span>${machineControl}</div>
-      <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
-      <output class="sound-value" data-sound-value="${track.id}">${track.gainDb.toFixed(1)} dB</output>
-      <div class="node-meter" data-track-meter="${track.id}" aria-label="Nivel de ${track.name}">
-        <span class="node-meter__track"><span class="node-meter__fill" data-track-meter-fill="${track.id}"></span></span>
-        <button class="node-meter__clip" type="button" data-meter-reset="track:${track.id}" aria-pressed="false" aria-label="Reset clip de ${track.name}">CLIP</button>
-      </div>
-      <div class="sound-controls">
-        <button class="small-toggle${track.muted ? ' is-active' : ''}" type="button" data-sound-mute="${track.id}" aria-label="Silenciar ${track.name}" aria-pressed="${track.muted}">M</button>
-        <button class="small-toggle${track.solo ? ' is-active' : ''}" type="button" data-sound-solo="${track.id}" aria-label="Aislar ${track.name}" aria-pressed="${track.solo}">S</button>
-        ${track.hasPattern ? `<button class="small-toggle${state.pattern.frozen[track.id] ? ' is-active' : ''}" type="button" data-sound-freeze="${track.id}" aria-label="Congelar ${track.name}" aria-pressed="${state.pattern.frozen[track.id] ?? false}">F</button>` : ''}
-      </div>
-      <div class="sound-pan">
-        <span>Pan</span>
-        <input type="range" min="-1" max="1" step="0.01" value="${track.pan}" data-sound-pan="${track.id}" aria-label="Paneo de ${track.name}">
-        <output data-sound-pan-value="${track.id}">${formatPan(track.pan)}</output>
-      </div>
-      <div class="track-macros">${trackMacros}</div>
-      <div class="machine-params" data-machine-params="${track.id}">${machineParams}</div>
-      <div class="sound-effects">
-        ${sends}
-        <div class="insert-rack">${rack}</div>
-        ${add}
-      </div>
-    </div>`;
+      const active = track.id === selected.id;
+      return `<div class="mixer-row${active ? ' is-selected' : ''}${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
+        <button class="mixer-name" type="button" data-sound-select="${track.id}" aria-pressed="${active}">
+          <strong>${track.name}</strong>
+          <span>${track.hasPattern ? 'patrón' : 'generativo'}</span>
+        </button>
+        <div class="node-meter" data-track-meter="${track.id}" aria-label="Nivel de ${track.name}">
+          <span class="node-meter__track"><span class="node-meter__fill" data-track-meter-fill="${track.id}"></span></span>
+          <button class="node-meter__clip" type="button" data-meter-reset="track:${track.id}" aria-pressed="false" aria-label="Reset clip de ${track.name}">CLIP</button>
+        </div>
+        <input class="sound-fader" type="range" min="-20" max="0" step="0.5" value="${track.gainDb}" data-sound-fader="${track.id}" aria-label="Volumen de ${track.name}">
+        <output class="sound-value" data-sound-value="${track.id}">${track.gainDb.toFixed(1)} dB</output>
+        <div class="sound-pan mixer-pan">
+          <span>Pan</span>
+          <input type="range" min="-1" max="1" step="0.01" value="${track.pan}" data-sound-pan="${track.id}" aria-label="Paneo de ${track.name}">
+          <output data-sound-pan-value="${track.id}">${formatPan(track.pan)}</output>
+        </div>
+        <div class="sound-controls">
+          <button class="small-toggle${track.muted ? ' is-active' : ''}" type="button" data-sound-mute="${track.id}" aria-label="Silenciar ${track.name}" aria-pressed="${track.muted}">M</button>
+          <button class="small-toggle${track.solo ? ' is-active' : ''}" type="button" data-sound-solo="${track.id}" aria-label="Aislar ${track.name}" aria-pressed="${track.solo}">S</button>
+          ${track.hasPattern ? `<button class="small-toggle${state.pattern.frozen[track.id] ? ' is-active' : ''}" type="button" data-sound-freeze="${track.id}" aria-label="Congelar ${track.name}" aria-pressed="${state.pattern.frozen[track.id] ?? false}">F</button>` : ''}
+        </div>
+      </div>`;
     })
     .join('');
 
+  const rack = selected.inserts
+    .map(insert => {
+      const plugin = plugins.find(definition => definition.id === insert.pluginId);
+      const name = plugin?.name ?? insert.pluginId;
+      const ref = `${selected.id}:${insert.id}`;
+      return `<div class="insert-row">
+        <div class="insert-head">
+          <strong>${name}</strong>
+          <div class="insert-actions">
+            <button class="small-toggle${insert.bypass ? ' is-active' : ''}" type="button" data-insert-move="up" data-insert-ref="${ref}" aria-label="Mover ${name} hacia arriba">↑</button>
+            <button class="small-toggle" type="button" data-insert-move="down" data-insert-ref="${ref}" aria-label="Mover ${name} hacia abajo">↓</button>
+            <button class="small-toggle${insert.bypass ? ' is-active' : ''}" type="button" data-insert-bypass="${ref}" aria-pressed="${insert.bypass}" aria-label="Bypass ${name}">BYP</button>
+            <button class="small-toggle" type="button" data-insert-remove="${ref}" aria-label="Quitar ${name}">×</button>
+          </div>
+        </div>
+        <div class="insert-params" data-insert-params="${ref}"></div>
+      </div>`;
+    })
+    .join('');
+
+  const add = mixService.supportsInserts
+    ? `<select class="insert-add" data-add-insert="${selected.id}" aria-label="Agregar plugin a ${selected.name}">
+        <option value="">+ insert</option>
+        ${plugins.map(plugin => `<option value="${plugin.id}">${plugin.name}</option>`).join('')}
+      </select>`
+    : '<span class="sound-none">rack no disponible</span>';
+
+  const sends =
+    mixService.supportsRouting && state.kit.buses.length > 0
+      ? `<div class="sound-sends">${state.kit.buses
+          .map(bus => {
+            const ref = `${selected.id}:${bus.id}`;
+            const send = selected.sends.find(entry => entry.busId === bus.id);
+            const amount = Math.round((send?.amount ?? 0) * 100);
+            return `<label class="sound-send">
+              <span>${bus.name}</span>
+              <input type="range" min="0" max="100" step="1" value="${amount}" data-sound-send="${ref}" aria-label="Enviar ${selected.name} a ${bus.name}">
+              <output data-sound-send-value="${ref}">${amount}%</output>
+            </label>`;
+          })
+          .join('')}</div>`
+      : '';
+
+  const machineControl = canEditTrackSound(selected)
+    ? `<select class="machine-select" data-machine="${selected.id}" aria-label="Máquina de ${selected.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
+        mixService
+      )
+        .map(
+          option =>
+            `<option value="${option.id}"${selected.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
+        )
+        .join('')}</select>`
+    : `<span class="machine-label">${machineLabel(selected.machineId)}</span>`;
+
+  const machineParams = canEditTrackSound(selected)
+    ? renderMachineParams(selected, mixService)
+    : '';
+
+  const macroEnabled = mixService.supportsRouting;
+  const trackMacros = selected.macros
+    .map((value, index) => {
+      const ref = `${selected.id}:${index}`;
+      const percent = Math.round(value * 100);
+      return `<label class="track-macro">
+        <span>M${index + 1}</span>
+        <input type="range" min="0" max="100" step="1" value="${percent}" data-track-macro="${ref}" aria-label="Macro ${index + 1} de ${selected.name}"${macroEnabled ? '' : ' disabled'}>
+        <output data-track-macro-value="${ref}">${percent}%</output>
+      </label>`;
+    })
+    .join('');
+
+  const detail = `<section class="sound-detail" data-sound-detail="${selected.id}" aria-labelledby="sound-detail-name">
+    <div class="sound-detail-head">
+      <div>
+        <p class="section-label">Track seleccionado</p>
+        <h3 id="sound-detail-name" class="sound-detail-title">${selected.name}</h3>
+        <p class="section-meta">${selected.hasPattern ? 'patrón' : 'generativo'} · ${machineLabel(selected.machineId)}</p>
+      </div>
+      <div class="sound-detail-machine">${machineControl}</div>
+    </div>
+    <div class="sound-detail-grid">
+      <div class="sound-pan">
+        <span>Pan</span>
+        <input type="range" min="-1" max="1" step="0.01" value="${selected.pan}" data-sound-pan="${selected.id}" aria-label="Paneo de ${selected.name}">
+        <output data-sound-pan-value="${selected.id}">${formatPan(selected.pan)}</output>
+      </div>
+      <div class="track-macros">${trackMacros}</div>
+      ${sends}
+    </div>
+    <div class="machine-params" data-machine-params="${selected.id}">${machineParams}</div>
+    <div class="sound-effects">
+      <div class="insert-rack">${rack}</div>
+      ${add}
+    </div>
+  </section>`;
+
+  container.innerHTML = `<div class="mixer-compact" aria-label="Mixer compacto">${mixer}</div>${detail}`;
+
   if (mixService.supportsInserts) {
-    kitTracks(state.kit).forEach(track => {
-      track.inserts.forEach(insert => {
-        const plugin = plugins.find(definition => definition.id === insert.pluginId);
-        const target = q(`[data-insert-params="${track.id}:${insert.id}"]`);
-        if (!plugin || !target) return;
-        renderPluginControls(target, plugin, insert.params, (paramId, value) => {
-          mixService.setInsertParam(track.id, insert.id, paramId, value);
-        });
+    selected.inserts.forEach(insert => {
+      const plugin = plugins.find(definition => definition.id === insert.pluginId);
+      const target = q(`[data-insert-params="${selected.id}:${insert.id}"]`);
+      if (!plugin || !target) return;
+      renderPluginControls(target, plugin, insert.params, (paramId, value) => {
+        mixService.setInsertParam(selected.id, insert.id, paramId, value);
       });
     });
   }
@@ -594,11 +707,11 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
     )
     .join('');
 
+  const summary = q('#sound-bank-summary');
+  if (summary) summary.textContent = status;
+
   root.innerHTML = `<div class="sound-bank-head">
-    <div>
-      <p class="section-label">Banco de sonidos</p>
-      <p id="sound-bank-status" class="section-meta">${status}</p>
-    </div>
+    <p id="sound-bank-status" class="section-meta">${status}</p>
     <label class="sound-bank-target">
       <span>Destino</span>
       <select id="sound-bank-target" aria-label="Track destino del banco"${mixService.supportsMachineChange ? '' : ' disabled'}>
@@ -607,7 +720,6 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
       </select>
     </label>
   </div>
-  <p class="tool-hint">El sonido se aplica al track elegido y conserva su mezcla, inserts y patrón. Drone, pad y lead también aceptan sonidos.</p>
   <div class="sound-bank-categories">${SOUND_CATEGORIES.map(category => {
     const entries = SOUND_BANK.filter(
       preset => preset.category === category.id

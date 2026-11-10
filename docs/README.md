@@ -39,6 +39,8 @@ el código y la spec se corrige.
 | [11](specs/11-sound-bank.md) | Banco de sonidos | sin estado declarado |
 | [12](specs/12-generative-tracks.md) | Tracks generativos editables | sin estado declarado |
 | [13](specs/13-clip-grid.md) | Clip Grid / Session View | implementada (primer corte) |
+| [14](specs/14-sound-mixer.md) | Sound compacto y mixer | implementada |
+| [15](specs/15-arm-wizard.md) | Armado inicial (wizard) | implementada |
 
 ## ADR
 

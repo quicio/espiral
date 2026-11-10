@@ -465,6 +465,14 @@ body[data-view="session"] .generative {
   display: none;
 }
 
+body[data-view="sound"] .instrument-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body[data-view="sound"] .generative {
+  display: none;
+}
+
 .stage {
   min-width: 0;
 }
@@ -1404,8 +1412,262 @@ body[data-view="session"] .generative {
 }
 
 .sound-channels {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(19rem, 1fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.mixer-compact {
   display: flex;
   flex-direction: column;
+  margin-top: 0;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.mixer-row {
+  display: grid;
+  grid-template-columns:
+    minmax(6rem, 0.9fr)
+    minmax(4rem, 1fr)
+    minmax(5rem, 1.6fr)
+    4rem
+    minmax(5rem, 1fr)
+    auto;
+  gap: 0.6rem 0.9rem;
+  align-items: center;
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid var(--umbral-rule-faint);
+  transition: background 0.18s ease, opacity 0.18s ease;
+}
+
+.mixer-row.is-selected {
+  background: color-mix(in srgb, var(--umbral-trace) 7%, transparent);
+  box-shadow: inset 2px 0 0 var(--umbral-trace);
+}
+
+.mixer-row.is-isolated {
+  opacity: 0.55;
+}
+
+.mixer-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mixer-name strong {
+  overflow: hidden;
+  color: var(--umbral-ink);
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-weight: 400;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mixer-name span {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.mixer-name:hover strong,
+.mixer-name[aria-pressed="true"] strong {
+  color: var(--umbral-trace);
+}
+
+.mixer-row .node-meter,
+.mixer-row .sound-fader,
+.mixer-row .sound-value,
+.mixer-row .sound-controls,
+.mixer-row .sound-pan {
+  grid-area: auto;
+}
+
+.mixer-row .node-meter {
+  min-width: 0;
+}
+
+.mixer-row .sound-controls {
+  justify-content: flex-end;
+}
+
+.sound-detail {
+  margin-top: 0;
+  padding: 0 0 0 clamp(1.25rem, 2vw, 1.75rem);
+  border-top: 0;
+  border-left: 1px solid var(--umbral-rule-faint);
+}
+
+.sound-detail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 0.8rem;
+}
+
+.sound-detail-title {
+  margin: 0.2rem 0 0.2rem;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--umbral-ink);
+}
+
+.sound-detail-machine {
+  min-width: 13rem;
+}
+
+.sound-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem 1.5rem;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.sound-detail-grid .sound-pan {
+  grid-area: auto;
+  grid-template-columns: auto minmax(0, 1fr) 3.2rem;
+}
+
+.sound-detail-grid .sound-sends {
+  grid-area: auto;
+  grid-column: 1 / -1;
+}
+
+.sound-detail-grid .track-macros {
+  grid-area: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+
+.sound-bank-drawer {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--umbral-rule);
+}
+
+.sound-bank-drawer > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.sound-bank-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sound-bank-drawer > summary:hover .section-label,
+.sound-bank-drawer > summary:focus-visible .section-label {
+  color: var(--umbral-ink);
+}
+
+.sound-bank-drawer[open] > summary {
+  border-bottom: 1px solid var(--umbral-rule-faint);
+}
+
+.sound-bank-drawer .sound-bank {
+  border-bottom: 0;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 1080px) {
+  .mixer-row {
+    grid-template-columns:
+      minmax(6rem, 1fr)
+      minmax(4rem, 1fr)
+      minmax(5rem, 1.4fr)
+      4rem
+      minmax(5rem, 1fr)
+      auto;
+    gap: 0.5rem 0.7rem;
+  }
+
+  .sound-channels {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sound-detail {
+    margin-top: 1.5rem;
+    padding: 1rem 0 0;
+    border-top: 1px solid var(--umbral-rule);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 780px) {
+  .mixer-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "name controls"
+      "meter meter"
+      "fader fader"
+      "value pan";
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 0.35rem;
+  }
+
+  .mixer-row .mixer-name {
+    grid-area: name;
+  }
+
+  .mixer-row .sound-controls {
+    grid-area: controls;
+  }
+
+  .mixer-row .node-meter {
+    grid-area: meter;
+  }
+
+  .mixer-row .sound-fader {
+    grid-area: fader;
+  }
+
+  .mixer-row .sound-value {
+    grid-area: value;
+    text-align: left;
+  }
+
+  .mixer-row .sound-pan {
+    grid-area: pan;
+  }
+
+  .sound-detail-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .sound-detail-machine {
+    width: 100%;
+  }
+
+  .sound-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sound-detail-grid .sound-sends {
+    grid-column: auto;
+  }
 }
 
 /* --- Session / Clip Grid ------------------------------------------------ */
@@ -3130,5 +3392,154 @@ body[data-view="session"] .generative {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* --- Armado / wizard de inicio ------------------------------------------- */
+
+.arm-wizard {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  overflow: auto;
+  background: color-mix(in srgb, var(--umbral-bg) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.arm-wizard[hidden] {
+  display: none;
+}
+
+.arm-panel {
+  width: min(64rem, 100%);
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border: 1px solid var(--umbral-rule);
+  background: var(--umbral-bg);
+}
+
+.arm-head {
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--umbral-rule);
+}
+
+.arm-title {
+  margin: 0.4rem 0 0.5rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--umbral-ink);
+}
+
+.arm-readout {
+  max-width: 42rem;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  line-height: 1.45;
+  color: var(--umbral-dim);
+}
+
+.arm-section {
+  margin-top: 1.5rem;
+}
+
+.arm-grid {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.arm-grid--presets,
+.arm-grid--scenes {
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+}
+
+.arm-grid--elements {
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+}
+
+.arm-card,
+.arm-element {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.arm-card:hover,
+.arm-card:focus-visible,
+.arm-element:hover,
+.arm-element:focus-visible {
+  border-color: var(--umbral-trace);
+}
+
+.arm-card.is-selected,
+.arm-element.is-selected {
+  border-color: var(--umbral-trace);
+  background: color-mix(in srgb, var(--umbral-trace) 10%, transparent);
+}
+
+.arm-card strong,
+.arm-element strong {
+  color: var(--umbral-ink);
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.arm-card span,
+.arm-element span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--umbral-muted);
+}
+
+.arm-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.8rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--umbral-rule);
+}
+
+.arm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  align-items: center;
+}
+
+@media (max-width: 700px) {
+  .arm-wizard {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .arm-panel {
+    max-height: none;
+    min-height: 100vh;
+    border: 0;
+  }
+
+  .arm-grid--presets,
+  .arm-grid--scenes,
+  .arm-grid--elements {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

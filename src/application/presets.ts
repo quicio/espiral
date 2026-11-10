@@ -23,7 +23,7 @@ export class PresetService {
     return this.repository.list();
   }
 
-  async load(id: string): Promise<void> {
+  async load(id: string): Promise<boolean> {
     let transitioning = false;
     try {
       const raw = await this.repository.load(id);
@@ -60,9 +60,11 @@ export class PresetService {
       this.mix.syncAll(next, true);
       this.status.session('Preset musical cargado.');
       this.status.error('');
+      return true;
     } catch (error) {
       console.error(error);
       this.status.error('No se pudo cargar el preset.');
+      return false;
     } finally {
       if (transitioning) this.mix.endTransition();
     }

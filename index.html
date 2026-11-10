@@ -316,7 +316,7 @@
         <div class="sound-head">
           <div>
             <p class="section-label">Mezcla</p>
-            <p class="sound-readout">Nivel, espacio y congelado por track.</p>
+            <p class="sound-readout">Mixer compacto · seleccioná un track para editar su sonido.</p>
           </div>
           <div class="mix-preset-field">
             <label for="mix-preset">Preset musical</label>
@@ -326,9 +326,15 @@
           </div>
         </div>
 
-        <div id="sound-bank" class="sound-bank"></div>
-
         <div id="sound-channels" class="sound-channels"></div>
+
+        <details id="sound-bank-drawer" class="sound-bank-drawer">
+          <summary>
+            <span class="section-label">Banco de sonidos</span>
+            <span id="sound-bank-summary" class="section-meta">15 presets</span>
+          </summary>
+          <div id="sound-bank" class="sound-bank"></div>
+        </details>
       </section>
 
       <section class="view" id="view-routing" role="tabpanel" aria-labelledby="tab-routing" tabindex="0" hidden>
@@ -539,6 +545,7 @@
   <section class="session-bar" aria-label="Sesión">
     <p class="section-label">Sesión</p>
     <div class="session-actions">
+      <button id="arm-wizard-open" class="line-action" type="button">Armar set</button>
       <button id="save-session" class="line-action" type="button">Guardar</button>
       <button id="load-session" class="line-action" type="button">Cargar</button>
       <button id="export-session" class="line-action" type="button">Exportar</button>
@@ -579,6 +586,36 @@
   </p>
 </div>
     </main>
+
+    <div id="arm-wizard" class="arm-wizard" role="dialog" aria-modal="true" aria-labelledby="arm-title">
+      <div class="arm-panel">
+        <header class="arm-head">
+          <p class="section-label">Armado</p>
+          <h2 id="arm-title" class="arm-title">Armá tu comienzo</h2>
+          <p class="arm-readout">Elegí una base, una escena y qué elementos querés escuchar. Nada suena hasta que entres.</p>
+        </header>
+        <section class="arm-section" aria-labelledby="arm-presets-label">
+          <p class="section-label" id="arm-presets-label">1 · Base</p>
+          <div id="arm-presets" class="arm-grid arm-grid--presets"></div>
+        </section>
+        <section class="arm-section" aria-labelledby="arm-scenes-label">
+          <p class="section-label" id="arm-scenes-label">2 · Escena</p>
+          <div id="arm-scenes" class="arm-grid arm-grid--scenes"></div>
+        </section>
+        <section class="arm-section" aria-labelledby="arm-elements-label">
+          <p class="section-label" id="arm-elements-label">3 · Elementos</p>
+          <div id="arm-elements" class="arm-grid arm-grid--elements"></div>
+        </section>
+        <footer class="arm-footer">
+          <div class="arm-actions">
+            <button id="arm-build" class="line-action" type="button">Armar set</button>
+            <button id="arm-load-session" class="line-action" type="button">Cargar última sesión</button>
+            <button id="arm-cancel" class="line-action" type="button" hidden>Cancelar</button>
+          </div>
+          <p id="arm-status" class="section-meta" role="status" aria-live="polite"></p>
+        </footer>
+      </div>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

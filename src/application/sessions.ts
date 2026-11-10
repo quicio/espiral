@@ -32,18 +32,28 @@ export class SessionService {
     }
   }
 
-  load(): void {
+  hasSaved(): boolean {
+    try {
+      return this.repository.load() !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  load(): boolean {
     try {
       const raw = this.repository.load();
       if (raw === null) {
         this.status.session('No hay una sesión guardada.');
-        return;
+        return false;
       }
       this.apply(raw);
       this.status.session('Sesión cargada.');
+      return true;
     } catch (error) {
       console.error(error);
       this.status.session('No se pudo cargar la sesión.');
+      return false;
     }
   }
 

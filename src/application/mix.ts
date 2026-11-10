@@ -195,6 +195,43 @@ export class MixService {
     this.syncMutes(next);
   }
 
+  setTrackMuted(trackId: string, muted: boolean): void {
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || track.muted === muted) return;
+
+    const scenes = { ...state.scenes };
+    Object.entries(scenes).forEach(([sceneId, scene]) => {
+      const sceneTrack = scene.kit.tracks[trackId];
+      if (!sceneTrack) return;
+      scenes[sceneId as keyof typeof scenes] = {
+        ...scene,
+        kit: {
+          ...scene.kit,
+          tracks: {
+            ...scene.kit.tracks,
+            [trackId]: { ...sceneTrack, muted }
+          }
+        }
+      };
+    });
+
+    const next: InstrumentState = {
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          [trackId]: { ...track, muted }
+        }
+      },
+      scenes
+    };
+
+    this.store.update(() => next);
+    this.syncMutes(next);
+  }
+
   toggleSolo(trackId: string): void {
     const track = this.store.getState().kit.tracks[trackId];
     if (!track) return;
