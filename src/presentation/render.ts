@@ -134,6 +134,8 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
       <button class="activity-name" type="button" data-select="${track.id}" aria-pressed="${track.id === state.selected}">${track.name}</button>
       <span class="activity-meta">${track.hasPattern ? 'patrón' : 'generativo'}</span>
       ${steps}
+      <button class="activity-action" type="button" data-track-move="${track.id}" data-track-offset="-1" aria-label="Mover ${track.name} hacia arriba">↑</button>
+      <button class="activity-action" type="button" data-track-move="${track.id}" data-track-offset="1" aria-label="Mover ${track.name} hacia abajo">↓</button>
       ${isGenerativeRole(track.role) ? `<button class="activity-action" type="button" data-pattern-toggle="${track.id}" aria-pressed="${track.hasPattern}" aria-label="${track.hasPattern ? 'Quitar patrón a' : 'Agregar patrón a'} ${track.name}">${track.hasPattern ? '−P' : '+P'}</button>` : ''}
       <button class="activity-action" type="button" data-mute="${track.id}" aria-pressed="${track.muted}" aria-label="Silenciar ${track.name}">M</button>
       ${track.hasPattern ? `<button class="activity-action" type="button" data-freeze="${track.id}" aria-pressed="${state.pattern.frozen[track.id] ?? false}" aria-label="Congelar ${track.name}">F</button>` : ''}
@@ -299,7 +301,11 @@ const ARM_PRESET_DESCRIPTIONS: Readonly<Record<string, string>> = {
   techno: '4/4, hats offbeat y bajo rodante',
   dub: 'Espacio largo, delays y graves',
   ambient: 'Texturas lentas y aire',
-  breaks: 'Síncopa y batería rota'
+  breaks: 'Síncopa y batería rota',
+  house: '4/4, bajo offbeat y brillo',
+  trance: 'Rodante, abierto y eufórico',
+  psytrance: 'Kick firme, bajo ácido y tensión',
+  triphop: 'Roto, oscuro y con espacio'
 };
 
 export function renderArmWizard(
@@ -812,7 +818,7 @@ export function renderSound(
     <div class="sound-detail-head">
       <div>
         <p class="section-label">Track seleccionado</p>
-        <h3 id="sound-detail-name" class="sound-detail-title">${selected.name}</h3>
+        <input id="sound-detail-name" class="sound-detail-title sound-detail-name" data-track-name="${selected.id}" value="${selected.name}" maxlength="40" aria-label="Nombre de ${selected.name}">
         <p class="section-meta">${selected.hasPattern ? 'patrón' : 'generativo'} · ${machineLabel(selected.machineId)}</p>
       </div>
       <div class="sound-detail-machine">${machineControl}</div>

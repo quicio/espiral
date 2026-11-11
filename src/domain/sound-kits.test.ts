@@ -8,9 +8,9 @@ import {
 } from './sound-kits';
 
 describe('sound kits', () => {
-  it('defines a default kit and four built-in kits', () => {
+  it('defines a default kit and eight built-in kits', () => {
     expect(soundKit(DEFAULT_KIT_ID)?.name).toBe('Techno Kit');
-    expect(SOUND_KITS.filter(kit => kit.builtin)).toHaveLength(4);
+    expect(SOUND_KITS.filter(kit => kit.builtin)).toHaveLength(8);
   });
 
   it('offers sounds for every wizard element', () => {
@@ -44,7 +44,8 @@ describe('sound kits', () => {
     expect(soundOptionsForTrack('kick').map(option => option.id)).toEqual([
       'kick-tight',
       'kick-deep',
-      'kick-click'
+      'kick-click',
+      'kick-sub'
     ]);
     expect(
       soundOptionsForTrack('pad').some(option => option.id === 'warm-pad')

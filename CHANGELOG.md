@@ -47,7 +47,10 @@
 - Importación de audio como track sampler con clip y patrón de un paso.
 - Undo/redo global con botones y Cmd/Ctrl+Z.
 - Modo Performance que oculta header, intro y barra de sesión.
-- 174 tests unitarios.
+- Layout base 8 tracks de ritmo + 8 melódicos, con reorder y rename.
+- Presets House, Trance, Psytrance y Trip-Hop.
+- Catálogo ampliado: más variantes de drums, bass, keys y texturas; kits House, Trance, Psy y Trip-Hop.
+- 176 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

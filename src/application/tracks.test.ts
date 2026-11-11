@@ -271,6 +271,31 @@ describe('TrackService', () => {
     expect(store.getState().kit.tracks.kick?.machine.kind).toBe('membrane');
   });
 
+  it('moves tracks in the kit and every scene', () => {
+    const { store, tracks } = setup();
+    const before = Object.keys(store.getState().kit.tracks);
+    const index = before.indexOf('track-08');
+
+    tracks.moveTrack('track-08', -1);
+
+    const after = Object.keys(store.getState().kit.tracks);
+    expect(after[index - 1]).toBe('track-08');
+    expect(Object.keys(store.getState().scenes.caos.kit.tracks)[index - 1]).toBe(
+      'track-08'
+    );
+  });
+
+  it('renames a track and its default clips across scenes', () => {
+    const { store, tracks } = setup();
+
+    tracks.renameTrack('track-08', 'Shaker');
+
+    const state = store.getState();
+    expect(state.kit.tracks['track-08']?.name).toBe('Shaker');
+    expect(state.scenes.deriva.kit.tracks['track-08']?.name).toBe('Shaker');
+    expect(state.clips[clipId('umbral', 'track-08')]?.name).toBe('Shaker');
+  });
+
   it('updates and clamps track macros', () => {
     const { store, tracks } = setup();
 

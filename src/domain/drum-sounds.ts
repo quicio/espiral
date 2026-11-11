@@ -145,6 +145,95 @@ export const DRUM_SOUNDS: readonly DrumSound[] = [
       fadeIn: 0.008,
       fadeOut: 0.22
     }
+  },
+  {
+    id: 'kick-sub',
+    name: 'Kick Sub',
+    trackId: 'kick',
+    machineId: 'core-kick',
+    machine: {
+      kind: 'membrane',
+      oscillator: 'sine',
+      envelope: { attack: 0.001, decay: 0.7, sustain: 0.01, release: 2.4 }
+    }
+  },
+  {
+    id: 'bass-pick',
+    name: 'Bass Pick',
+    trackId: 'bass',
+    machineId: 'core-bass',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/bass-g.wav'],
+      voices: 1,
+      fadeIn: 0.002,
+      fadeOut: 0.04
+    }
+  },
+  {
+    id: 'bass-dub',
+    name: 'Bass Dub',
+    trackId: 'bass',
+    machineId: 'core-bass',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/bass-ds.wav'],
+      voices: 2,
+      fadeIn: 0.004,
+      fadeOut: 0.12
+    }
+  },
+  {
+    id: 'hat-closed',
+    name: 'Hat Closed',
+    trackId: 'hihat',
+    machineId: 'core-hihat',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/hihat-05.wav'],
+      voices: 1,
+      fadeIn: 0.002,
+      fadeOut: 0.04
+    }
+  },
+  {
+    id: 'hat-metal',
+    name: 'Hat Metal',
+    trackId: 'hihat',
+    machineId: 'core-hihat',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/hihat-08.wav'],
+      voices: 1,
+      fadeIn: 0.002,
+      fadeOut: 0.2
+    }
+  },
+  {
+    id: 'perc-tom',
+    name: 'Perc Tom',
+    trackId: 'perc',
+    machineId: 'core-perc',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/perc.wav'],
+      voices: 2,
+      fadeIn: 0.004,
+      fadeOut: 0.18
+    }
+  },
+  {
+    id: 'perc-click',
+    name: 'Perc Click',
+    trackId: 'perc',
+    machineId: 'core-perc',
+    machine: {
+      kind: 'sampler',
+      samples: ['./audio/perc.wav'],
+      voices: 1,
+      fadeIn: 0.001,
+      fadeOut: 0.03
+    }
   }
 ];
 

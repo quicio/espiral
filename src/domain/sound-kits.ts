@@ -88,6 +88,78 @@ export const SOUND_KITS: readonly SoundKit[] = [
       pad: 'glass-pad',
       lead: 'fm-bell'
     }
+  },
+  {
+    id: 'house-kit',
+    name: 'House Kit',
+    description: 'Kick seco, hats cerrados y órgano',
+    builtin: true,
+    sounds: {
+      kick: 'kick-tight',
+      bass: 'bass-round',
+      hihat: 'hat-closed',
+      perc: 'perc-dry',
+      'track-08': 'shaker-dry',
+      'track-09': 'hat-pedal',
+      'track-10': 'clap-soft',
+      drone: 'dark-drone',
+      pad: 'organ-keys',
+      lead: 'bell-keys'
+    }
+  },
+  {
+    id: 'trance-kit',
+    name: 'Trance Kit',
+    description: 'Hats abiertos, kick firme y lead brillante',
+    builtin: true,
+    sounds: {
+      kick: 'kick-tight',
+      bass: 'bass-round',
+      hihat: 'hat-open',
+      perc: 'perc-room',
+      'track-08': 'shaker-air',
+      'track-09': 'hat-pedal',
+      'track-10': 'tom-floor',
+      drone: 'dark-drone',
+      pad: 'glass-pad',
+      lead: 'fm-brass'
+    }
+  },
+  {
+    id: 'psy-kit',
+    name: 'Psy Kit',
+    description: 'Kick click, percusión seca y metal FM',
+    builtin: true,
+    sounds: {
+      kick: 'kick-click',
+      bass: 'bass-growl',
+      hihat: 'hat-tight',
+      perc: 'perc-click',
+      'track-08': 'shaker-dry',
+      'track-09': 'rim-tick',
+      'track-10': 'hat-pedal',
+      drone: 'dark-drone',
+      pad: 'dust-keys',
+      lead: 'fm-metal'
+    }
+  },
+  {
+    id: 'triphop-kit',
+    name: 'Trip-Hop Kit',
+    description: 'Graves dub, percusión rota y campanas',
+    builtin: true,
+    sounds: {
+      kick: 'kick-deep',
+      bass: 'bass-dub',
+      hihat: 'hat-soft',
+      perc: 'perc-tom',
+      'track-08': 'shaker-air',
+      'track-09': 'rim-tick',
+      'track-10': 'clap-soft',
+      drone: 'dark-drone',
+      pad: 'bell-keys',
+      lead: 'fm-bell'
+    }
   }
 ];
 

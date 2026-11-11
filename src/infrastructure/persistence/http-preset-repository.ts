@@ -4,7 +4,11 @@ const PRESETS: readonly (PresetSummary & { readonly file: string })[] = [
   { id: 'techno', name: 'Techno', file: './presets/techno.json' },
   { id: 'dub', name: 'Dub', file: './presets/dub.json' },
   { id: 'ambient', name: 'Ambient', file: './presets/ambient.json' },
-  { id: 'breaks', name: 'Breaks', file: './presets/breaks.json' }
+  { id: 'breaks', name: 'Breaks', file: './presets/breaks.json' },
+  { id: 'house', name: 'House', file: './presets/house.json' },
+  { id: 'trance', name: 'Trance', file: './presets/trance.json' },
+  { id: 'psytrance', name: 'Psytrance', file: './presets/psytrance.json' },
+  { id: 'triphop', name: 'Trip-Hop', file: './presets/triphop.json' }
 ];
 
 export class HttpPresetRepository implements PresetRepositoryPort {

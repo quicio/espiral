@@ -1,0 +1,132 @@
+{
+  "name": "Trip-Hop",
+  "description": "Roto, oscuro y con espacio",
+  "scene": "deriva",
+  "bpm": 86,
+  "masterVolume": -5,
+  "harmony": {
+    "root": 2,
+    "scale": "dorian",
+    "progression": "menor",
+    "sustain": 0.7
+  },
+  "params": {
+    "density": 0.4,
+    "complexity": 0.58,
+    "variation": 0.5,
+    "stability": 0.35,
+    "randomness": 0.6
+  },
+  "channels": {
+    "kick": {
+      "volume": -6,
+      "pan": 0
+    },
+    "bass": {
+      "volume": -10,
+      "pan": 0
+    },
+    "hihat": {
+      "volume": -17,
+      "pan": 0.2,
+      "effects": {
+        "reverb": {
+          "wet": 0.2,
+          "roomSize": 0.7
+        }
+      }
+    },
+    "perc": {
+      "volume": -13,
+      "pan": -0.24
+    },
+    "drone": {
+      "volume": -16,
+      "pan": 0
+    },
+    "pad": {
+      "volume": -15,
+      "pan": -0.12,
+      "effects": {
+        "reverb": {
+          "wet": 0.55,
+          "roomSize": 0.9
+        },
+        "delay": {
+          "wet": 0.25,
+          "feedback": 0.4,
+          "delayTime": 0.375
+        }
+      }
+    },
+    "lead": {
+      "volume": -20,
+      "pan": 0.2
+    },
+    "track-08": {
+      "volume": -19,
+      "pan": 0.3,
+      "sends": [
+        {
+          "busId": "reverb-bus",
+          "amount": 0.25
+        }
+      ]
+    },
+    "track-09": {
+      "volume": -16,
+      "pan": -0.32,
+      "effects": {
+        "delay": {
+          "wet": 0.3,
+          "feedback": 0.45,
+          "delayTime": 0.375
+        }
+      }
+    },
+    "track-10": {
+      "volume": -21,
+      "pan": 0.36
+    }
+  },
+  "machines": {
+    "track-10": "pluck"
+  },
+  "patterns": {
+    "kick": "x.....x...x.....",
+    "bass": "....x.......x...",
+    "hihat": "..x...x...x...x.",
+    "perc": ".....x..x.......",
+    "track-08": "....x.......x...",
+    "track-09": "..x.....x.......",
+    "track-10": "........x.....x."
+  },
+  "scenes": {
+    "umbral": {
+      "seed": 5501
+    },
+    "deriva": {
+      "seed": 5502,
+      "patterns": {
+        "kick": "x.......x.....x.",
+        "bass": "......x.....x...",
+        "pad": "x.......x......."
+      }
+    },
+    "pulso": {
+      "seed": 5503,
+      "patterns": {
+        "kick": "x.....x...x.....",
+        "perc": "....x.......x..x"
+      }
+    },
+    "caos": {
+      "seed": 5504,
+      "patterns": {
+        "kick": "x..x....x.x.....",
+        "bass": "..x...x.....x..x",
+        "hihat": "x..x..x...x..x.."
+      }
+    }
+  }
+}

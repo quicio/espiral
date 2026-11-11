@@ -20,12 +20,13 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Cambios de preset/escena con duck breve de master y BPM rampeado.
 - Buffer/lookahead configurable de 20–300 ms.
 - Patch bay de buses con detección de ciclos y creación/eliminación de buses.
-- Presets musicales por género con escenas, patrones, armonía, mezcla, pan y sends.
+- Presets musicales: Techno, Dub, Ambient, Breaks, House, Trance, Psytrance y Trip-Hop.
+- Layout base 8 tracks de ritmo + 8 melódicos, con reorder y rename.
 - Grooves curados por escena con velocity, probabilidad y ratchets desde el estado inicial.
 - Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.
 - Máquinas por track: sampler, drone sampler, pad, bajo, lead y pluck, con editor de parámetros.
-- Banco de 15 sonidos e instrumentos por categoría para tracks editables.
+- Banco de más de 20 sonidos e instrumentos, con búsqueda y drag/drop.
 - Drone, pad y lead con sonido editable y modo patrón conmutable (`+P` / `−P`).
 - Instrument plugins con `FM Synth` built-in y dos macros de track para el mod matrix.
 - Modulación audio-rate para parámetros de plugins que exponen `AudioParam`.

@@ -121,6 +121,25 @@ const LAYER_CHARACTER: Readonly<Record<string, LayerCharacter>> = {
   }
 };
 
+const DEFAULT_TRACK_ORDER = [
+  'kick',
+  'bass',
+  'hihat',
+  'perc',
+  'track-08',
+  'track-09',
+  'track-10',
+  'track-11',
+  'drone',
+  'pad',
+  'lead',
+  'track-12',
+  'track-13',
+  'track-14',
+  'track-15',
+  'track-16'
+] as const;
+
 const CORE_MACHINE_IDS: Record<ChannelKey, string> = {
   kick: 'core-kick',
   bass: 'core-bass',
@@ -161,7 +180,14 @@ export function createDefaultKit(): KitState {
     tracks[track.id] = character ? { ...track, ...character } : track;
   }
 
-  return { id: 'default', name: 'Default', tracks, buses: createDefaultBuses() };
+  const ordered = Object.fromEntries(
+    DEFAULT_TRACK_ORDER.flatMap(id => {
+      const track = tracks[id];
+      return track ? [[id, track] as const] : [];
+    })
+  ) as Record<string, TrackState>;
+
+  return { id: 'default', name: 'Default', tracks: ordered, buses: createDefaultBuses() };
 }
 
 export function createDefaultBuses(): readonly BusState[] {

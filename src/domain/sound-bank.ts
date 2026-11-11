@@ -258,6 +258,128 @@ export const SOUND_BANK: readonly SoundPreset[] = [
       fadeOut: 0.2
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 }
+  },
+  {
+    id: 'tom-floor',
+    name: 'Tom Floor',
+    description: 'Tom grave con cuerpo',
+    category: 'drums',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}perc.wav`],
+      voices: 2,
+      fadeIn: 0.004,
+      fadeOut: 0.2
+    },
+    noteSource: { kind: 'fixed', note: 'C4' }
+  },
+  {
+    id: 'hat-pedal',
+    name: 'Hat Pedal',
+    description: 'Hi-hat cerrado ultra corto',
+    category: 'drums',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}hihat-05.wav`],
+      voices: 1,
+      fadeIn: 0.001,
+      fadeOut: 0.03
+    },
+    noteSource: { kind: 'fixed', note: 'C4' }
+  },
+  {
+    id: 'shaker-dry',
+    name: 'Shaker Dry',
+    description: 'Shaker seco y cercano',
+    category: 'drums',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}hihat-02.wav`],
+      voices: 1,
+      fadeIn: 0.002,
+      fadeOut: 0.06
+    },
+    noteSource: { kind: 'fixed', note: 'C4' }
+  },
+  {
+    id: 'reese-bass',
+    name: 'Reese Bass',
+    description: 'Sierra ancha con filtro oscuro',
+    category: 'bass',
+    machineId: 'bass-synth',
+    machine: {
+      kind: 'mono',
+      oscillator: 'sawtooth',
+      envelope: { attack: 0.02, decay: 0.4, sustain: 0.6, release: 0.6 },
+      filter: { frequency: 420, q: 5 }
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 }
+  },
+  {
+    id: 'organ-keys',
+    name: 'Organ Keys',
+    description: 'Órgano cuadrado con ataque rápido',
+    category: 'keys',
+    machineId: 'soft-pad',
+    machine: {
+      kind: 'poly',
+      oscillator: 'square',
+      envelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.8 },
+      maxPolyphony: 8
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 3 }
+  },
+  {
+    id: 'bell-keys',
+    name: 'Bell Keys',
+    description: 'Campana de seno con cola media',
+    category: 'keys',
+    machineId: 'soft-pad',
+    machine: {
+      kind: 'poly',
+      oscillator: 'sine',
+      envelope: { attack: 0.01, decay: 1.2, sustain: 0.15, release: 3.5 },
+      maxPolyphony: 8
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 4, size: 3 }
+  },
+  {
+    id: 'fm-metal',
+    name: 'FM Metal',
+    description: 'Metal FM con índice alto',
+    category: 'textures',
+    machineId: 'plugin-fm-synth',
+    machine: {
+      kind: 'plugin',
+      pluginId: 'fm-synth',
+      params: {
+        harmonicity: 5.2,
+        modulationIndex: 12,
+        attack: 0.005,
+        decay: 0.5,
+        sustain: 0.2,
+        release: 1.6
+      }
+    },
+    noteSource: { kind: 'scale-degree', degree: 0, octave: 5 }
+  },
+  {
+    id: 'dark-drone',
+    name: 'Dark Drone',
+    description: 'Drone grave con cola larga',
+    category: 'textures',
+    machineId: 'drone-sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}drone.wav`],
+      voices: 2,
+      fadeIn: 0.02,
+      fadeOut: 0.5
+    },
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 1, size: 1 }
   }
 ];
 

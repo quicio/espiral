@@ -824,12 +824,16 @@ export class EspiralApp {
     view.must('#activity-list').addEventListener('click', event => {
       const select = attr(event, 'data-select');
       const patternToggle = attr(event, 'data-pattern-toggle');
+      const moveTrack = attr(event, 'data-track-move');
+      const moveOffset = attr(event, 'data-track-offset');
       const mute = attr(event, 'data-mute');
       const freeze = attr(event, 'data-freeze');
 
       if (select) patterns.selectChannel(select);
       else if (patternToggle) tracks.togglePattern(patternToggle);
-      else if (mute) this.toggleMute(mute);
+      else if (moveTrack && moveOffset) {
+        tracks.moveTrack(moveTrack, Number(moveOffset));
+      } else if (mute) this.toggleMute(mute);
       else if (freeze) patterns.toggleFreeze(freeze);
     });
 
@@ -924,6 +928,12 @@ export class EspiralApp {
     });
 
     view.must('#sound-channels').addEventListener('change', event => {
+      const renameTrack = attr(event, 'data-track-name');
+      if (renameTrack && event.target instanceof HTMLInputElement) {
+        tracks.renameTrack(renameTrack, event.target.value);
+        return;
+      }
+
       const trackId = attr(event, 'data-machine');
       if (trackId && event.target instanceof HTMLSelectElement) {
         this.deps.tracks.setMachine(trackId, event.target.value);

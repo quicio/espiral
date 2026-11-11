@@ -367,6 +367,69 @@ export class TrackService {
     this.status.generative(`${track.name} vuelve a modo generativo.`);
   }
 
+  moveTrack(trackId: string, offset: number): void {
+    const state = this.store.getState();
+    if (!state.kit.tracks[trackId]) return;
+    const tracks = reorderTracks(state.kit.tracks, trackId, offset);
+    if (tracks === state.kit.tracks) return;
+    const next: InstrumentState = {
+      ...state,
+      kit: { ...state.kit, tracks },
+      scenes: mapScenes(state, scene => ({
+        ...scene,
+        kit: { ...scene.kit, tracks: reorderTracks(scene.kit.tracks, trackId, offset) }
+      })),
+      history: []
+    };
+    this.store.update(() => next);
+    this.status.generative('Orden de tracks actualizado.');
+  }
+
+  renameTrack(trackId: string, name: string): void {
+    const nextName = name.trim();
+    if (!nextName) return;
+    const state = this.store.getState();
+    const track = state.kit.tracks[trackId];
+    if (!track || track.name === nextName) return;
+    const oldName = track.name;
+    const clips = Object.fromEntries(
+      Object.entries(state.clips).map(([id, clip]) => [
+        id,
+        clip.trackId === trackId && clip.name === oldName
+          ? { ...clip, name: nextName }
+          : clip
+      ])
+    );
+    const next: InstrumentState = {
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          [trackId]: { ...track, name: nextName }
+        }
+      },
+      scenes: mapScenes(state, scene => {
+        const sceneTrack = scene.kit.tracks[trackId];
+        if (!sceneTrack) return scene;
+        return {
+          ...scene,
+          kit: {
+            ...scene.kit,
+            tracks: {
+              ...scene.kit.tracks,
+              [trackId]: { ...sceneTrack, name: nextName }
+            }
+          }
+        };
+      }),
+      clips,
+      history: []
+    };
+    this.store.update(() => next);
+    this.status.generative(`Track renombrado a ${nextName}.`);
+  }
+
   setTrackMacro(trackId: string, index: number, value: number): void {
     const state = this.store.getState();
     const track = state.kit.tracks[trackId];
@@ -476,6 +539,21 @@ export class TrackService {
     this.engine.removeTrack(trackId);
     this.status.generative(`${track.name} eliminado.`);
   }
+}
+
+function reorderTracks(
+  tracks: Readonly<Record<string, TrackState>>,
+  trackId: string,
+  offset: number
+): Readonly<Record<string, TrackState>> {
+  const entries = Object.entries(tracks);
+  const index = entries.findIndex(([id]) => id === trackId);
+  const target = index + offset;
+  if (index < 0 || target < 0 || target >= entries.length) return tracks;
+  const [entry] = entries.splice(index, 1);
+  if (!entry) return tracks;
+  entries.splice(target, 0, entry);
+  return Object.fromEntries(entries);
 }
 
 function nextTrackIndex(kit: KitState): number {

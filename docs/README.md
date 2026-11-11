@@ -48,6 +48,7 @@ el código y la spec se corrige.
 | [20](specs/20-audio-import.md) | Importación de audio | implementada |
 | [21](specs/21-performance-mode.md) | Performance mode | implementada |
 | [22](specs/22-undo-global.md) | Undo global | implementada |
+| [23](specs/23-dynamic-tracks-and-presets.md) | Tracks dinámicos, presets y catálogo | implementada |
 
 ## ADR
 

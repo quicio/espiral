@@ -41,6 +41,10 @@ try {
     undefined,
     { timeout: 6000 }
   );
+  const armPresets = await page.locator('[data-arm-preset]').count();
+  if (armPresets !== 8) {
+    throw new Error(`Se esperaban 8 presets de armado, hay ${armPresets}.`);
+  }
   const padDefault = await page
     .locator('[data-arm-element="pad"]')
     .getAttribute('aria-pressed');
@@ -192,7 +196,7 @@ try {
   }
   await page.locator('[data-sound-select="bass"]').click();
   await page.waitForTimeout(150);
-  const detailTrack = (await page.locator('.sound-detail-title').textContent())?.trim();
+  const detailTrack = (await page.locator('.sound-detail-title').inputValue())?.trim();
   if (detailTrack !== 'Bass') {
     throw new Error(`El detalle de Sound no siguió la selección: ${detailTrack}.`);
   }
@@ -225,6 +229,13 @@ try {
   const bpm = (await page.locator('#bpm-value').textContent())?.trim();
   if (bpm !== '126') throw new Error(`El preset Dub no aplicó BPM 126: ${bpm}.`);
 
+  await page.locator('#mix-preset').selectOption('triphop');
+  await page.waitForTimeout(700);
+  const tripHopBpm = (await page.locator('#bpm-value').textContent())?.trim();
+  if (tripHopBpm !== '86') {
+    throw new Error(`El preset Trip-Hop no aplicó BPM 86: ${tripHopBpm}.`);
+  }
+
   const failedSamples = samples.filter(sample => sample.status !== 200);
   if (samples.length === 0) throw new Error('No se solicitó ningún sample.');
   if (failedSamples.length > 0) {
@@ -250,7 +261,9 @@ try {
         playing,
         stopped,
         bpm,
+        tripHopBpm,
         armedBpm,
+        armPresets,
         padDefault,
         padMuted,
         bankCards,

@@ -1,0 +1,137 @@
+{
+  "name": "Trance",
+  "description": "Rodante, abierto y eufórico",
+  "scene": "pulso",
+  "bpm": 138,
+  "masterVolume": -4,
+  "harmony": {
+    "root": 5,
+    "scale": "minor",
+    "progression": "epica",
+    "sustain": 0.3
+  },
+  "params": {
+    "density": 0.68,
+    "complexity": 0.42,
+    "variation": 0.3,
+    "stability": 0.72,
+    "randomness": 0.22
+  },
+  "channels": {
+    "kick": {
+      "volume": -4,
+      "pan": 0
+    },
+    "bass": {
+      "volume": -6,
+      "pan": 0
+    },
+    "hihat": {
+      "volume": -13,
+      "pan": 0.16,
+      "effects": {
+        "reverb": {
+          "wet": 0.16,
+          "roomSize": 0.6
+        }
+      }
+    },
+    "perc": {
+      "volume": -11,
+      "pan": -0.2
+    },
+    "drone": {
+      "volume": -18,
+      "pan": 0
+    },
+    "pad": {
+      "volume": -17,
+      "pan": -0.1,
+      "effects": {
+        "reverb": {
+          "wet": 0.5,
+          "roomSize": 0.9
+        }
+      }
+    },
+    "lead": {
+      "volume": -15,
+      "pan": 0.2,
+      "effects": {
+        "delay": {
+          "wet": 0.35,
+          "feedback": 0.4,
+          "delayTime": 0.25
+        },
+        "reverb": {
+          "wet": 0.3,
+          "roomSize": 0.7
+        }
+      }
+    },
+    "track-08": {
+      "volume": -17,
+      "pan": 0.3,
+      "sends": [
+        {
+          "busId": "reverb-bus",
+          "amount": 0.24
+        }
+      ]
+    },
+    "track-09": {
+      "volume": -15,
+      "pan": -0.3,
+      "effects": {
+        "delay": {
+          "wet": 0.25,
+          "feedback": 0.35,
+          "delayTime": 0.25
+        }
+      }
+    },
+    "track-10": {
+      "volume": -18,
+      "pan": 0.22
+    }
+  },
+  "machines": {
+    "track-10": "lead-synth"
+  },
+  "patterns": {
+    "kick": "x...x...x...x...",
+    "bass": "x.xx..x.x.xx..x.",
+    "hihat": "..x...x...x...x.",
+    "perc": "....x.......x...",
+    "track-08": "x.x.x.x.x.x.x.x.",
+    "track-09": "..x...x...x...x.",
+    "track-10": "....x.......x..."
+  },
+  "scenes": {
+    "umbral": {
+      "seed": 3301
+    },
+    "deriva": {
+      "seed": 3302,
+      "patterns": {
+        "bass": "x.xx..x.x.xx..x.",
+        "lead": "x...x...x...x..."
+      }
+    },
+    "pulso": {
+      "seed": 3303,
+      "patterns": {
+        "bass": "x.xx..x.x.xx..x.",
+        "hihat": "x.x.x.x.x.x.x.x."
+      }
+    },
+    "caos": {
+      "seed": 3304,
+      "patterns": {
+        "bass": "xx.x.xx.xx.x.xx.",
+        "hihat": "x.xxx.x.xxx.x.xx",
+        "perc": "..x.x..x.x..x.x."
+      }
+    }
+  }
+}
