@@ -39,6 +39,7 @@
 - Kits pre-hechos (Techno, Dub, Breaks, Ambient) y kits propios persistidos en local.
 - Aplicación de sonidos de kick, bass, hats y percusión en todas las escenas.
 - El armado mutea los elementos no elegidos en todas las escenas.
+- El Pad arranca desmarcado en el armado por defecto para limpiar el Techno.
 - Clips con patrón propio; crear, duplicar, renombrar, colorear y eliminar.
 - Browser de sonidos con búsqueda y drag/drop a tracks editables.
 - Arrangement de escenas por bloques con compases, playback y persistencia.

@@ -41,6 +41,12 @@ try {
     undefined,
     { timeout: 6000 }
   );
+  const padDefault = await page
+    .locator('[data-arm-element="pad"]')
+    .getAttribute('aria-pressed');
+  if (padDefault !== 'false') {
+    throw new Error('El pad debería arrancar desmarcado en el armado por defecto.');
+  }
   await page.locator('#arm-bpm').fill('130');
   await page.locator('#arm-bpm').blur();
   await page.locator('[data-arm-kit="dub-kit"]').click();
@@ -54,6 +60,12 @@ try {
   const armedBpm = (await page.locator('#bpm-value').textContent())?.trim();
   if (armedBpm !== '130') {
     throw new Error(`El wizard no aplicó BPM 130: ${armedBpm}.`);
+  }
+  const padMuted = await page
+    .locator('[data-mute="pad"]')
+    .getAttribute('aria-pressed');
+  if (padMuted !== 'true') {
+    throw new Error(`El pad debería quedar muteado por defecto: ${padMuted}.`);
   }
 
   const trackRows = await page.locator('#activity-list .activity-row').count();
@@ -239,6 +251,8 @@ try {
         stopped,
         bpm,
         armedBpm,
+        padDefault,
+        padMuted,
         bankCards,
         bankMachine,
         clipRows,

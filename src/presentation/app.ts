@@ -86,7 +86,9 @@ export class EspiralApp {
     bpm: 128,
     kitId: DEFAULT_KIT_ID,
     sounds: { ...(soundKit(DEFAULT_KIT_ID)?.sounds ?? {}) },
-    elements: new Set(view.ARM_ELEMENT_IDS),
+    elements: new Set(
+      view.ARM_ELEMENT_IDS.filter(trackId => trackId !== 'pad')
+    ),
     canCancel: false,
     hasSavedSession: false
   };

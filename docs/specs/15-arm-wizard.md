@@ -27,6 +27,8 @@ Pasos:
 2. **Música**: raíz, escala, progresión y BPM.
 3. **Escena**: Umbral, Deriva, Pulso o Caos contenido.
 4. **Elementos**: Kick, Bass, Hi-Hat, Perc, Shaker 08, Perc 09, Track 10, Drone, Pad y Lead.
+   El Pad arranca **desmarcado** en el default Techno para no engordar la mezcla; se puede
+   activar manualmente.
 5. **Kit y sonidos**: kits pre-hechos, kit custom y sonido por elemento.
 
 Acciones:
