@@ -63,6 +63,19 @@ export interface AutomationState {
   readonly values: readonly number[];
 }
 
+export interface ArrangementBlock {
+  readonly id: string;
+  readonly sceneId: SceneId;
+  readonly bars: number;
+}
+
+export interface ArrangementState {
+  readonly enabled: boolean;
+  readonly blocks: readonly ArrangementBlock[];
+  readonly blockIndex: number;
+  readonly bar: number;
+}
+
 export interface TransportState {
   readonly bpm: number;
   readonly swing: number;
@@ -82,6 +95,7 @@ export interface InstrumentState {
   readonly harmony: HarmonyState;
   readonly pattern: PatternState;
   readonly automation: AutomationState;
+  readonly arrangement: ArrangementState;
   readonly transport: TransportState;
   readonly kit: KitState;
   readonly modulation: ModulationState;

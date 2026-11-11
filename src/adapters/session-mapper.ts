@@ -16,12 +16,16 @@ import {
   DEFAULT_CLIP_QUANTIZE,
   activeClipsForScene,
   createClipsFromScenes,
+  emptyClipPattern,
+  materializeClips,
   materializeScenes,
+  trackPatternData,
   type ActiveClips,
   type ClipCollection,
   type ClipFollowAction,
   type ClipQuantize,
-  type ClipState
+  type ClipState,
+  type TrackPatternData
 } from '../domain/clip';
 import type { InsertConfig, MachineConfig, SendConfig } from '../domain/graph';
 import {
@@ -35,6 +39,7 @@ import {
 import { captureScene } from '../application/scenes';
 import type { NoteSource } from '../domain/machines';
 import type {
+  ArrangementState,
   GenerativeParams,
   InstrumentState,
   ProgressionId,
@@ -128,6 +133,16 @@ export interface SessionSceneDto {
   readonly masterVolume: number;
 }
 
+export interface SessionClipPatternDto {
+  readonly steps: readonly number[];
+  readonly pulses: number;
+  readonly frozen: boolean;
+  readonly locks?: readonly (readonly ParamLock[])[];
+  readonly velocity?: readonly number[];
+  readonly probability?: readonly number[];
+  readonly ratchets?: readonly number[];
+}
+
 export interface SessionClipDto {
   readonly id: string;
   readonly trackId: string;
@@ -136,6 +151,7 @@ export interface SessionClipDto {
   readonly color: string;
   readonly followAction: ClipFollowAction;
   readonly followAfter: number;
+  readonly pattern?: SessionClipPatternDto;
 }
 
 export interface SessionDto {
@@ -173,6 +189,7 @@ export interface SessionDto {
   readonly clips?: Record<string, SessionClipDto>;
   readonly activeClips?: Record<string, string | null>;
   readonly clipQuantize?: ClipQuantize;
+  readonly arrangement?: ArrangementState;
   readonly modulation?: ModulationState;
 }
 
@@ -181,12 +198,14 @@ export class SessionMapper implements SessionCodec {
 
   toDto(state: InstrumentState): SessionDto {
     const scenes: Record<string, SessionSceneDto> = {};
-    const materialized = materializeScenes(state);
+    const clips = materializeClips(state);
+    const materialized = materializeScenes({ ...state, clips });
     const currentPattern =
       materialized[state.scene]?.pattern ?? state.pattern;
     const current = {
       ...state,
       scenes: materialized,
+      clips,
       pattern: currentPattern
     };
     Object.entries(materialized).forEach(([id, snapshot]) => {
@@ -227,9 +246,10 @@ export class SessionMapper implements SessionCodec {
       evolveCount: state.evolveCount,
       kit: toKitDto(state.kit),
       scenes,
-      clips: toClipsDto(state.clips),
+      clips: toClipsDto(clips),
       activeClips: { ...state.activeClips },
       clipQuantize: state.clipQuantize,
+      arrangement: state.arrangement,
       modulation: state.modulation
     };
   }
@@ -365,7 +385,8 @@ export class SessionMapper implements SessionCodec {
       },
       clips,
       activeClips,
-      clipQuantize: readClipQuantize(data.clipQuantize)
+      clipQuantize: readClipQuantize(data.clipQuantize),
+      arrangement: readArrangement(data.arrangement, current.arrangement)
     };
   }
 }
@@ -1181,10 +1202,80 @@ function readClips(raw: unknown, scenes: SceneCollection): ClipCollection {
       followAfter:
         typeof record.followAfter === 'number'
           ? clamp(record.followAfter, 0, 16)
-          : (existing?.followAfter ?? 0)
+          : (existing?.followAfter ?? 0),
+      pattern: readClipPattern(
+        record.pattern,
+        existing?.pattern ??
+          trackPatternData(scene.pattern, trackId) ??
+          emptyClipPattern()
+      )
     };
   });
   return clips;
+}
+
+function readArrangement(
+  raw: unknown,
+  fallback: ArrangementState
+): ArrangementState {
+  const data = asRecord(raw);
+  if (!data) return fallback;
+  const rawBlocks = Array.isArray(data.blocks) ? data.blocks : [];
+  const blocks = rawBlocks.flatMap(value => {
+    const record = asRecord(value);
+    if (!record || !isClipSceneId(record.sceneId)) return [];
+    const id = typeof record.id === 'string' ? record.id : null;
+    if (!id) return [];
+    return [
+      {
+        id,
+        sceneId: record.sceneId,
+        bars: clamp(numberOr(record.bars, 4), 1, 64)
+      }
+    ];
+  });
+  if (blocks.length === 0) return fallback;
+  const blockIndex = Math.round(
+    clamp(numberOr(data.blockIndex, 0), 0, blocks.length - 1)
+  );
+  const bar = Math.round(
+    clamp(numberOr(data.bar, 0), 0, Math.max(0, (blocks[blockIndex]?.bars ?? 1) - 1))
+  );
+  return {
+    enabled: typeof data.enabled === 'boolean' ? data.enabled : fallback.enabled,
+    blocks,
+    blockIndex,
+    bar
+  };
+}
+
+function readClipPattern(
+  raw: unknown,
+  fallback: TrackPatternData
+): TrackPatternData {
+  const data = asRecord(raw);
+  if (!data) return fallback;
+  const pattern = readPatternState(
+    {
+      steps: { clip: data.steps },
+      pulses: { clip: data.pulses },
+      frozen: { clip: data.frozen },
+      locks: { clip: data.locks },
+      velocity: { clip: data.velocity },
+      probability: { clip: data.probability },
+      ratchets: { clip: data.ratchets }
+    },
+    {
+      steps: { clip: fallback.steps },
+      pulses: { clip: fallback.pulses },
+      frozen: { clip: fallback.frozen },
+      locks: { clip: fallback.locks },
+      velocity: { clip: fallback.velocity },
+      probability: { clip: fallback.probability },
+      ratchets: { clip: fallback.ratchets }
+    }
+  );
+  return trackPatternData(pattern, 'clip') ?? fallback;
 }
 
 function readActiveClips(

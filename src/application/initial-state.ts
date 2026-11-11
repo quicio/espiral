@@ -107,6 +107,17 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
       target: 'pad-reverb',
       values: [...DEFAULT_AUTOMATION_VALUES]
     },
+    arrangement: {
+      enabled: false,
+      blocks: [
+        { id: 'block-umbral', sceneId: 'umbral', bars: 4 },
+        { id: 'block-deriva', sceneId: 'deriva', bars: 4 },
+        { id: 'block-pulso', sceneId: 'pulso', bars: 4 },
+        { id: 'block-caos', sceneId: 'caos', bars: 4 }
+      ],
+      blockIndex: 0,
+      bar: 0
+    },
     transport: {
       bpm: 120,
       swing: 0.12,

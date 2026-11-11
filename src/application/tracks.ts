@@ -102,6 +102,61 @@ export class TrackService {
     this.status.generative(`${track.name} creado.`);
   }
 
+  addAudioTrack(name: string, dataUrl: string): void {
+    if (!this.engine.supportsTrackManagement) {
+      this.status.generative('Importar audio no está disponible en este motor.');
+      return;
+    }
+    const state = this.store.getState();
+    if (Object.keys(state.kit.tracks).length >= MAX_TRACKS) {
+      this.status.generative(`Máximo de ${MAX_TRACKS} tracks alcanzado.`);
+      return;
+    }
+
+    const created = createUserTrack(nextTrackIndex(state.kit), 'sampler');
+    const track: TrackState = {
+      ...created,
+      name: name.replace(/\.[^.]+$/, '') || created.name,
+      machine: {
+        kind: 'sampler',
+        samples: [dataUrl],
+        voices: 1,
+        fadeIn: 0.005,
+        fadeOut: 0.1
+      }
+    };
+    const pattern = Array.from(
+      { length: PATTERN_LENGTH },
+      (_, index) => (index === 0 ? 1 : 0)
+    ) as Pattern;
+    const scenes = mapScenes(state, scene => addTrackToScene(scene, track, pattern));
+    const clips = addClipsForTrack(state.clips, scenes, track.id);
+    const activeClip =
+      clips[clipId(state.scene, track.id)] ?? clips[clipId('umbral', track.id)];
+    const next: InstrumentState = {
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: { ...state.kit.tracks, [track.id]: track }
+      },
+      pattern: {
+        ...withPattern(state.pattern, track.id, pattern),
+        pulses: { ...state.pattern.pulses, [track.id]: 1 }
+      },
+      scenes,
+      clips,
+      activeClips: activeClip
+        ? { ...state.activeClips, [track.id]: activeClip.id }
+        : state.activeClips,
+      selected: track.id,
+      history: []
+    };
+
+    this.store.update(() => next);
+    this.engine.addTrack(trackToConfig(track));
+    this.status.generative(`${track.name} importado como audio.`);
+  }
+
   removeSelectedTrack(): void {
     this.removeTrack(this.store.getState().selected);
   }

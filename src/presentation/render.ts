@@ -211,7 +211,7 @@ export function renderSession(
         const id = clipId(sceneId, track.id);
         const clip = state.clips[id];
         if (!clip) {
-          return `<div class="session-cell session-cell--empty"><span>—</span></div>`;
+          return `<button class="session-cell session-cell--empty" type="button" data-clip-create="${sceneId}:${track.id}" aria-label="Crear clip de ${track.name} en ${scene.name}">+</button>`;
         }
         const active = state.activeClips[track.id] === clip.id;
         const stopped = state.activeClips[track.id] === null;
@@ -521,6 +521,18 @@ function renderClipInspector(
       <p class="section-meta">${scene?.name ?? clip.sceneId}</p>
     </div>
     <div class="clip-inspector-controls">
+      <label class="clip-field clip-field--name">
+        <span>Nombre</span>
+        <input data-clip-name="${clip.id}" value="${clip.name}" maxlength="40" aria-label="Nombre de ${clip.name}">
+      </label>
+      <label class="clip-field clip-field--color">
+        <span>Color</span>
+        <input type="color" data-clip-color="${clip.id}" value="${clip.color}" aria-label="Color de ${clip.name}">
+      </label>
+      <button class="line-action" type="button" data-clip-duplicate="${clip.id}">Duplicar</button>
+      <button class="line-action" type="button" data-clip-delete="${clip.id}">Eliminar</button>
+    </div>
+    <div class="clip-inspector-controls">
       <label class="clip-field">
         <span>Follow</span>
         <select data-clip-follow-action="${clip.id}" aria-label="Follow action de ${clip.name}">
@@ -558,6 +570,67 @@ function followAfterOptions(current: number): string {
       bars =>
         `<option value="${bars}"${bars === current ? ' selected' : ''}>${bars === 0 ? '—' : `${bars} ${bars === 1 ? 'compás' : 'compases'}`}</option>`
     )
+    .join('');
+}
+
+export function renderArrangement(
+  state: InstrumentState,
+  catalog: Catalog
+): void {
+  const timeline = q('#arrangement-timeline');
+  if (!timeline) return;
+
+  const sceneSelect = q<HTMLSelectElement>('#arrangement-scene');
+  if (sceneSelect && sceneSelect.options.length === 0) {
+    sceneSelect.innerHTML = catalog.scenes
+      .map(scene => `<option value="${scene.id}">${scene.label}</option>`)
+      .join('');
+  }
+
+  const toggle = q<HTMLButtonElement>('#arrangement-toggle');
+  if (toggle) {
+    toggle.textContent = state.arrangement.enabled ? 'Detener' : 'Activar';
+    toggle.setAttribute(
+      'aria-pressed',
+      state.arrangement.enabled ? 'true' : 'false'
+    );
+    toggle.classList.toggle('is-active', state.arrangement.enabled);
+  }
+
+  const activeBlock =
+    state.arrangement.blocks[state.arrangement.blockIndex];
+  const activeScene = activeBlock
+    ? catalog.scenes.find(scene => scene.id === activeBlock.sceneId)
+    : undefined;
+  const readout = q('#arrangement-readout');
+  if (readout) {
+    readout.textContent = state.arrangement.enabled
+      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.label ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}`
+      : `Arrangement detenido · ${state.arrangement.blocks.length} bloques`;
+  }
+
+  timeline.innerHTML = state.arrangement.blocks
+    .map((block, index) => {
+      const scene = catalog.scenes.find(entry => entry.id === block.sceneId);
+      const active =
+        state.arrangement.enabled &&
+        index === state.arrangement.blockIndex;
+      return `<div class="arrangement-block${active ? ' is-active' : ''}" data-arrangement-block="${block.id}">
+        <div class="arrangement-block-head">
+          <span class="arrangement-index">${String(index + 1).padStart(2, '0')}</span>
+          <strong>${scene?.label ?? block.sceneId}</strong>
+        </div>
+        <label class="arrangement-bars">
+          <span>Compases</span>
+          <input type="number" min="1" max="64" step="1" value="${block.bars}" data-arrangement-bars="${block.id}" aria-label="Compases de ${scene?.label ?? block.sceneId}">
+        </label>
+        <div class="arrangement-block-actions">
+          <button class="small-toggle" type="button" data-arrangement-move="-1" data-arrangement-block="${block.id}" aria-label="Mover bloque a la izquierda">←</button>
+          <button class="small-toggle" type="button" data-arrangement-move="1" data-arrangement-block="${block.id}" aria-label="Mover bloque a la derecha">→</button>
+          <button class="small-toggle" type="button" data-arrangement-remove="${block.id}" aria-label="Eliminar bloque">×</button>
+        </div>
+      </div>`;
+    })
     .join('');
 }
 
@@ -639,7 +712,7 @@ export function renderSound(
     .map(track => {
       const isolated = anySolo && !track.solo;
       const active = track.id === selected.id;
-      return `<div class="mixer-row${active ? ' is-selected' : ''}${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}">
+      return `<div class="mixer-row${active ? ' is-selected' : ''}${isolated ? ' is-isolated' : ''}" data-sound-channel="${track.id}" data-drop-track="${track.id}">
         <button class="mixer-name" type="button" data-sound-select="${track.id}" aria-pressed="${active}">
           <strong>${track.name}</strong>
           <span>${track.hasPattern ? 'patrón' : 'generativo'}</span>
@@ -818,11 +891,11 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
     const entries = SOUND_BANK.filter(
       preset => preset.category === category.id
     );
-    return `<section class="sound-bank-category">
+    return `<section class="sound-bank-category" data-sound-category="${category.id}">
       <p class="sound-bank-category-label">${category.label}</p>
       <div class="sound-bank-grid">${entries
         .map(
-          preset => `<button class="sound-bank-card${preset === active ? ' is-active' : ''}" type="button" data-sound-preset="${preset.id}" aria-pressed="${preset === active}"${canApply ? '' : ' disabled'}>
+          preset => `<button class="sound-bank-card${preset === active ? ' is-active' : ''}" type="button" draggable="true" data-sound-preset="${preset.id}" data-sound-category="${category.id}" aria-pressed="${preset === active}"${canApply ? '' : ' disabled'}>
             <span class="sound-bank-name">${preset.name}</span>
             <span class="sound-bank-desc">${preset.description}</span>
           </button>`
@@ -830,6 +903,22 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
         .join('')}</div>
     </section>`;
   }).join('')}</div>`;
+
+  filterSoundBank(root, q<HTMLInputElement>('#sound-bank-search')?.value ?? '');
+}
+
+export function filterSoundBank(root: HTMLElement, query: string): void {
+  const normalized = query.trim().toLowerCase();
+  root.querySelectorAll<HTMLElement>('.sound-bank-card').forEach(card => {
+    const text = (card.textContent ?? '').toLowerCase();
+    card.hidden = normalized !== '' && !text.includes(normalized);
+  });
+  root.querySelectorAll<HTMLElement>('.sound-bank-category').forEach(section => {
+    const cards = Array.from(
+      section.querySelectorAll<HTMLElement>('.sound-bank-card')
+    );
+    section.hidden = cards.length > 0 && cards.every(card => card.hidden);
+  });
 }
 
 function matchesSoundPreset(track: TrackState, preset: SoundPreset): boolean {
@@ -1021,6 +1110,13 @@ export function syncFreeze(state: InstrumentState): void {
 export function syncUndo(state: InstrumentState): void {
   const button = q<HTMLButtonElement>('#undo-pattern');
   if (button) button.disabled = state.history.length === 0;
+}
+
+export function syncGlobalHistory(canUndo: boolean, canRedo: boolean): void {
+  const undo = q<HTMLButtonElement>('#undo-global');
+  if (undo) undo.disabled = !canUndo;
+  const redo = q<HTMLButtonElement>('#redo-global');
+  if (redo) redo.disabled = !canRedo;
 }
 
 export function syncPaste(state: InstrumentState): void {
@@ -2020,6 +2116,7 @@ export function renderAll(
 ): void {
   renderPerformance(state, catalog);
   renderSession(state, options.runtime);
+  renderArrangement(state, catalog);
   renderSequencer(state, catalog);
   if (options.sound !== false) renderSound(state, catalog, mixService);
   renderAutomation(state, catalog);

@@ -18,6 +18,7 @@ import type {
 } from '../domain/ports';
 import { PlaybackRuntime } from './runtime';
 import type { ClipService } from './clip';
+import type { ArrangementService } from './arrangement';
 import type { Store } from './store';
 import {
   bassVoice,
@@ -46,7 +47,8 @@ export class PlaybackService {
     private readonly automation: AutomationRunner,
     private readonly patterns: PatternEvolver,
     private readonly clips: ClipService,
-    private readonly runtime: PlaybackRuntime
+    private readonly runtime: PlaybackRuntime,
+    private readonly arrangement?: ArrangementService
   ) {
     this.unsubscribe = this.clock.onStep((time, stepCount) => this.handleStep(time, stepCount));
   }
@@ -165,6 +167,7 @@ export class PlaybackService {
     if (!this.running) return;
     this.runtime.absoluteStep = stepCount;
     this.clips.applyPending(stepCount);
+    this.arrangement?.onStep(stepCount);
 
     const state = this.store.getState();
     if (!state.transport.playing) return;

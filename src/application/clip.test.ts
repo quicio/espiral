@@ -27,7 +27,7 @@ describe('ClipService', () => {
     );
   });
 
-  it('saves the outgoing live pattern into its source scene', () => {
+  it('saves the outgoing live pattern into its clip', () => {
     const { store, clips } = setup();
     const kick = store.getState().pattern.steps.kick!.map((value, index) =>
       index === 1 ? 1 : value
@@ -42,7 +42,9 @@ describe('ClipService', () => {
 
     clips.launchClip(clipId('deriva', 'kick'));
 
-    expect(store.getState().scenes.umbral.pattern.steps.kick).toEqual(kick);
+    expect(
+      store.getState().clips[clipId('umbral', 'kick')]?.pattern.steps
+    ).toEqual(kick);
   });
 
   it('schedules a quantized launch while playing', () => {
@@ -112,6 +114,60 @@ describe('ClipService', () => {
     clips.cancelPending('kick');
 
     expect(runtime.pendingClipActions).toHaveLength(0);
+  });
+
+  it('creates, renames, colors and removes clips', () => {
+    const { store, clips } = setup();
+    const kick = clipId('umbral', 'kick');
+
+    clips.removeClip(kick);
+    expect(store.getState().clips[kick]).toBeUndefined();
+
+    clips.createClip('umbral', 'kick');
+    const created = store.getState().clips[kick];
+    expect(created?.pattern.steps).toHaveLength(16);
+
+    clips.renameClip(kick, 'Kick A');
+    clips.setClipColor(kick, '#aabbcc');
+    expect(store.getState().clips[kick]?.name).toBe('Kick A');
+    expect(store.getState().clips[kick]?.color).toBe('#aabbcc');
+
+    clips.removeClip(kick);
+    expect(store.getState().clips[kick]).toBeUndefined();
+  });
+
+  it('duplicates a clip into a free scene slot', () => {
+    const { store, clips } = setup();
+    clips.removeClip(clipId('umbral', 'kick'));
+
+    clips.duplicateClip(clipId('deriva', 'kick'));
+
+    const copy = store.getState().clips[clipId('umbral', 'kick')];
+    expect(copy?.pattern.steps).toEqual(
+      store.getState().clips[clipId('deriva', 'kick')]?.pattern.steps
+    );
+  });
+
+  it('persists clip patterns independently from scenes', () => {
+    const { store, clips } = setup();
+    const derivaKick = clipId('deriva', 'kick');
+    clips.launchClip(derivaKick);
+    const kick = store.getState().pattern.steps.kick!.map((value, index) =>
+      index === 2 ? 1 : value
+    );
+    store.update(state => ({
+      ...state,
+      pattern: {
+        ...state.pattern,
+        steps: { ...state.pattern.steps, kick }
+      }
+    }));
+
+    clips.launchClip(clipId('umbral', 'kick'));
+    expect(store.getState().clips[derivaKick]?.pattern.steps).toEqual(kick);
+
+    clips.launchClip(derivaKick);
+    expect(store.getState().pattern.steps.kick).toEqual(kick);
   });
 
   it('persists quantize and clip follow settings in state', () => {

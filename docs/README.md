@@ -41,6 +41,13 @@ el código y la spec se corrige.
 | [13](specs/13-clip-grid.md) | Clip Grid / Session View | implementada (primer corte) |
 | [14](specs/14-sound-mixer.md) | Sound compacto y mixer | implementada |
 | [15](specs/15-arm-wizard.md) | Armado inicial (wizard) | implementada |
+| [16](specs/16-clip-grid-2.md) | Clip Grid 2 — clips independientes | implementada |
+| [17](specs/17-browser.md) | Browser de sonidos | implementada |
+| [18](specs/18-arrangement.md) | Arrangement de escenas | implementada |
+| [19](specs/19-live-input.md) | Entrada MIDI en vivo | implementada |
+| [20](specs/20-audio-import.md) | Importación de audio | implementada |
+| [21](specs/21-performance-mode.md) | Performance mode | implementada |
+| [22](specs/22-undo-global.md) | Undo global | implementada |
 
 ## ADR
 

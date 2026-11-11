@@ -15,6 +15,15 @@ export class BrowserFileGateway implements FileGatewayPort {
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
+  readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
   readJsonFile(file: File): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

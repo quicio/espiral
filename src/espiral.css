@@ -1972,6 +1972,19 @@ body[data-view="sound"] .generative {
   color: var(--umbral-muted);
 }
 
+.session-cell--empty {
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.session-cell--empty:hover,
+.session-cell--empty:focus-visible {
+  border-color: var(--umbral-trace);
+  color: var(--umbral-ink);
+}
+
 .clip-inspector {
   margin-top: 1rem;
   padding-top: 1rem;
@@ -1987,8 +2000,36 @@ body[data-view="sound"] .generative {
 
 .clip-inspector-controls {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   gap: 1rem;
   margin-top: 0.9rem;
+}
+
+.clip-field input {
+  min-height: 36px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+}
+
+.clip-field--name {
+  flex: 1 1 12rem;
+}
+
+.clip-field--color {
+  flex: 0 0 auto;
+}
+
+.clip-field--color input[type="color"] {
+  width: 3.2rem;
+  padding: 0.15rem;
+  cursor: pointer;
 }
 
 .routing-buses {
@@ -3676,4 +3717,155 @@ body[data-view="sound"] .generative {
   .arm-sounds {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.sound-bank-search-row {
+  padding-top: 0.6rem;
+}
+
+.sound-bank-search-row input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+}
+
+.sound-bank-search-row input::placeholder {
+  color: var(--umbral-muted);
+  opacity: 1;
+}
+
+.sound-bank-card[draggable="true"] {
+  cursor: grab;
+}
+
+.mixer-row.is-drop-target {
+  outline: 1px dashed var(--umbral-trace);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--umbral-trace) 12%, transparent);
+}
+
+/* --- Arrangement ---------------------------------------------------------- */
+
+.arrangement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 1rem;
+}
+
+.arrangement-actions select {
+  min-height: 34px;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+}
+
+.arrangement-timeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(10rem, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-bottom: 0.75rem;
+  overflow-x: auto;
+  scrollbar-color: var(--umbral-rule) transparent;
+  scrollbar-width: thin;
+}
+
+.arrangement-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 8rem;
+  padding: 0.8rem;
+  border: 1px solid var(--umbral-rule-faint);
+  background: transparent;
+}
+
+.arrangement-block.is-active {
+  border-color: var(--umbral-trace);
+  background: color-mix(in srgb, var(--umbral-trace) 9%, transparent);
+}
+
+.arrangement-block-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.arrangement-index {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--umbral-muted);
+}
+
+.arrangement-block-head strong {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: var(--umbral-ink);
+}
+
+.arrangement-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.arrangement-bars span {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.arrangement-bars input {
+  width: 4.5rem;
+  min-height: 30px;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid var(--umbral-rule);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color-scheme: dark;
+}
+
+.arrangement-block-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: auto;
+}
+
+body.is-performance .espiral-header,
+body.is-performance .espiral-intro,
+body.is-performance .session-bar,
+body.is-performance .instrument-keys {
+  display: none;
+}
+
+body.is-performance .espiral-shell {
+  padding-top: 1rem;
+}
+
+body.is-performance .instrument-dock {
+  border-top: 0;
+}
+
+body.is-performance .instrument-body {
+  margin-top: 1rem;
 }

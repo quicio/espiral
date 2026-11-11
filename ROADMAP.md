@@ -77,10 +77,9 @@ Specs relacionadas: `docs/specs/01` a `docs/specs/12`.
 **Resultado:** cada track puede tener clips independientes en una grilla. Lanzar un clip
 o una escena no reinicia el resto de la música.
 
-**Estado:** primer corte implementado (spec 13 / ADR-0005). Grilla, launch quantize,
-follow actions, stop y persistencia funcionando. Pendiente para M1.2: crear/duplicar/
-renombrar/colorear/eliminar clips fuera de las cuatro escenas y desacoplar el patrón del
-backing store de escenas.
+**Estado:** M1.1 y M1.2 implementados (specs 13 y 16 / ADR-0005). Clips con patrón
+propio, creación, duplicado, rename, color y delete. Pendiente: filas/slots dinámicos más
+allá de las cuatro escenas y drag/drop de clips.
 
 ### Alcance
 
@@ -117,6 +116,10 @@ backing store de escenas.
 **Resultado:** explorar el instrumento se siente como abrir el browser de Ableton:
 buscar, escuchar y arrastrar.
 
+**Estado:** primer corte implementado (spec 17). Búsqueda, drag/drop de sonidos y drawer
+compacto. Pendiente: preview/audition, favoritos, recientes y presets de cadenas de
+dispositivos.
+
 ### Alcance
 
 - Panel de browser con categorías: sonidos, instrumentos, efectos, presets y samples.
@@ -150,6 +153,10 @@ buscar, escuchar y arrastrar.
 ## M3 — Arrangement + Automation
 
 **Resultado:** una performance se puede grabar y ordenar en una canción.
+
+**Estado:** primer corte implementado (spec 18). Secuencia de bloques de escena con
+compases, playback y persistencia. Pendiente: grabación de performance, locators/loop y
+automatización por bloque.
 
 ### Alcance
 
@@ -185,6 +192,9 @@ buscar, escuchar y arrastrar.
 
 **Resultado:** tocar y capturar la performance sin fricción.
 
+**Estado:** undo global y entrada MIDI implementados (specs 19 y 22). Capture real-time
+sigue pendiente; el export WAV offline cubre el render actual.
+
 ### Alcance
 
 - Grabar master y resamplear a un clip.
@@ -218,6 +228,9 @@ buscar, escuchar y arrastrar.
 
 **Resultado:** el audio entra al instrumento y se comporta como un clip de Ableton.
 
+**Estado:** importación de audio como track sampler implementada (spec 20). Pendiente:
+warp, waveform, slice y pitch/loop del clip.
+
 ### Alcance
 
 - Importar WAV/MP3 por drag/drop o file picker.
@@ -248,6 +261,9 @@ buscar, escuchar y arrastrar.
 ## M6 — Hardening + Scale
 
 **Resultado:** la experiencia se siente confiable, rápida y accesible.
+
+**Estado:** performance mode implementado (spec 21). Pendiente: fullscreen, mobile,
+compatibilidad amplia y auditoría de accesibilidad completa.
 
 ### Alcance
 

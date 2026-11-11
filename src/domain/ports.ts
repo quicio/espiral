@@ -96,6 +96,7 @@ export interface ClockPort {
   getBpm(): number;
   setLookAhead(seconds: number): void;
   getLookAhead(): number;
+  now(): number;
   onStep(listener: StepListener): () => void;
   dispose(): void;
 }
@@ -207,6 +208,7 @@ export interface FileGatewayPort {
   downloadJson(filename: string, data: unknown): void;
   downloadBlob(filename: string, blob: Blob): void;
   readJsonFile(file: File): Promise<unknown>;
+  readFileAsDataUrl(file: File): Promise<string>;
 }
 
 export interface AudioExportPort {

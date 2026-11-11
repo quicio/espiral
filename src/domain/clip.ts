@@ -44,6 +44,7 @@ export interface ClipState {
   readonly color: string;
   readonly followAction: ClipFollowAction;
   readonly followAfter: number;
+  readonly pattern: TrackPatternData;
 }
 
 export type ClipCollection = Readonly<Record<string, ClipState>>;
@@ -80,7 +81,9 @@ export function createClipsFromScenes(
     Object.values(scene.kit.tracks)
       .filter(track => track.hasPattern)
       .forEach(track => {
-        const clip = createClipForTrack(sceneId, track);
+        const pattern = trackPatternData(scene.pattern, track.id);
+        if (!pattern) return;
+        const clip = createClipForTrack(sceneId, track, pattern);
         clips[clip.id] = clip;
       });
   });
@@ -89,7 +92,8 @@ export function createClipsFromScenes(
 
 export function createClipForTrack(
   sceneId: SceneId,
-  track: TrackState
+  track: TrackState,
+  pattern: TrackPatternData
 ): ClipState {
   return {
     id: clipId(sceneId, track.id),
@@ -98,7 +102,8 @@ export function createClipForTrack(
     name: track.name,
     color: CLIP_COLORS[sceneId],
     followAction: 'none',
-    followAfter: 0
+    followAfter: 0,
+    pattern
   };
 }
 
@@ -112,7 +117,9 @@ export function addClipsForTrack(
     const scene = scenes[sceneId];
     const track = scene?.kit.tracks[trackId];
     if (!scene || !track?.hasPattern) return;
-    const clip = createClipForTrack(sceneId, track);
+    const pattern = trackPatternData(scene.pattern, trackId);
+    if (!pattern) return;
+    const clip = createClipForTrack(sceneId, track, pattern);
     if (!next[clip.id]) next[clip.id] = clip;
   });
   return next;
@@ -174,6 +181,18 @@ export function trackPatternData(
     velocity: pattern.velocity[trackId] ?? emptyStepValues(1),
     probability: pattern.probability[trackId] ?? emptyStepValues(1),
     ratchets: pattern.ratchets[trackId] ?? emptyStepValues(1)
+  };
+}
+
+export function emptyClipPattern(): TrackPatternData {
+  return {
+    steps: Array.from({ length: 16 }, () => 0 as const),
+    pulses: 4,
+    frozen: false,
+    locks: emptyTrackLocks(),
+    velocity: emptyStepValues(1),
+    probability: emptyStepValues(1),
+    ratchets: emptyStepValues(1)
   };
 }
 
@@ -240,6 +259,25 @@ export function withSceneTrackPattern(
       pattern: applyTrackPatternData(scene.pattern, trackId, data)
     }
   };
+}
+
+/**
+ * Copia el patrón vivo de cada clip activo a su propio ClipState.
+ * Es la fuente de verdad para persistir clips independientes de las escenas.
+ */
+export function materializeClips(
+  state: ClipMaterializeState
+): ClipCollection {
+  const clips: Record<string, ClipState> = { ...state.clips };
+  Object.entries(state.activeClips).forEach(([trackId, activeId]) => {
+    if (!activeId) return;
+    const clip = clips[activeId];
+    if (!clip || clip.trackId !== trackId) return;
+    const data = trackPatternData(state.pattern, trackId);
+    if (!data) return;
+    clips[activeId] = { ...clip, pattern: data };
+  });
+  return clips;
 }
 
 export function quantizeSteps(quantize: ClipQuantize): number {

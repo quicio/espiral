@@ -1,9 +1,13 @@
 import {
   applyTrackPatternData,
   clipsForTrack,
+  CLIP_SCENE_ORDER,
+  CLIP_COLORS,
+  clipId,
+  createClipForTrack,
+  emptyClipPattern,
   nextQuantizedStep,
   trackPatternData,
-  withSceneTrackPattern,
   type ClipFollowAction,
   type ClipQuantize,
   type ClipState
@@ -35,6 +39,85 @@ export class ClipService {
       ...clip,
       followAfter: Math.max(0, Math.min(16, Math.round(bars)))
     }));
+  }
+
+  createClip(sceneId: SceneId, trackId: string): void {
+    const state = this.store.getState();
+    const scene = state.scenes[sceneId];
+    const track = state.kit.tracks[trackId];
+    if (!scene || !track || !track.hasPattern) return;
+    const id = clipId(sceneId, trackId);
+    if (state.clips[id]) return;
+
+    const pattern =
+      trackPatternData(scene.pattern, trackId) ?? emptyClipPattern();
+    const clip = createClipForTrack(sceneId, track, pattern);
+    this.store.update(current => ({
+      ...current,
+      clips: { ...current.clips, [clip.id]: clip },
+      selected: trackId
+    }));
+    this.status.generative(`${clip.name} creado.`);
+  }
+
+  duplicateClip(sourceId: string): void {
+    const state = this.store.getState();
+    const source = state.clips[sourceId];
+    if (!source) return;
+    const emptyScene = CLIP_SCENE_ORDER.find(
+      sceneId => !state.clips[clipId(sceneId, source.trackId)]
+    );
+    if (!emptyScene) {
+      this.status.generative('No hay un slot libre para duplicar el clip.');
+      return;
+    }
+    const track = state.kit.tracks[source.trackId];
+    const scene = state.scenes[emptyScene];
+    if (!track || !scene) return;
+    const copy = {
+      ...source,
+      id: clipId(emptyScene, source.trackId),
+      sceneId: emptyScene,
+      name: source.name,
+      color: CLIP_COLORS[emptyScene] ?? source.color
+    };
+    this.store.update(current => ({
+      ...current,
+      clips: { ...current.clips, [copy.id]: copy },
+      selected: source.trackId
+    }));
+    this.status.generative(`${copy.name} duplicado en ${emptyScene}.`);
+  }
+
+  renameClip(clipId: string, name: string): void {
+    const next = name.trim();
+    if (!next) return;
+    this.updateClip(clipId, clip => ({ ...clip, name: next }));
+  }
+
+  setClipColor(clipId: string, color: string): void {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return;
+    this.updateClip(clipId, clip => ({ ...clip, color }));
+  }
+
+  removeClip(clipId: string): void {
+    const state = this.store.getState();
+    const clip = state.clips[clipId];
+    if (!clip) return;
+    const active = state.activeClips[clip.trackId] === clipId;
+    const clips = Object.fromEntries(
+      Object.entries(state.clips).filter(([id]) => id !== clipId)
+    );
+    const activeClips = active
+      ? { ...state.activeClips, [clip.trackId]: null }
+      : state.activeClips;
+    this.store.update(current => ({
+      ...current,
+      clips,
+      activeClips
+    }));
+    if (active) delete this.runtime.clipStartedAt[clip.trackId];
+    this.status.generative(`${clip.name} eliminado.`);
   }
 
   launchClip(clipId: string, quantize = this.store.getState().clipQuantize): void {
@@ -143,13 +226,12 @@ export class ClipService {
       this.stopTracksNow(
         Object.entries(this.store.getState().activeClips)
           .filter(([, clipId]) => clipId !== null)
-          .map(([trackId]) => trackId),
-        stepCount
+          .map(([trackId]) => trackId)
       );
       return;
     }
     if (action.kind === 'stop-track') {
-      this.stopTracksNow([action.trackId], stepCount);
+      this.stopTracksNow([action.trackId]);
       return;
     }
     this.launchNow(action.clipId, stepCount);
@@ -162,22 +244,23 @@ export class ClipService {
 
     const outgoingId = state.activeClips[clip.trackId];
     const outgoing = outgoingId ? state.clips[outgoingId] : undefined;
-    let scenes = state.scenes;
+    let clips = state.clips;
 
     if (outgoing) {
       const current = trackPatternData(state.pattern, clip.trackId);
       if (current) {
-        scenes = withSceneTrackPattern(
-          scenes,
-          outgoing.sceneId,
-          clip.trackId,
-          current
-        );
+        clips = {
+          ...clips,
+          [outgoing.id]: { ...outgoing, pattern: current }
+        };
       }
     }
 
-    const target = scenes[clip.sceneId];
-    const data = target ? trackPatternData(target.pattern, clip.trackId) : null;
+    const data =
+      clip.pattern ??
+      (state.scenes[clip.sceneId]
+        ? trackPatternData(state.scenes[clip.sceneId].pattern, clip.trackId)
+        : null);
     if (!data) {
       this.status.generative(`El clip ${clip.name} no tiene patrón.`);
       return;
@@ -185,7 +268,7 @@ export class ClipService {
 
     const next: InstrumentState = {
       ...state,
-      scenes,
+      clips,
       pattern: applyTrackPatternData(state.pattern, clip.trackId, data),
       activeClips: { ...state.activeClips, [clip.trackId]: clip.id },
       history: []
@@ -195,24 +278,22 @@ export class ClipService {
     this.runtime.clipStartedAt[clip.trackId] = stepCount;
   }
 
-  private stopTracksNow(trackIds: readonly string[], stepCount: number): void {
+  private stopTracksNow(trackIds: readonly string[]): void {
     const state = this.store.getState();
-    let scenes = state.scenes;
+    let clips = state.clips;
     const activeClips = { ...state.activeClips };
 
     trackIds.forEach(trackId => {
       const activeId = activeClips[trackId];
       if (!activeId) return;
-      const clip = state.clips[activeId];
+      const clip = clips[activeId];
       if (clip) {
         const current = trackPatternData(state.pattern, trackId);
         if (current) {
-          scenes = withSceneTrackPattern(
-            scenes,
-            clip.sceneId,
-            trackId,
-            current
-          );
+          clips = {
+            ...clips,
+            [clip.id]: { ...clip, pattern: current }
+          };
         }
       }
       activeClips[trackId] = null;
@@ -221,10 +302,9 @@ export class ClipService {
 
     this.store.update(current => ({
       ...current,
-      scenes,
+      clips,
       activeClips
     }));
-    void stepCount;
   }
 
   private applyFollowActions(stepCount: number): void {
@@ -241,7 +321,7 @@ export class ClipService {
       if (stepCount - started < clip.followAfter * FOLLOW_BAR_STEPS) return;
 
       if (clip.followAction === 'stop') {
-        this.stopTracksNow([trackId], stepCount);
+        this.stopTracksNow([trackId]);
         return;
       }
 

@@ -39,7 +39,14 @@
 - Kits pre-hechos (Techno, Dub, Breaks, Ambient) y kits propios persistidos en local.
 - Aplicación de sonidos de kick, bass, hats y percusión en todas las escenas.
 - El armado mutea los elementos no elegidos en todas las escenas.
-- 158 tests unitarios.
+- Clips con patrón propio; crear, duplicar, renombrar, colorear y eliminar.
+- Browser de sonidos con búsqueda y drag/drop a tracks editables.
+- Arrangement de escenas por bloques con compases, playback y persistencia.
+- Entrada MIDI: notas al track seleccionado y CC1/CC2 a macros.
+- Importación de audio como track sampler con clip y patrón de un paso.
+- Undo/redo global con botones y Cmd/Ctrl+Z.
+- Modo Performance que oculta header, intro y barra de sesión.
+- 174 tests unitarios.
 
 ## 0.6.0 — 2026-11-09
 

@@ -2,10 +2,13 @@ import './base.css';
 import './espiral.css';
 import { PresetMapper } from './adapters/preset-mapper';
 import { SessionMapper } from './adapters/session-mapper';
+import { ArrangementService } from './application/arrangement';
 import { AutomationService } from './application/automation';
 import { ClipService } from './application/clip';
 import { ExportService } from './application/export';
+import { HistoryService } from './application/history';
 import { createInitialState } from './application/initial-state';
+import { LiveInputService } from './application/live-input';
 import { LocksService } from './application/locks';
 import { MixService } from './application/mix';
 import { ModulationService } from './application/modulation';
@@ -25,6 +28,7 @@ import { BrowserFileGateway } from './infrastructure/persistence/browser-file-ga
 import { HttpPresetRepository } from './infrastructure/persistence/http-preset-repository';
 import { LocalSessionRepository } from './infrastructure/persistence/local-session-repository';
 import { LocalSoundKitRepository } from './infrastructure/persistence/local-sound-kit-repository';
+import { WebMidiInput } from './infrastructure/midi/web-midi';
 import { IntervalTicker } from './infrastructure/time/interval-ticker';
 import { EspiralApp } from './presentation/app';
 import { createCatalog } from './presentation/render';
@@ -34,6 +38,7 @@ async function boot(): Promise<void> {
   const generative = new UmbralGenerative();
   const initial = createInitialState(generative);
   const store = new Store(initial);
+  const history = new HistoryService(store);
   const runtime = new PlaybackRuntime();
   const status = new DomStatus();
 
@@ -52,6 +57,9 @@ async function boot(): Promise<void> {
   const patterns = new PatternService(store, generative, status, runtime);
   const automation = new AutomationService(store, engine, status);
   const clips = new ClipService(store, runtime, status);
+  const mix = new MixService(store, engine);
+  const scenes = new SceneService(store, mix, runtime, status);
+  const arrangement = new ArrangementService(store, scenes, status);
   const playback = new PlaybackService(
     store,
     clock,
@@ -61,11 +69,17 @@ async function boot(): Promise<void> {
     automation,
     patterns,
     clips,
-    runtime
+    runtime,
+    arrangement
   );
-  const mix = new MixService(store, engine);
-  const scenes = new SceneService(store, mix, runtime, status);
   const tracks = new TrackService(store, engine, status);
+  const liveInput = new LiveInputService(
+    store,
+    engine,
+    clock,
+    status,
+    new WebMidiInput()
+  );
   const routing = new RoutingService(store, engine, status);
   const modulation = new ModulationService(store, engine, new IntervalTicker());
   const locks = new LocksService(store, engine);
@@ -105,6 +119,8 @@ async function boot(): Promise<void> {
     patterns,
     clips,
     runtime,
+    arrangement,
+    liveInput,
     automation,
     mix,
     sessions,
@@ -116,6 +132,8 @@ async function boot(): Promise<void> {
     modulation,
     locks,
     exportService,
+    history,
+    files,
     status
   });
   app.mount();

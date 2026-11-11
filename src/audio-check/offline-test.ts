@@ -65,6 +65,10 @@ class OfflineClock implements ClockPort {
     return this.lookAhead;
   }
 
+  now(): number {
+    return 0;
+  }
+
   onStep(listener: StepListener): () => void {
     this.listeners.add(listener);
     return () => {

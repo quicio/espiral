@@ -34,6 +34,23 @@ describe('TrackService', () => {
     expect(engine.added.at(-1)?.id).toBe('track-17');
   });
 
+  it('imports an audio file as a sampler track with its own clip', () => {
+    const { store, engine, tracks } = setup();
+    const dataUrl = 'data:audio/wav;base64,AAAA';
+
+    tracks.addAudioTrack('loop.wav', dataUrl);
+
+    const state = store.getState();
+    const track = state.kit.tracks['track-17'];
+    expect(track?.name).toBe('loop');
+    expect(track?.machine.kind).toBe('sampler');
+    expect(track?.machine.samples).toEqual([dataUrl]);
+    expect(state.pattern.steps['track-17']?.[0]).toBe(1);
+    expect(state.clips[clipId('umbral', 'track-17')]).toBeDefined();
+    expect(state.activeClips['track-17']).toBe(clipId('umbral', 'track-17'));
+    expect(engine.added.at(-1)?.id).toBe('track-17');
+  });
+
   it('adds a user track with a selected synth machine', () => {
     const { store, engine, tracks } = setup();
 

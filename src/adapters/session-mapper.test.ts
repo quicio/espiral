@@ -297,6 +297,35 @@ describe('SessionMapper', () => {
     );
   });
 
+  it('round-trips the arrangement', () => {
+    const { store, mapper } = setup();
+    store.update(state => ({
+      ...state,
+      arrangement: {
+        enabled: true,
+        blocks: [
+          { id: 'a', sceneId: 'pulso', bars: 2 },
+          { id: 'b', sceneId: 'caos', bars: 6 }
+        ],
+        blockIndex: 1,
+        bar: 3
+      }
+    }));
+
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(store.getState()))),
+      store.getState()
+    );
+
+    expect(restored.arrangement.enabled).toBe(true);
+    expect(restored.arrangement.blocks).toEqual([
+      { id: 'a', sceneId: 'pulso', bars: 2 },
+      { id: 'b', sceneId: 'caos', bars: 6 }
+    ]);
+    expect(restored.arrangement.blockIndex).toBe(1);
+    expect(restored.arrangement.bar).toBe(3);
+  });
+
   it('ignores invalid session values', () => {
     const { store, mapper } = setup();
     const current = store.getState();

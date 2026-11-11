@@ -1,5 +1,10 @@
 import { cloneKit } from '../domain/kit';
-import { activeClipsForScene, materializeScenes } from '../domain/clip';
+import {
+  activeClipsForScene,
+  applyTrackPatternData,
+  materializeClips,
+  materializeScenes
+} from '../domain/clip';
 import type { InstrumentState, SceneId } from '../domain/models';
 import { clonePatternState } from '../domain/pattern';
 import type { StatusPort } from '../domain/ports';
@@ -22,18 +27,27 @@ export class SceneService {
     const target = state.scenes[sceneId];
     if (!target) return;
 
-    const materialized = materializeScenes(state);
+    const clips = materializeClips(state);
+    const materialized = materializeScenes({ ...state, clips });
     const currentPattern =
       materialized[state.scene]?.pattern ?? state.pattern;
     const currentSnapshot = captureScene({
       ...state,
       scenes: materialized,
+      clips,
       pattern: currentPattern
     });
     const nextScene = cloneScene(target);
-    const firstTrack = Object.keys(nextScene.pattern.steps)[0] ?? 'kick';
+    const targetPattern = Object.values(clips)
+      .filter(clip => clip.sceneId === sceneId)
+      .reduce(
+        (pattern, clip) =>
+          applyTrackPatternData(pattern, clip.trackId, clip.pattern),
+        clonePatternState(nextScene.pattern)
+      );
+    const firstTrack = Object.keys(targetPattern.steps)[0] ?? 'kick';
     const selectedTrack =
-      nextScene.pattern.steps[state.selected] !== undefined
+      targetPattern.steps[state.selected] !== undefined
         ? state.selected
         : firstTrack;
 
@@ -42,13 +56,14 @@ export class SceneService {
       scene: sceneId,
       scenes: { ...materialized, [state.scene]: currentSnapshot },
       kit: nextScene.kit,
-      pattern: nextScene.pattern,
+      pattern: targetPattern,
+      clips,
       harmony: nextScene.harmony,
       seed: nextScene.seed,
       params: nextScene.params,
       masterVolume: nextScene.masterVolume,
       selected: selectedTrack,
-      activeClips: activeClipsForScene(state.clips, sceneId),
+      activeClips: activeClipsForScene(clips, sceneId),
       history: [],
       clipboard: null
     };

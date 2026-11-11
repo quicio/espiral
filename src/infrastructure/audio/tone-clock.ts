@@ -46,6 +46,10 @@ export class ToneClock implements ClockPort {
     return this.lookAhead;
   }
 
+  now(): number {
+    return Tone.now();
+  }
+
   onStep(listener: StepListener): () => void {
     this.listeners.add(listener);
     return () => {

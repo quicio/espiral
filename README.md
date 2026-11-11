@@ -32,6 +32,12 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Los presets pueden definir máquinas por track y variarlas por escena.
 - Performances por escenas: `Umbral`, `Deriva`, `Pulso`, `Caos contenido`.
 - Session / Clip Grid con lanzamiento cuantizado, follow actions y stop por track.
+- Clips independientes con patrón propio, crear, duplicar, renombrar, colorear y eliminar.
+- Browser de sonidos con búsqueda y drag/drop a tracks editables.
+- Arrangement de escenas por bloques de compases.
+- Entrada MIDI para tocar el track seleccionado y mapear macros.
+- Importación de audio como track sampler.
+- Undo/redo global y modo Performance.
 - Semilla reproducible, Euclid, densidad, mutación, freeze y evolución.
 - Tonalidad: 12 raíces, 7 escalas y 4 progresiones.
 - Duración de notas para pad, lead y bass.

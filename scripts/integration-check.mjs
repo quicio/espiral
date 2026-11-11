@@ -85,6 +85,7 @@ try {
 
   for (const tab of [
     '#tab-session',
+    '#tab-arrangement',
     '#tab-sequencer',
     '#tab-sound',
     '#tab-routing',
@@ -155,6 +156,18 @@ try {
     );
   }
 
+  await page.locator('#tab-arrangement').click();
+  const arrangementBlocks = await page.locator('.arrangement-block').count();
+  await page.locator('#arrangement-toggle').click();
+  await page.waitForTimeout(150);
+  const arrangementReadout = (await page.locator('#arrangement-readout').textContent())?.trim();
+  await page.locator('#arrangement-toggle').click();
+  if (arrangementBlocks !== 4 || !arrangementReadout?.includes('Bloque')) {
+    throw new Error(
+      `Arrangement inesperado: ${arrangementBlocks} bloques, readout=${arrangementReadout}.`
+    );
+  }
+
   await page.locator('#tab-sound').click();
   const mixerRows = await page.locator('.mixer-row').count();
   const bankDrawerOpen = await page
@@ -177,6 +190,13 @@ try {
   if (bankCards === 0) throw new Error('El banco de sonidos no tiene presets.');
   await page.locator('#sound-bank-target').selectOption('track-08');
   await page.waitForTimeout(200);
+  await page.locator('#sound-bank-search').fill('acid');
+  await page.waitForTimeout(120);
+  const filteredSounds = await page.locator('.sound-bank-card:visible').count();
+  await page.locator('#sound-bank-search').fill('');
+  if (filteredSounds !== 1) {
+    throw new Error(`La búsqueda de sonidos devolvió ${filteredSounds} tarjetas.`);
+  }
   await page.locator('[data-sound-preset="warm-pad"]').click();
   await page.waitForTimeout(400);
   const bankStatus = (await page.locator('#sound-bank-status').textContent())?.trim();
@@ -199,6 +219,15 @@ try {
     throw new Error(`Samples con error: ${failedSamples.map(sample => sample.url).join(', ')}`);
   }
 
+  await page.locator('#performance-mode').click();
+  const performanceHeader = await page
+    .locator('.espiral-header')
+    .evaluate(el => getComputedStyle(el).display);
+  await page.locator('#performance-mode').click();
+  if (performanceHeader !== 'none') {
+    throw new Error('Performance mode no ocultó el header.');
+  }
+
   if (errors.length > 0) throw new Error(`Errores de consola:\n${errors.join('\n')}`);
 
   console.log(
@@ -219,6 +248,8 @@ try {
         keyboardCancel,
         mixerRows,
         bankDrawerOpen,
+        arrangementBlocks,
+        filteredSounds,
         samples: samples.length,
         clip
       },

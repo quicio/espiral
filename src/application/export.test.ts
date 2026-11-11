@@ -24,6 +24,9 @@ function setup() {
     },
     async readJsonFile() {
       return {};
+    },
+    async readFileAsDataUrl() {
+      return '';
     }
   };
   const status = new FakeStatus();
@@ -69,6 +72,9 @@ describe('ExportService', () => {
         downloadBlob() {},
         async readJsonFile() {
           return {};
+        },
+        async readFileAsDataUrl() {
+          return '';
         }
       },
       status

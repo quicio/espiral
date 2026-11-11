@@ -3,7 +3,12 @@ import type { ClipFollowAction, ClipQuantize } from '../domain/clip';
 import type { ModulationState } from '../domain/modulation';
 import { formatMachineParam, machinePreset } from '../domain/machines';
 import { denormalizePluginParam } from '../domain/plugin';
-import type { SoundKitRepositoryPort, StatusPort } from '../domain/ports';
+import { canEditTrackSound } from '../domain/kit';
+import type {
+  FileGatewayPort,
+  SoundKitRepositoryPort,
+  StatusPort
+} from '../domain/ports';
 import {
   DEFAULT_KIT_ID,
   SOUND_KITS,
@@ -11,9 +16,12 @@ import {
   type SoundKit
 } from '../domain/sound-kits';
 import type { AutomationService } from '../application/automation';
+import type { ArrangementService } from '../application/arrangement';
 import type { ClipService } from '../application/clip';
 import type { ExportService } from '../application/export';
+import type { HistoryService } from '../application/history';
 import type { MixService } from '../application/mix';
+import type { LiveInputService } from '../application/live-input';
 import type { LocksService } from '../application/locks';
 import type { ModulationService } from '../application/modulation';
 import type { PatternService } from '../application/patterns';
@@ -32,6 +40,7 @@ import { formatPluginParam } from './plugin-controls';
 type ViewId =
   | 'performance'
   | 'session'
+  | 'arrangement'
   | 'sequencer'
   | 'sound'
   | 'routing'
@@ -44,6 +53,8 @@ interface PresentationDependencies {
   readonly patterns: PatternService;
   readonly clips: ClipService;
   readonly runtime: PlaybackRuntime;
+  readonly arrangement: ArrangementService;
+  readonly liveInput: LiveInputService;
   readonly automation: AutomationService;
   readonly mix: MixService;
   readonly sessions: SessionService;
@@ -55,6 +66,8 @@ interface PresentationDependencies {
   readonly modulation: ModulationService;
   readonly locks: LocksService;
   readonly exportService: ExportService;
+  readonly history: HistoryService;
+  readonly files: FileGatewayPort;
   readonly status: StatusPort;
 }
 
@@ -63,6 +76,7 @@ export class EspiralApp {
   private unsubscribe: (() => void) | null = null;
   private meterFrame: number | null = null;
   private armRequired = true;
+  private midiConnected = false;
   private armState: view.ArmWizardState = {
     presetId: 'techno',
     sceneId: 'umbral',
@@ -90,6 +104,7 @@ export class EspiralApp {
     view.renderAll(this.lastState, this.deps.catalog, this.deps.mix, {
       runtime: this.deps.runtime
     });
+    this.syncHistoryButtons();
     const initial = (location.hash || '').replace('#', '');
     this.setView(isView(initial) ? initial : 'performance', { scroll: false });
     this.openArmWizard(true);
@@ -194,6 +209,7 @@ export class EspiralApp {
   private handleState(state: InstrumentState): void {
     const previous = this.lastState;
     this.lastState = state;
+    this.syncHistoryButtons();
     if (!previous) {
       view.renderAll(state, this.deps.catalog, this.deps.mix, {
         runtime: this.deps.runtime
@@ -310,6 +326,14 @@ export class EspiralApp {
       else void playback.start();
     });
 
+    view.must('#performance-mode').addEventListener('click', event => {
+      const active = document.body.classList.toggle('is-performance');
+      if (event.target instanceof HTMLElement) {
+        event.target.setAttribute('aria-pressed', String(active));
+        event.target.classList.toggle('is-active', active);
+      }
+    });
+
     const setBpm = (raw: number): void => {
       if (!Number.isFinite(raw)) return;
       const value = Math.max(40, Math.min(240, Math.round(raw)));
@@ -420,12 +444,15 @@ export class EspiralApp {
     this.bindGenerativeActions();
     this.bindTrackActions();
     this.bindRouting();
+    this.bindArrangement();
     this.bindModulation();
     this.bindLocks();
     this.bindDynamics();
     this.bindChannelActions();
     this.bindClipActions();
     this.bindSessionActions();
+    this.bindHistory();
+    this.bindLiveInput();
     this.bindArmWizard();
     this.bindViewControls();
     this.bindKeyboard();
@@ -969,6 +996,61 @@ export class EspiralApp {
       if (presetId) tracks.applySoundPreset(presetId);
     });
 
+    view.must<HTMLInputElement>('#sound-bank-search').addEventListener('input', event => {
+      const root = view.q<HTMLElement>('#sound-bank');
+      if (root) view.filterSoundBank(root, inputValue(event));
+    });
+
+    view.must('#sound-bank').addEventListener('dragstart', event => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-sound-preset]')
+          : null;
+      const presetId = target?.getAttribute('data-sound-preset');
+      if (!presetId || !(event instanceof DragEvent) || !event.dataTransfer) return;
+      event.dataTransfer.setData('text/plain', presetId);
+      event.dataTransfer.effectAllowed = 'copy';
+    });
+
+    view.must('#sound-channels').addEventListener('dragover', event => {
+      const row =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-drop-track]')
+          : null;
+      if (!row) return;
+      event.preventDefault();
+      row.classList.add('is-drop-target');
+    });
+
+    view.must('#sound-channels').addEventListener('dragleave', event => {
+      const row =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-drop-track]')
+          : null;
+      row?.classList.remove('is-drop-target');
+    });
+
+    view.must('#sound-channels').addEventListener('drop', event => {
+      const row =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-drop-track]')
+          : null;
+      if (!row || !(event instanceof DragEvent)) return;
+      event.preventDefault();
+      row.classList.remove('is-drop-target');
+      const presetId = event.dataTransfer?.getData('text/plain');
+      const trackId = row.getAttribute('data-drop-track');
+      if (!presetId || !trackId) return;
+      const track = this.deps.store.getState().kit.tracks[trackId];
+      if (!track || !canEditTrackSound(track)) {
+        this.deps.status.generative(
+          'Los tracks de batería se editan desde el kit del wizard.'
+        );
+        return;
+      }
+      tracks.applySoundPreset(presetId, trackId);
+    });
+
     view.must('#sound-bank').addEventListener('change', event => {
       if (!(event.target instanceof HTMLSelectElement)) return;
       if (event.target.id !== 'sound-bank-target' || !event.target.value) return;
@@ -991,6 +1073,7 @@ export class EspiralApp {
 
     view.must('#session-grid').addEventListener('click', event => {
       const clip = attr(event, 'data-clip-launch');
+      const create = attr(event, 'data-clip-create');
       const stop = attr(event, 'data-clip-stop');
       const scene = attr(event, 'data-scene-launch');
       const select = attr(event, 'data-select');
@@ -999,6 +1082,11 @@ export class EspiralApp {
         clips.launchClip(clip);
         const trackId = this.deps.store.getState().clips[clip]?.trackId;
         if (trackId) patterns.selectChannel(trackId);
+      } else if (create) {
+        const [sceneId, trackId] = create.split(':');
+        if (sceneId && trackId && isSceneId(sceneId)) {
+          clips.createClip(sceneId, trackId);
+        }
       } else if (stop) {
         clips.stopTrack(stop);
       } else if (scene && isSceneId(scene)) {
@@ -1065,16 +1153,128 @@ export class EspiralApp {
     });
 
     view.must('#clip-inspector').addEventListener('change', event => {
-      if (!(event.target instanceof HTMLSelectElement)) return;
+      const target = event.target;
+      if (
+        !(target instanceof HTMLSelectElement) &&
+        !(target instanceof HTMLInputElement)
+      ) {
+        return;
+      }
+
+      const nameId = attr(event, 'data-clip-name');
+      if (nameId && target instanceof HTMLInputElement) {
+        clips.renameClip(nameId, target.value);
+        this.refreshSession();
+        return;
+      }
+
+      const colorId = attr(event, 'data-clip-color');
+      if (colorId && target instanceof HTMLInputElement) {
+        clips.setClipColor(colorId, target.value);
+        this.refreshSession();
+        return;
+      }
+
       const action = attr(event, 'data-clip-follow-action');
       const after = attr(event, 'data-clip-follow-after');
       if (action) {
-        clips.setFollowAction(action, event.target.value as ClipFollowAction);
+        clips.setFollowAction(action, target.value as ClipFollowAction);
       }
       if (after) {
-        clips.setFollowAfter(after, Number(event.target.value));
+        clips.setFollowAfter(after, Number(target.value));
       }
     });
+
+    view.must('#clip-inspector').addEventListener('click', event => {
+      const duplicate = attr(event, 'data-clip-duplicate');
+      if (duplicate) {
+        clips.duplicateClip(duplicate);
+        this.refreshSession();
+        return;
+      }
+      const remove = attr(event, 'data-clip-delete');
+      if (remove) {
+        clips.removeClip(remove);
+        this.refreshSession();
+      }
+    });
+  }
+
+  private bindLiveInput(): void {
+    view.must('#midi-connect').addEventListener('click', () => {
+      void this.toggleMidi();
+    });
+  }
+
+  private async toggleMidi(): Promise<void> {
+    const button = view.q<HTMLButtonElement>('#midi-connect');
+    if (button) button.disabled = true;
+    if (this.midiConnected) {
+      this.deps.liveInput.disconnect();
+      this.midiConnected = false;
+    } else {
+      this.midiConnected = await this.deps.liveInput.connect();
+    }
+    if (button) {
+      button.disabled = false;
+      button.textContent = this.midiConnected ? 'MIDI on' : 'MIDI';
+      button.setAttribute(
+        'aria-pressed',
+        this.midiConnected ? 'true' : 'false'
+      );
+      button.classList.toggle('is-active', this.midiConnected);
+    }
+  }
+
+  private bindArrangement(): void {
+    const { arrangement } = this.deps;
+    view.must('#arrangement-toggle').addEventListener('click', () => arrangement.toggle());
+    view.must('#arrangement-reset').addEventListener('click', () => arrangement.reset());
+    view.must('#arrangement-add').addEventListener('click', () => {
+      const scene = view.q<HTMLSelectElement>('#arrangement-scene')?.value;
+      if (scene && isSceneId(scene)) arrangement.addBlock(scene);
+    });
+
+    view.must('#arrangement-timeline').addEventListener('click', event => {
+      const remove = attr(event, 'data-arrangement-remove');
+      if (remove) {
+        arrangement.removeBlock(remove);
+        return;
+      }
+      const move = attr(event, 'data-arrangement-move');
+      const block = attr(event, 'data-arrangement-block');
+      if (move && block) arrangement.moveBlock(block, Number(move));
+    });
+
+    view.must('#arrangement-timeline').addEventListener('change', event => {
+      if (!(event.target instanceof HTMLInputElement)) return;
+      const block = attr(event, 'data-arrangement-bars');
+      if (block) arrangement.setBars(block, Number(event.target.value));
+    });
+  }
+
+  private bindHistory(): void {
+    view.must('#undo-global').addEventListener('click', () => {
+      this.deps.clips.clearPending();
+      if (this.deps.history.undo()) {
+        this.deps.status.generative('Cambio deshecho.');
+      }
+      this.syncHistoryButtons();
+    });
+    view.must('#redo-global').addEventListener('click', () => {
+      this.deps.clips.clearPending();
+      if (this.deps.history.redo()) {
+        this.deps.status.generative('Cambio rehecho.');
+      }
+      this.syncHistoryButtons();
+    });
+  }
+
+  private syncHistoryButtons(): void {
+    view.syncGlobalHistory(
+      this.deps.history.canUndo,
+      this.deps.history.canRedo
+    );
   }
 
   private bindArmWizard(): void {
@@ -1326,6 +1526,27 @@ export class EspiralApp {
       importFile.value = '';
     });
 
+    const audioButton = view.must<HTMLButtonElement>('#import-audio');
+    const audioFile = view.must<HTMLInputElement>('#import-audio-file');
+    audioButton.addEventListener('click', () => audioFile.click());
+    audioFile.addEventListener('change', () => {
+      const file = audioFile.files?.[0];
+      if (!file) return;
+      audioFile.disabled = true;
+      this.deps.status.session('Importando audio…');
+      void this.deps.files
+        .readFileAsDataUrl(file)
+        .then(dataUrl => this.deps.tracks.addAudioTrack(file.name, dataUrl))
+        .catch(error => {
+          console.error(error);
+          this.deps.status.session('No se pudo importar el audio.');
+        })
+        .finally(() => {
+          audioFile.disabled = false;
+          audioFile.value = '';
+        });
+    });
+
     view.must<HTMLSelectElement>('#mix-preset').addEventListener('change', event => {
       const id = selectValue(event);
       if (id && id !== '-1') void this.deps.presets.load(id);
@@ -1374,12 +1595,28 @@ export class EspiralApp {
         return;
       }
 
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        this.deps.clips.clearPending();
+        const changed = event.shiftKey
+          ? this.deps.history.redo()
+          : this.deps.history.undo();
+        if (changed) {
+          this.deps.status.generative(
+            event.shiftKey ? 'Cambio rehecho.' : 'Cambio deshecho.'
+          );
+        }
+        this.syncHistoryButtons();
+        return;
+      }
+
       if (event.key === '1') this.setView('performance');
       else if (event.key === '2') this.setView('session');
-      else if (event.key === '3') this.setView('sequencer');
-      else if (event.key === '4') this.setView('sound');
-      else if (event.key === '5') this.setView('routing');
-      else if (event.key === '6') this.setView('modulation');
+      else if (event.key === '3') this.setView('arrangement');
+      else if (event.key === '4') this.setView('sequencer');
+      else if (event.key === '5') this.setView('sound');
+      else if (event.key === '6') this.setView('routing');
+      else if (event.key === '7') this.setView('modulation');
       else if (event.key.toLowerCase() === 'r') this.deps.patterns.mutateSelected();
       else if (event.key.toLowerCase() === 'f') this.deps.patterns.toggleFreeze();
       else if (event.key.toLowerCase() === 'm') this.toggleMute(this.deps.store.getState().selected);
@@ -1418,7 +1655,7 @@ export class EspiralApp {
       tab.setAttribute('aria-selected', active ? 'true' : 'false');
       tab.classList.toggle('is-active', active);
     });
-    (['performance', 'session', 'sequencer', 'sound', 'routing', 'modulation'] as const).forEach(name => {
+    (['performance', 'session', 'arrangement', 'sequencer', 'sound', 'routing', 'modulation'] as const).forEach(name => {
       const section = view.q(`#view-${name}`);
       if (section) section.hidden = name !== id;
     });
@@ -1426,6 +1663,7 @@ export class EspiralApp {
     const state = this.deps.store.getState();
     if (id === 'performance') view.renderPerformance(state, this.deps.catalog);
     if (id === 'session') view.renderSession(state, this.deps.runtime);
+    if (id === 'arrangement') view.renderArrangement(state, this.deps.catalog);
     if (id === 'sequencer') {
       view.renderSequencer(state, this.deps.catalog);
       view.renderAutomation(state, this.deps.catalog);
@@ -1458,6 +1696,7 @@ function isView(value: unknown): value is ViewId {
   return (
     value === 'performance' ||
     value === 'session' ||
+    value === 'arrangement' ||
     value === 'sequencer' ||
     value === 'sound' ||
     value === 'routing' ||
@@ -1518,9 +1757,13 @@ function sameNonTransport(a: InstrumentState, b: InstrumentState): boolean {
     a.scenes === b.scenes &&
     a.pattern === b.pattern &&
     a.automation === b.automation &&
+    a.arrangement === b.arrangement &&
     a.modulation === b.modulation &&
     a.kit === b.kit &&
     a.masterVolume === b.masterVolume &&
+    a.clips === b.clips &&
+    a.activeClips === b.activeClips &&
+    a.clipQuantize === b.clipQuantize &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&
@@ -1542,9 +1785,13 @@ function isAutomationValueChange(a: InstrumentState, b: InstrumentState): boolea
     a.scenes === b.scenes &&
     a.pattern === b.pattern &&
     a.transport === b.transport &&
+    a.arrangement === b.arrangement &&
     a.modulation === b.modulation &&
     a.kit === b.kit &&
-    a.masterVolume === b.masterVolume
+    a.masterVolume === b.masterVolume &&
+    a.clips === b.clips &&
+    a.activeClips === b.activeClips &&
+    a.clipQuantize === b.clipQuantize
   );
 }
 
@@ -1567,8 +1814,12 @@ function isMixValueChange(a: InstrumentState, b: InstrumentState): boolean {
     a.scenes === b.scenes &&
     a.pattern === b.pattern &&
     a.automation === b.automation &&
+    a.arrangement === b.arrangement &&
     a.modulation === b.modulation &&
     a.transport === b.transport &&
+    a.clips === b.clips &&
+    a.activeClips === b.activeClips &&
+    a.clipQuantize === b.clipQuantize &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&
@@ -1588,9 +1839,13 @@ function isModulationChange(a: InstrumentState, b: InstrumentState): boolean {
     a.scenes === b.scenes &&
     a.pattern === b.pattern &&
     a.automation === b.automation &&
+    a.arrangement === b.arrangement &&
     a.transport === b.transport &&
     a.kit === b.kit &&
     a.masterVolume === b.masterVolume &&
+    a.clips === b.clips &&
+    a.activeClips === b.activeClips &&
+    a.clipQuantize === b.clipQuantize &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&
