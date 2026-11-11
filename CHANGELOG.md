@@ -47,7 +47,8 @@
 - Importación de audio como track sampler con clip y patrón de un paso.
 - Undo/redo global con botones y Cmd/Ctrl+Z.
 - Modo Performance que oculta header, intro y barra de sesión.
-- Layout base 8 tracks de ritmo + 8 melódicos, con reorder y rename.
+- Layout base: Kick, Shaker, Snare, Hat Closed, Hat Open, Perc, Clap y Tom; luego Bass, Drone, Pad, Lead, Synth, Texture, Sampler y Aux.
+- Sample `snare.wav` sintético y grooves para Hat Open, Clap y Tom.
 - Presets House, Trance, Psytrance y Trip-Hop.
 - Catálogo ampliado: más variantes de drums, bass, keys y texturas; kits House, Trance, Psy y Trip-Hop.
 - 176 tests unitarios.

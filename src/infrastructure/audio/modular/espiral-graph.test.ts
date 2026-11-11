@@ -11,19 +11,19 @@ describe('createEspiralGraph', () => {
     expect(graph.tracks).toHaveLength(16);
     expect(graph.tracks.slice(0, 8).map(track => track.id)).toEqual([
       'kick',
-      'bass',
-      'hihat',
-      'perc',
       'track-08',
       'track-09',
+      'hihat',
       'track-10',
-      'track-11'
+      'perc',
+      'track-11',
+      'track-12'
     ]);
     expect(graph.tracks.slice(8).map(track => track.id)).toEqual([
+      'bass',
       'drone',
       'pad',
       'lead',
-      'track-12',
       'track-13',
       'track-14',
       'track-15',

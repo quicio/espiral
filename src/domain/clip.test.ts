@@ -26,7 +26,7 @@ describe('clip helpers', () => {
     );
 
     expect(Object.keys(clips)).toHaveLength(patternTracks.length * 4);
-    expect(clips[clipId('umbral', 'kick')]?.name).toBe('Kick 4/4');
+    expect(clips[clipId('umbral', 'kick')]?.name).toBe('Kick');
     expect(clips[clipId('caos', 'track-08')]?.color).toBe('#8e7cc3');
   });
 

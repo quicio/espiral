@@ -24,7 +24,7 @@ describe('defaultGroovePattern', () => {
   });
 
   it('leaves tracks without a curated groove blank', () => {
-    expect(defaultGroovePattern('umbral', 'track-10')).toBeNull();
+    expect(defaultGroovePattern('umbral', 'track-13')).toBeNull();
     expect(defaultGroovePattern('umbral', 'track-16')).toBeNull();
   });
 });

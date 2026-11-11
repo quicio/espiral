@@ -95,14 +95,28 @@ const CORE_PAN: Record<ChannelKey, number> = {
 
 interface LayerCharacter {
   readonly name: string;
+  readonly machineId: string;
+  readonly machine: MachineConfig;
+  readonly noteSource: NoteSource;
   readonly gainDb: number;
   readonly pan: number;
   readonly sends: readonly SendConfig[];
 }
 
+const fixedSource = (): NoteSource => ({ kind: 'fixed', note: 'C4' });
+
 const LAYER_CHARACTER: Readonly<Record<string, LayerCharacter>> = {
   'track-08': {
-    name: 'Shaker 08',
+    name: 'Shaker',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}hihat-01.wav`],
+      voices: 1,
+      fadeIn: 0.003,
+      fadeOut: 0.12
+    },
+    noteSource: fixedSource(),
     gainDb: -15,
     pan: 0.24,
     sends: [
@@ -111,29 +125,128 @@ const LAYER_CHARACTER: Readonly<Record<string, LayerCharacter>> = {
     ]
   },
   'track-09': {
-    name: 'Perc 09',
-    gainDb: -13,
-    pan: -0.26,
-    sends: [
-      { busId: 'delay-bus', amount: 0.18, preFader: false },
-      { busId: 'reverb-bus', amount: 0.12, preFader: false }
-    ]
+    name: 'Snare',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}snare.wav`],
+      voices: 2,
+      fadeIn: 0.002,
+      fadeOut: 0.12
+    },
+    noteSource: fixedSource(),
+    gainDb: -12,
+    pan: -0.04,
+    sends: [{ busId: 'reverb-bus', amount: 0.18, preFader: false }]
+  },
+  'track-10': {
+    name: 'Hat Open',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}hihat-07.wav`],
+      voices: 1,
+      fadeIn: 0.002,
+      fadeOut: 0.35
+    },
+    noteSource: fixedSource(),
+    gainDb: -17,
+    pan: 0.28,
+    sends: [{ busId: 'reverb-bus', amount: 0.16, preFader: false }]
+  },
+  'track-11': {
+    name: 'Clap',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}perc.wav`],
+      voices: 4,
+      fadeIn: 0.008,
+      fadeOut: 0.22
+    },
+    noteSource: fixedSource(),
+    gainDb: -14,
+    pan: -0.22,
+    sends: [{ busId: 'reverb-bus', amount: 0.2, preFader: false }]
+  },
+  'track-12': {
+    name: 'Tom',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}perc.wav`],
+      voices: 2,
+      fadeIn: 0.004,
+      fadeOut: 0.18
+    },
+    noteSource: fixedSource(),
+    gainDb: -16,
+    pan: 0.12,
+    sends: [{ busId: 'reverb-bus', amount: 0.12, preFader: false }]
+  },
+  'track-13': {
+    name: 'Synth',
+    machineId: 'lead-synth',
+    machine: machinePreset('lead-synth').machine,
+    noteSource: { kind: 'scale-degree', degree: 4, octave: 4 },
+    gainDb: -16,
+    pan: -0.12,
+    sends: [{ busId: 'reverb-bus', amount: 0.2, preFader: false }]
+  },
+  'track-14': {
+    name: 'Texture',
+    machineId: 'drone-sampler',
+    machine: machinePreset('drone-sampler').machine,
+    noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 },
+    gainDb: -18,
+    pan: 0.3,
+    sends: [{ busId: 'reverb-bus', amount: 0.28, preFader: false }]
+  },
+  'track-15': {
+    name: 'Sampler',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}hihat-04.wav`],
+      voices: 1,
+      fadeIn: 0.003,
+      fadeOut: 0.08
+    },
+    noteSource: fixedSource(),
+    gainDb: -18,
+    pan: -0.3,
+    sends: []
+  },
+  'track-16': {
+    name: 'Aux',
+    machineId: 'sampler',
+    machine: {
+      kind: 'sampler',
+      samples: [`${SAMPLE_PATH}perc.wav`],
+      voices: 2,
+      fadeIn: 0.004,
+      fadeOut: 0.1
+    },
+    noteSource: fixedSource(),
+    gainDb: -20,
+    pan: 0.2,
+    sends: []
   }
 };
 
 const DEFAULT_TRACK_ORDER = [
   'kick',
-  'bass',
-  'hihat',
-  'perc',
   'track-08',
   'track-09',
+  'hihat',
   'track-10',
+  'perc',
   'track-11',
+  'track-12',
+  'bass',
   'drone',
   'pad',
   'lead',
-  'track-12',
   'track-13',
   'track-14',
   'track-15',
@@ -156,7 +269,12 @@ export function createDefaultKit(): KitState {
       const mix = DEFAULT_MIX[key];
       const track: TrackState = {
         id: key,
-        name: channelName(key),
+        name:
+          key === 'kick'
+            ? 'Kick'
+            : key === 'hihat'
+              ? 'Hat Closed'
+              : channelName(key),
         role: key,
         hasPattern: key === 'kick' || key === 'bass' || key === 'hihat' || key === 'perc',
         machineId: CORE_MACHINE_IDS[key],

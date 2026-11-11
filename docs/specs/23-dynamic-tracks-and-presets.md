@@ -19,8 +19,12 @@ tracks reordenables/renombrables y más material musical para arrancar.
 
 El kit por defecto ahora se ordena así:
 
-1–8 (ritmo): kick, bass, hi-hat, perc, Shaker 08, Perc 09, Track 10, Track 11.
-9–16 (melódico/texturas): drone, pad, lead, Track 12–16.
+1–8 (ritmo): Kick, Shaker, Snare, Hat Closed, Hat Open, Perc, Clap, Tom.
+9–16 (melódico/texturas): Bass, Drone, Pad, Lead, Synth, Texture, Sampler, Aux.
+
+`public/audio/snare.wav` se genera como sample sintético para que el track Snare tenga un
+sonido propio. Tracks 10/11/12 dejan de ser “Track NN” y pasan a ser Hat Open, Clap y Tom.
+El wizard lista los 16 elementos reales del kit.
 
 Los roles de playback siguen siendo los mismos; lo dinámico es el orden, el nombre y la
 posibilidad de agregar/quitar tracks de usuario.
@@ -54,7 +58,8 @@ Cada uno incluye mezcla, patrones, escenas y armonía. El wizard los lista en Ba
 
 ## Criterios
 
-- El kit por defecto muestra 8 tracks de ritmo y luego 8 melódicos.
+- El kit por defecto muestra Kick, Shaker, Snare, Hat Closed, Hat Open, Perc, Clap y Tom
+  en los primeros 8 tracks.
 - Mover un track cambia el orden en kit y escenas.
 - Renombrar actualiza el track y sus clips por defecto.
 - El wizard lista 8 bases.

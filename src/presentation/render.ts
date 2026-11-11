@@ -272,15 +272,21 @@ export function renderSession(
 
 export const ARM_ELEMENT_IDS = [
   'kick',
-  'bass',
-  'hihat',
-  'perc',
   'track-08',
   'track-09',
+  'hihat',
   'track-10',
+  'perc',
+  'track-11',
+  'track-12',
+  'bass',
   'drone',
   'pad',
-  'lead'
+  'lead',
+  'track-13',
+  'track-14',
+  'track-15',
+  'track-16'
 ] as const;
 
 export interface ArmWizardState {

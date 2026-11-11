@@ -21,7 +21,7 @@ Instrumento generativo de ritmos, escalas y automatización.
 - Buffer/lookahead configurable de 20–300 ms.
 - Patch bay de buses con detección de ciclos y creación/eliminación de buses.
 - Presets musicales: Techno, Dub, Ambient, Breaks, House, Trance, Psytrance y Trip-Hop.
-- Layout base 8 tracks de ritmo + 8 melódicos, con reorder y rename.
+- Layout base: Kick, Shaker, Snare, Hat Closed, Hat Open, Perc, Clap y Tom; luego Bass, Drone, Pad, Lead, Synth, Texture, Sampler y Aux.
 - Grooves curados por escena con velocity, probabilidad y ratchets desde el estado inicial.
 - Capas de shaker y percusión con paneo y sends propios en el kit por defecto.
 - Velocity, probabilidad y ratchets por paso; paneo y sends rápidos por track.

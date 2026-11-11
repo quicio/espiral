@@ -30,6 +30,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'rim-tick',
       'track-10': 'hat-tight',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'organ-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'drone-bed',
       pad: 'warm-pad',
       lead: 'fm-brass'
@@ -48,6 +54,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'rim-tick',
       'track-10': 'hat-tight',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'organ-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'drone-bed',
       pad: 'glass-pad',
       lead: 'fm-bell'
@@ -66,6 +78,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'rim-tick',
       'track-10': 'clap-soft',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'dust-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'drone-bed',
       pad: 'dust-keys',
       lead: 'pluck-koto'
@@ -84,6 +102,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'rim-tick',
       'track-10': 'hat-tight',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'bell-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'drone-bed',
       pad: 'glass-pad',
       lead: 'fm-bell'
@@ -102,6 +126,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-dry',
       'track-09': 'hat-pedal',
       'track-10': 'clap-soft',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'organ-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'dark-drone',
       pad: 'organ-keys',
       lead: 'bell-keys'
@@ -120,6 +150,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'hat-pedal',
       'track-10': 'tom-floor',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'bell-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'dark-drone',
       pad: 'glass-pad',
       lead: 'fm-brass'
@@ -138,6 +174,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-dry',
       'track-09': 'rim-tick',
       'track-10': 'hat-pedal',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'dust-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'dark-drone',
       pad: 'dust-keys',
       lead: 'fm-metal'
@@ -156,6 +198,12 @@ export const SOUND_KITS: readonly SoundKit[] = [
       'track-08': 'shaker-air',
       'track-09': 'rim-tick',
       'track-10': 'clap-soft',
+      'track-11': 'clap-soft',
+      'track-12': 'tom-floor',
+      'track-13': 'bell-keys',
+      'track-14': 'dark-drone',
+      'track-15': 'shaker-dry',
+      'track-16': 'rim-tick',
       drone: 'dark-drone',
       pad: 'bell-keys',
       lead: 'fm-bell'
@@ -190,5 +238,7 @@ function categoriesForTrack(trackId: string): readonly SoundCategory[] {
   if (trackId === 'pad') return ['keys'];
   if (trackId === 'lead') return ['keys', 'textures'];
   if (trackId === 'drone') return ['textures'];
+  if (trackId === 'track-13') return ['keys'];
+  if (trackId === 'track-14') return ['textures'];
   return ['drums'];
 }

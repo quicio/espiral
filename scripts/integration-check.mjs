@@ -74,6 +74,22 @@ try {
 
   const trackRows = await page.locator('#activity-list .activity-row').count();
   if (trackRows !== 16) throw new Error(`Se esperaban 16 tracks, hay ${trackRows}.`);
+  const drumNames = await page
+    .locator('#activity-list .activity-name')
+    .evaluateAll(elements => elements.slice(0, 8).map(el => el.textContent?.trim()));
+  const expectedDrums = [
+    'Kick',
+    'Shaker',
+    'Snare',
+    'Hat Closed',
+    'Hat Open',
+    'Perc',
+    'Clap',
+    'Tom'
+  ];
+  if (JSON.stringify(drumNames) !== JSON.stringify(expectedDrums)) {
+    throw new Error(`Orden de drums inesperado: ${drumNames.join(', ')}.`);
+  }
 
   await page.locator('#transport-play').click();
   await page
@@ -257,6 +273,7 @@ try {
     JSON.stringify(
       {
         tracks: trackRows,
+        drumNames,
         pulse,
         playing,
         stopped,
