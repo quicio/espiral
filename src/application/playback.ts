@@ -302,8 +302,7 @@ export class PlaybackService {
           time: at,
           sampleIndex: 0,
           playbackRate: 1,
-          gainDb: velocityGainDb(velocity),
-          duration: '8n'
+          gainDb: velocityGainDb(velocity)
         });
         return;
       }
@@ -382,8 +381,7 @@ export class PlaybackService {
         channel: 'perc',
         time: at,
         playbackRate: percRate,
-        gainDb: velocityGainDb(velocity),
-        duration: '2n'
+        gainDb: velocityGainDb(velocity)
       });
     });
 
@@ -398,8 +396,7 @@ export class PlaybackService {
             time: at,
             sampleIndex: 0,
             playbackRate: 1,
-            gainDb: velocityGainDb(velocity),
-            duration: '8n'
+            gainDb: velocityGainDb(velocity)
           });
         });
         return;
