@@ -155,9 +155,14 @@ class WorkletSamplerSource implements SamplerVoiceSource {
       this.fallback?.play(time, sampleIndex, playbackRate, duration, gainDb);
       return;
     }
+    if (this.urls.length === 0) return;
+    const index = Math.max(
+      0,
+      Math.min(this.urls.length - 1, Math.round(sampleIndex))
+    );
     this.node.port.postMessage({
       type: 'play',
-      index: sampleIndex,
+      index,
       time,
       rate: playbackRate,
       duration: duration ? Tone.Time(duration).toSeconds() : undefined,
@@ -166,7 +171,6 @@ class WorkletSamplerSource implements SamplerVoiceSource {
       fadeOut: this.fadeOut
     });
   }
-
   stop(): void {
     this.node?.port.postMessage({ type: 'stop' });
     this.fallback?.stop();

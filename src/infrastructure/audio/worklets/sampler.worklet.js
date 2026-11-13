@@ -59,8 +59,7 @@ class EspiralSamplerProcessor extends AudioWorkletProcessor {
   }
 
   process(_inputs, outputs) {
-    const output = outputs[0];
-    if (!output || output.length === 0) return true;
+    const output = outputs[0];    if (!output || output.length === 0) return true;
     const left = output[0];
     const right = output[1] ?? output[0];
     if (!left) return true;
@@ -68,7 +67,6 @@ class EspiralSamplerProcessor extends AudioWorkletProcessor {
     for (let frame = 0; frame < left.length; frame += 1) {
       let mixLeft = 0;
       let mixRight = 0;
-
       for (let index = 0; index < this.voices.length; index += 1) {
         const voice = this.voices[index];
         if (voice.done) continue;

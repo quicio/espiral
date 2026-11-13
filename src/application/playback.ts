@@ -293,6 +293,20 @@ export class PlaybackService {
     const tracks = state.kit.tracks;
 
     this.eachPatternHit(state, 'kick', stepCount, time, (at, velocity) => {
+      const kick = tracks.kick;
+      if (kick?.machine.kind === 'sampler') {
+        this.engine.trigger({
+          type: 'sample',
+          channel: 'perc',
+          trackId: 'kick',
+          time: at,
+          sampleIndex: 0,
+          playbackRate: 1,
+          gainDb: velocityGainDb(velocity),
+          duration: '8n'
+        });
+        return;
+      }
       this.engine.trigger({ type: 'kick', time: at, velocity });
     });
 

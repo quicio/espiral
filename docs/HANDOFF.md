@@ -19,14 +19,14 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **220 pasan / 32 archivos** en ~3 s | `npm test` |
+| tests unitarios | **221 pasan / 32 archivos** en ~3 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 1.79 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 555.29 kB (141.60 kB gzip) | salida de `npm run build` |
 | samples de batería | 1.79 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
 | código | 119 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 38 en `docs/specs/` | `ls docs/specs` |
+| specs | 39 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 6 en `docs/adr/` | `ls docs/adr` |
 | git | árbol con cambios de spec 38 sin commitear | `git status` |
 
@@ -91,6 +91,7 @@ Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opc
 | Batería sin round-robin ni velocity | un one-shot por slot, mismo sample en cada golpe | agregar variantes por slot y elegir por paso en una spec nueva |
 | Mover clips entre tracks | fuera de alcance en spec 24: el patrón vivo es por instrumento | evaluar en M3 si aparece la necesidad |
 | Escenas vacías sin snapshot | `addScene` duplica la escena actual para garantizar un snapshot completo | diseñar en una spec nueva si se pide Session View puro |
+| Pitch de bajos con kits de un sample | `bassVoice` calcula contra la tabla MIDI histórica de 6 samples | spec 39 fuera de alcance; corregir si el pitch molesta |
 
 ## Qué NO hacer
 

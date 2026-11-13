@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.15.0
+version: 1.16.0
 updated: 2026-11-13
 ---
 
@@ -65,6 +65,7 @@ el código y la spec se corrige.
 | [36](specs/36-clean-view-cache.md) | Cache de vistas limpias al cambiar de pestaña | implementada |
 | [37](specs/37-sampler-audioworklet.md) | Sampler en AudioWorklet con fallback | implementada |
 | [38](specs/38-drum-kits.md) | Drum kits: máquinas con samples de dominio público | implementada |
+| [39](specs/39-drum-kit-worklet-fixes.md) | Fixes de integración entre drum kits y sampler Worklet | implementada |
 
 ## ADR
 

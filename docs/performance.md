@@ -50,7 +50,8 @@ scheduler llega tarde.
     reconstruye el DOM (spec 36).
 14. **Sampler en AudioWorklet** con fallback a `Tone.Player`: un nodo por máquina
     sampler mezcla voces en el hilo de audio; el render offline sigue usando el
-    fallback (spec 37).
+    fallback (spec 37). Los índices de sample se clampean y el kick sampler ya no
+    se dispara como membrana (spec 39).
 
 ## Palancas de tuning pendientes (bajo riesgo)
 

@@ -50,6 +50,37 @@ describe('PlaybackService', () => {
     expect(store.getState().transport.playing).toBe(true);
   });
 
+  it('triggers a sampler kick when the kick machine is a sampler', async () => {
+    const { playback, clock, engine, store } = setup();
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          kick: {
+            ...state.kit.tracks.kick!,
+            machine: {
+              kind: 'sampler',
+              samples: ['./audio/kits/909/kick.wav'],
+              voices: 1
+            }
+          }
+        }
+      }
+    }));
+    await playback.start();
+
+    clock.fire(1, 0);
+
+    expect(
+      engine.events.some(
+        event => event.type === 'sample' && event.trackId === 'kick'
+      )
+    ).toBe(true);
+    expect(engine.events.some(event => event.type === 'kick')).toBe(false);
+  });
+
   it('turns the step into sound events and automation', async () => {
     const { playback, clock, engine, automation, store } = setup();
     await playback.start();
