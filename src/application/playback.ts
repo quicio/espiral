@@ -300,7 +300,7 @@ export class PlaybackService {
           channel: 'perc',
           trackId: 'kick',
           time: at,
-          sampleIndex: this.sampleIndexFor(state, 'kick', stepCount),
+          sampleIndex: this.sampleIndexFor(state, 'kick', stepCount, velocity),
           playbackRate: 1,
           gainDb: velocityGainDb(velocity)
         });
@@ -339,7 +339,14 @@ export class PlaybackService {
         type: 'sample',
         channel: 'hihat',
         time: at,
-        sampleIndex: hihat.sampleIndex,
+        sampleIndex: pickSampleIndex(
+          this.generative,
+          state.seed,
+          'hihat',
+          stepCount,
+          hihatVariants,
+          velocity
+        ),
         playbackRate: hihat.playbackRate,
         gainDb: hihat.gainDb + velocityGainDb(velocity)
       });
@@ -389,7 +396,7 @@ export class PlaybackService {
         channel: 'perc',
         trackId: 'perc',
         time: at,
-        sampleIndex: this.sampleIndexFor(state, 'perc', stepCount),
+        sampleIndex: this.sampleIndexFor(state, 'perc', stepCount, velocity),
         playbackRate: percRate,
         gainDb: velocityGainDb(velocity)
       });
@@ -404,7 +411,7 @@ export class PlaybackService {
             channel: 'perc',
             trackId: track.id,
             time: at,
-            sampleIndex: this.sampleIndexFor(state, track.id, stepCount),
+            sampleIndex: this.sampleIndexFor(state, track.id, stepCount, velocity),
             playbackRate: 1,
             gainDb: velocityGainDb(velocity)
           });
@@ -463,14 +470,16 @@ export class PlaybackService {
   private sampleIndexFor(
     state: InstrumentState,
     trackId: string,
-    stepCount: number
+    stepCount: number,
+    velocity = 1
   ): number {
     return pickSampleIndex(
       this.generative,
       state.seed,
       trackId,
       stepCount,
-      sampleVariants(state, trackId)
+      sampleVariants(state, trackId),
+      velocity
     );
   }
 
@@ -649,9 +658,18 @@ export function pickSampleIndex(
   seed: number,
   trackId: string,
   stepCount: number,
-  variants: number
+  variants: number,
+  velocity = 1
 ): number {
   if (variants <= 1) return 0;
+  if (velocity < 0.6) {
+    // Los golpes suaves evitan la variante 0 (la más brillante/fuerte del pack).
+    const soft = 1 + Math.floor(
+      generative.hash01(seed, `${trackId}-rr-soft`, stepCount, 19) *
+        (variants - 1)
+    );
+    return Math.max(1, Math.min(variants - 1, soft));
+  }
   const pick = Math.floor(
     generative.hash01(seed, `${trackId}-rr`, stepCount, 17) * variants
   );

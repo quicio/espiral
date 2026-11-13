@@ -64,6 +64,21 @@ describe('pickSampleIndex', () => {
       expect(pickSampleIndex(generative, 4821, 'kick', step, 1)).toBe(0);
     }
   });
+
+  it('avoids variant 0 for soft velocities when there are variants', () => {
+    for (let step = 0; step < 64; step += 1) {
+      const index = pickSampleIndex(
+        generative,
+        4821,
+        '808-kick',
+        step,
+        3,
+        0.5
+      );
+      expect(index).toBeGreaterThan(0);
+      expect(index).toBeLessThan(3);
+    }
+  });
 });
 
 describe('PlaybackService', () => {
