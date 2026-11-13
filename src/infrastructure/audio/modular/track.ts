@@ -14,6 +14,8 @@ export class Track {
   readonly id: string;
   readonly input = new Tone.Gain(1);
   readonly output = new Tone.Gain(1);
+  /** Ganancia dedicada al ducking de sidechain. No es el fader del usuario. */
+  readonly duckGain = new Tone.Gain(1);
   private readonly volume: Tone.Volume;
   private readonly panner: Tone.Panner;
   private readonly muteGain: Tone.Gain;
@@ -52,7 +54,8 @@ export class Track {
 
     this.volume.connect(this.panner);
     this.panner.connect(this.muteGain);
-    this.muteGain.connect(this.output);
+    this.muteGain.connect(this.duckGain);
+    this.duckGain.connect(this.output);
     this.compensation = createCompensation(compensationSamples, this.sampleRate);
     this.outputBusId = config.outputBusId;
     this.outputTarget =
@@ -238,6 +241,7 @@ export class Track {
     this.volume.dispose();
     this.panner.dispose();
     this.muteGain.dispose();
+    this.duckGain.dispose();
     this.meter?.dispose();
     this.compensation?.dispose();
     this.output.dispose();

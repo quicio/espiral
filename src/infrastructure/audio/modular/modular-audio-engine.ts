@@ -14,6 +14,10 @@ import {
 import type { LfoShape, ModulationTarget } from '../../../domain/modulation';
 import type { PluginDefinition } from '../../../domain/plugin';
 import type { AudioEnginePort } from '../../../domain/ports';
+import {
+  sidechainPoints,
+  type SidechainConfig
+} from '../../../domain/sidechain';
 import type { BusState } from '../../../domain/kit';
 import { createBuiltinPluginHost } from '../plugins/builtins';
 import { createBuiltinInstrumentHost } from '../plugins/instruments';
@@ -66,6 +70,7 @@ export class ModularAudioEngine implements AudioEnginePort {
   private readonly latencyPlan: LatencyPlan;
   private readonly samples = new SampleLibrary();
   private preview: { readonly track: Track; node: SourceNode } | null = null;
+  private sidechain: SidechainConfig | undefined;
   private prepared = false;
   private preparing: Promise<void> | null = null;
 
@@ -79,6 +84,7 @@ export class ModularAudioEngine implements AudioEnginePort {
 
     this.pluginHost = pluginHost;
     this.instrumentHost = instrumentHost;
+    this.sidechain = config.sidechain;
     this.latencyPlan = planLatency(config);
     this.master = new MasterBus(config.master);
     config.buses.forEach(bus => this.addBus(bus));
@@ -131,6 +137,10 @@ export class ModularAudioEngine implements AudioEnginePort {
       }, 80);
     }
     globalThis.setTimeout(() => track.dispose(), 80);
+  }
+
+  setSidechain(config?: SidechainConfig): void {
+    this.sidechain = config;
   }
 
   setTrackOutput(trackId: string, outputBusId?: string): void {
@@ -237,6 +247,7 @@ export class ModularAudioEngine implements AudioEnginePort {
             event.velocity ?? 1
           );
         }
+        this.duckAt(event.time);
         return;
       }
       case 'synth': {
@@ -275,8 +286,29 @@ export class ModularAudioEngine implements AudioEnginePort {
           event.duration,
           event.gainDb
         );
+        if (event.trackId === 'kick') this.duckAt(event.time);
       }
     }
+  }
+
+  private duckAt(time: number): void {
+    const config = this.sidechain;
+    if (!config?.enabled || config.sourceTrackId !== 'kick') return;
+    const target = this.tracks.get(config.targetTrackId);
+    if (!target) return;
+
+    const points = sidechainPoints(
+      time,
+      config.depthDb,
+      config.attack,
+      config.release
+    );
+    const gain = target.duckGain.gain;
+    gain.cancelScheduledValues(time);
+    points.forEach(point => {
+      if (point === points[0]) gain.setValueAtTime(point.gain, point.time);
+      else gain.linearRampToValueAtTime(point.gain, point.time);
+    });
   }
 
   previewMachine(

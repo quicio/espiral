@@ -316,6 +316,7 @@ export class MixService {
       });
     });
 
+    this.engine.setSidechain(state.kit.sidechain);
     this.engine.setMasterVolume(state.masterVolume);
   }
 

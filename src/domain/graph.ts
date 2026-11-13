@@ -1,5 +1,6 @@
 import type { ChannelKey } from './channels';
 import { wouldCreateCycle } from './patch';
+import type { SidechainConfig } from './sidechain';
 
 export type MachineKind = 'membrane' | 'poly' | 'mono' | 'pluck' | 'sampler' | 'plugin';
 export type MachinePluginState = Readonly<Record<string, number>>;
@@ -119,6 +120,7 @@ export interface GraphConfig {
   readonly tracks: readonly TrackConfig[];
   readonly buses: readonly BusConfig[];
   readonly master: MasterConfig;
+  readonly sidechain?: SidechainConfig;
 }
 
 export interface MeterReading {

@@ -18,6 +18,7 @@ import type {
   SceneId
 } from '../domain/models';
 import type { Pattern } from '../domain/pattern';
+import type { SidechainConfig } from '../domain/sidechain';
 import type { PluginDefinition } from '../domain/plugin';
 import type { LfoShape, ModulationTarget } from '../domain/modulation';
 import type {
@@ -192,6 +193,7 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly removed: string[] = [];
   readonly machines: { trackId: string; machine: MachineConfig }[] = [];
   readonly trackOutputs: { trackId: string; outputBusId?: string }[] = [];
+  sidechain: SidechainConfig | undefined;
   readonly syncedTracks: (readonly TrackConfig[])[] = [];
   audioModulationSupport = false;
   readonly audioModulations: {
@@ -317,6 +319,10 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   setTrackOutput(trackId: string, outputBusId?: string): void {
     this.trackOutputs.push({ trackId, outputBusId });
+  }
+
+  setSidechain(config?: SidechainConfig): void {
+    this.sidechain = config;
   }
 
   syncTracks(tracks: readonly TrackConfig[]): void {

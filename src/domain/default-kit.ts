@@ -327,7 +327,20 @@ export function createDefaultKit(): KitState {
     })
   ) as Record<string, TrackState>;
 
-  return { id: 'default', name: 'Default', tracks: ordered, buses: createDefaultBuses() };
+  return {
+    id: 'default',
+    name: 'Default',
+    tracks: ordered,
+    buses: createDefaultBuses(),
+    sidechain: {
+      enabled: true,
+      sourceTrackId: 'kick',
+      targetTrackId: 'bass',
+      depthDb: 6,
+      attack: 0.006,
+      release: 0.16
+    }
+  };
 }
 
 export function createDefaultBuses(): readonly BusState[] {

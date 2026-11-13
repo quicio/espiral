@@ -207,6 +207,8 @@ describe('SessionMapper', () => {
     expect(restored.kit.buses.find(bus => bus.id === 'reverb-bus')?.sends).toEqual([
       { busId: 'delay-bus', amount: 0.35, preFader: false }
     ]);
+    expect(restored.kit.sidechain).toEqual(original.kit.sidechain);
+    expect(restored.kit.sidechain?.enabled).toBe(true);
     expect(restored.modulation.enabled).toBe(true);
     expect(restored.modulation.routes).toEqual(original.modulation.routes);
     expect(restored.scenes.umbral.kit.tracks.kick?.gainDb).toBe(-9);

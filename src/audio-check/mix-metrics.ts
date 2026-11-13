@@ -331,55 +331,57 @@ async function run(): Promise<void> {
     }
   };
 
+  const sidechainSetup = (
+    store: Store,
+    kickSteps: readonly (0 | 1)[]
+  ): void => {
+    store.update(state => ({
+      ...state,
+      pattern: {
+        ...state.pattern,
+        steps: {
+          ...state.pattern.steps,
+          kick: kickSteps,
+          bass: Array.from({ length: 16 }, () => 1 as const)
+        }
+      },
+      kit: {
+        ...state.kit,
+        tracks: Object.fromEntries(
+          Object.entries(state.kit.tracks).map(([id, track]) => [
+            id,
+            id === 'kick' || id === 'bass'
+              ? {
+                  ...track,
+                  solo: false,
+                  muted: false,
+                  gainDb: id === 'kick' ? -60 : track.gainDb
+                }
+              : { ...track, solo: false, muted: true }
+          ])
+        )
+      }
+    }));
+  };
+
   const sidechainProbe: Scenario = {
     name: 'sidechain-probe',
-    setup: store => {
-      store.update(state => ({
-        ...state,
-        pattern: {
-          ...state.pattern,
-          steps: {
-            ...state.pattern.steps,
-            bass: Array.from({ length: 16 }, () => 1 as const)
-          }
-        },
-        kit: {
-          ...state.kit,
-          tracks: Object.fromEntries(
-            Object.entries(state.kit.tracks).map(([id, track]) => [
-              id,
-              { ...track, solo: id === 'bass', muted: false }
-            ])
-          )
-        }
-      }));
-    }
+    setup: store =>
+      sidechainSetup(
+        store,
+        (store.getState().pattern.steps.kick ?? []).map(value =>
+          value ? (1 as const) : (0 as const)
+        )
+      )
   };
 
   const sidechainControl: Scenario = {
     name: 'sidechain-control',
-    setup: store => {
-      store.update(state => ({
-        ...state,
-        pattern: {
-          ...state.pattern,
-          steps: {
-            ...state.pattern.steps,
-            kick: Array.from({ length: 16 }, () => 0 as const),
-            bass: Array.from({ length: 16 }, () => 1 as const)
-          }
-        },
-        kit: {
-          ...state.kit,
-          tracks: Object.fromEntries(
-            Object.entries(state.kit.tracks).map(([id, track]) => [
-              id,
-              { ...track, solo: id === 'bass', muted: false }
-            ])
-          )
-        }
-      }));
-    }
+    setup: store =>
+      sidechainSetup(
+        store,
+        Array.from({ length: 16 }, () => 0 as const)
+      )
   };
 
   const scenarios = [];

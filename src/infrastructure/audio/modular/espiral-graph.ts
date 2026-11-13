@@ -5,6 +5,7 @@ export function createEspiralGraph(kit: KitState, masterVolumeDb: number): Graph
   return {
     tracks: Object.values(kit.tracks).map(track => trackToConfig(track)),
     buses: kit.buses.map(bus => busToConfig(bus)),
+    ...(kit.sidechain ? { sidechain: kit.sidechain } : {}),
     master: {
       volumeDb: masterVolumeDb,
       limiterDb: -2,

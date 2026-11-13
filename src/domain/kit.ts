@@ -7,6 +7,7 @@ import type {
   TrackConfig
 } from './graph';
 import type { NoteSource } from './machines';
+import type { SidechainConfig } from './sidechain';
 
 export type TrackRole = ChannelKey | 'user';
 
@@ -59,7 +60,10 @@ export interface KitState {
   readonly name: string;
   readonly tracks: Readonly<Record<string, TrackState>>;
   readonly buses: readonly BusState[];
+  readonly sidechain?: SidechainConfig;
 }
+
+export type { SidechainConfig } from './sidechain';
 
 export function kitTracks(kit: KitState): readonly TrackState[] {
   return Object.values(kit.tracks);

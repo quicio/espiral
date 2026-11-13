@@ -68,5 +68,13 @@ describe('createEspiralGraph', () => {
       }
     );
     expect(graph.master.volumeDb).toBe(-4);
+    expect(graph.sidechain).toEqual({
+      enabled: true,
+      sourceTrackId: 'kick',
+      targetTrackId: 'bass',
+      depthDb: 6,
+      attack: 0.006,
+      release: 0.16
+    });
   });
 });

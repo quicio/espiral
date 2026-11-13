@@ -37,6 +37,7 @@ import {
 } from '../domain/kit';
 import { captureScene } from '../application/scenes';
 import type { NoteSource } from '../domain/machines';
+import type { SidechainConfig } from '../domain/sidechain';
 import { soundPreset } from '../domain/sound-bank';
 import type {
   ArrangementState,
@@ -106,6 +107,7 @@ export interface SessionKitDto {
   readonly name: string;
   readonly tracks: Record<string, SessionTrackDto>;
   readonly buses?: readonly SessionBusDto[];
+  readonly sidechain?: SidechainConfig;
 }
 
 export interface SessionPatternDto {
@@ -442,6 +444,7 @@ function toKitDto(kit: KitState): SessionKitDto {
     id: kit.id,
     name: kit.name,
     tracks,
+    ...(kit.sidechain ? { sidechain: { ...kit.sidechain } } : {}),
     buses: kit.buses.map(bus => ({
       id: bus.id,
       name: bus.name,
@@ -670,7 +673,32 @@ function readKit(raw: unknown, current: KitState): KitState {
     id: typeof data.id === 'string' ? data.id : current.id,
     name: typeof data.name === 'string' ? data.name : current.name,
     tracks,
-    buses: readBuses(data.buses, current.buses)
+    buses: readBuses(data.buses, current.buses),
+    ...(readSidechain(data.sidechain, current.sidechain)
+      ? { sidechain: readSidechain(data.sidechain, current.sidechain) }
+      : {})
+  };
+}
+
+function readSidechain(
+  raw: unknown,
+  fallback: SidechainConfig | undefined
+): SidechainConfig | undefined {
+  const data = asRecord(raw);
+  if (!data) return fallback;
+  if (
+    typeof data.sourceTrackId !== 'string' ||
+    typeof data.targetTrackId !== 'string'
+  ) {
+    return fallback;
+  }
+  return {
+    enabled: data.enabled !== false,
+    sourceTrackId: data.sourceTrackId,
+    targetTrackId: data.targetTrackId,
+    depthDb: clamp(numberOr(data.depthDb, fallback?.depthDb ?? 4), 0, 24),
+    attack: clamp(numberOr(data.attack, fallback?.attack ?? 0.006), 0, 2),
+    release: clamp(numberOr(data.release, fallback?.release ?? 0.16), 0, 4)
   };
 }
 

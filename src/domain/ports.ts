@@ -5,6 +5,7 @@ import type {
 } from './channels';
 import type { BusConfig, InsertConfig, MachineConfig, TrackConfig } from './graph';
 import type { KitState, BusState } from './kit';
+import type { SidechainConfig } from './sidechain';
 import type { PluginDefinition } from './plugin';
 import type {
   ChannelSeed,
@@ -39,6 +40,7 @@ export interface AudioEnginePort {
   syncTracks(tracks: readonly TrackConfig[]): void;
   setTrackMachine(trackId: string, machine: MachineConfig): void;
   setTrackOutput(trackId: string, outputBusId?: string): void;
+  setSidechain(config?: SidechainConfig): void;
   addBus(bus: BusConfig): void;
   removeBus(busId: string): void;
   syncBuses(buses: readonly BusConfig[]): void;
