@@ -170,6 +170,17 @@
           <div class="arrangement-actions">
             <button id="arrangement-toggle" class="line-action" type="button" aria-pressed="false">Activar</button>
             <button id="arrangement-reset" class="line-action" type="button">Volver al inicio</button>
+            <button id="arrangement-loop" class="line-action" type="button" aria-pressed="false">Loop</button>
+            <div class="arrangement-loop-compact">
+              <label class="arrangement-loop-range">
+                <span>Desde</span>
+                <select id="arrangement-loop-start" aria-label="Bloque inicial del loop"></select>
+              </label>
+              <label class="arrangement-loop-range">
+                <span>Hasta</span>
+                <select id="arrangement-loop-end" aria-label="Bloque final del loop"></select>
+              </label>
+            </div>
             <select id="arrangement-scene" aria-label="Escena para agregar"></select>
             <button id="arrangement-add" class="line-action" type="button">+ bloque</button>
           </div>

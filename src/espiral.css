@@ -3995,6 +3995,30 @@ body[data-view="sound"] .generative {
   color-scheme: dark;
 }
 
+.arrangement-loop-compact {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.arrangement-loop-range {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.arrangement-loop-range span {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.arrangement-loop-range select {
+  min-width: 8.5rem;
+}
+
 .arrangement-timeline {
   display: grid;
   grid-auto-flow: column;
@@ -4020,6 +4044,10 @@ body[data-view="sound"] .generative {
 .arrangement-block.is-active {
   border-color: var(--umbral-trace);
   background: color-mix(in srgb, var(--umbral-trace) 9%, transparent);
+}
+
+.arrangement-block.is-loop {
+  box-shadow: inset 0 2px 0 var(--umbral-trace);
 }
 
 .arrangement-block-head {

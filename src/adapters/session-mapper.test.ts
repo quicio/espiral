@@ -401,7 +401,10 @@ describe('SessionMapper', () => {
           { id: 'b', sceneId: 'caos', bars: 6 }
         ],
         blockIndex: 1,
-        bar: 3
+        bar: 3,
+        loop: true,
+        loopStart: 0,
+        loopEnd: 2
       }
     }));
 
@@ -417,6 +420,9 @@ describe('SessionMapper', () => {
     ]);
     expect(restored.arrangement.blockIndex).toBe(1);
     expect(restored.arrangement.bar).toBe(3);
+    expect(restored.arrangement.loop).toBe(true);
+    expect(restored.arrangement.loopStart).toBe(0);
+    expect(restored.arrangement.loopEnd).toBe(2);
   });
 
   it('ignores invalid session values', () => {

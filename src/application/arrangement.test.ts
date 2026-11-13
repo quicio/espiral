@@ -63,4 +63,54 @@ describe('ArrangementService', () => {
     expect(store.getState().arrangement.bar).toBe(0);
     expect(store.getState().scene).toBe('umbral');
   });
+
+  it('cycles within the loop range', () => {
+    const { store, arrangement } = setup();
+    store.update(state => ({
+      ...state,
+      arrangement: {
+        ...state.arrangement,
+        blocks: state.arrangement.blocks.map(block => ({
+          ...block,
+          bars: 1
+        })),
+        loop: true,
+        loopStart: 0,
+        loopEnd: 2
+      }
+    }));
+    arrangement.toggle();
+
+    arrangement.onStep(16);
+    expect(store.getState().arrangement.blockIndex).toBe(1);
+
+    arrangement.onStep(32);
+    expect(store.getState().arrangement.blockIndex).toBe(0);
+    expect(store.getState().scene).toBe('umbral');
+  });
+
+  it('starts reset and playback from the loop start', () => {
+    const { store, arrangement } = setup();
+    arrangement.setLoopRange(1, 3);
+    arrangement.setLoop(true);
+
+    arrangement.reset();
+    expect(store.getState().arrangement.blockIndex).toBe(1);
+
+    arrangement.toggle();
+    expect(store.getState().arrangement.blockIndex).toBe(1);
+    expect(store.getState().scene).toBe('deriva');
+  });
+
+  it('clamps the loop range when blocks are removed', () => {
+    const { store, arrangement } = setup();
+    arrangement.setLoop(true);
+    arrangement.setLoopRange(2, 4);
+
+    arrangement.removeBlock('block-caos');
+
+    const state = store.getState().arrangement;
+    expect(state.loopStart).toBe(2);
+    expect(state.loopEnd).toBe(3);
+  });
 });

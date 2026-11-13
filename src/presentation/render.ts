@@ -625,6 +625,7 @@ export function renderArrangement(
   if (!timeline) return;
 
   syncSceneOptions(state);
+  syncLoopOptions(state);
 
   const toggle = q<HTMLButtonElement>('#arrangement-toggle');
   if (toggle) {
@@ -636,16 +637,25 @@ export function renderArrangement(
     toggle.classList.toggle('is-active', state.arrangement.enabled);
   }
 
+  const loop = q<HTMLButtonElement>('#arrangement-loop');
+  if (loop) {
+    loop.setAttribute('aria-pressed', state.arrangement.loop ? 'true' : 'false');
+    loop.classList.toggle('is-active', state.arrangement.loop);
+  }
+
   const activeBlock =
     state.arrangement.blocks[state.arrangement.blockIndex];
   const activeScene = activeBlock
     ? state.scenes[activeBlock.sceneId]
     : undefined;
+  const loopLabel = state.arrangement.loop
+    ? ` · loop ${state.arrangement.loopStart + 1}–${state.arrangement.loopEnd}`
+    : '';
   const readout = q('#arrangement-readout');
   if (readout) {
     readout.textContent = state.arrangement.enabled
-      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.name ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}`
-      : `Arrangement detenido · ${state.arrangement.blocks.length} bloques`;
+      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.name ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}${loopLabel}`
+      : `Arrangement detenido · ${state.arrangement.blocks.length} bloques${loopLabel}`;
   }
 
   timeline.innerHTML = state.arrangement.blocks
@@ -654,7 +664,11 @@ export function renderArrangement(
       const active =
         state.arrangement.enabled &&
         index === state.arrangement.blockIndex;
-      return `<div class="arrangement-block${active ? ' is-active' : ''}" data-arrangement-block="${block.id}">
+      const looped =
+        state.arrangement.loop &&
+        index >= state.arrangement.loopStart &&
+        index < state.arrangement.loopEnd;
+      return `<div class="arrangement-block${active ? ' is-active' : ''}${looped ? ' is-loop' : ''}" data-arrangement-block="${block.id}">
         <div class="arrangement-block-head">
           <span class="arrangement-index">${String(index + 1).padStart(2, '0')}</span>
           <strong>${scene?.name ?? block.sceneId}</strong>
@@ -671,6 +685,38 @@ export function renderArrangement(
       </div>`;
     })
     .join('');
+}
+
+function syncLoopOptions(state: InstrumentState): void {
+  const blocks = state.arrangement.blocks;
+  const start = q<HTMLSelectElement>('#arrangement-loop-start');
+  if (start) {
+    start.innerHTML = blocks
+      .map(
+        (block, index) =>
+          `<option value="${index}">${String(index + 1).padStart(2, '0')} · ${state.scenes[block.sceneId]?.name ?? block.sceneId}</option>`
+      )
+      .join('');
+    start.value = String(
+      Math.min(state.arrangement.loopStart, Math.max(0, blocks.length - 1))
+    );
+  }
+
+  const end = q<HTMLSelectElement>('#arrangement-loop-end');
+  if (end) {
+    end.innerHTML = blocks
+      .map(
+        (block, index) =>
+          `<option value="${index + 1}">${String(index + 1).padStart(2, '0')} · ${state.scenes[block.sceneId]?.name ?? block.sceneId}</option>`
+      )
+      .join('');
+    end.value = String(
+      Math.max(
+        1,
+        Math.min(state.arrangement.loopEnd, Math.max(1, blocks.length))
+      )
+    );
+  }
 }
 
 function syncSceneOptions(state: InstrumentState): void {

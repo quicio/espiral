@@ -157,9 +157,10 @@ menor un mapeo directo macro→parámetro.
 
 **Resultado:** una performance se puede grabar y ordenar en una canción.
 
-**Estado:** primer corte implementado (spec 18). Secuencia de bloques de escena con
-compases, playback y persistencia. Pendiente: grabación de performance, locators/loop y
-automatización por bloque.
+**Estado:** primer corte implementado (specs 18 y 29). Secuencia de bloques de
+escena con compases, playback, persistencia, locators y loop por bloques.
+Pendiente: grabación de performance, automatización por bloque y export del
+arrangement.
 
 ### Alcance
 

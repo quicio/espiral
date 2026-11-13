@@ -1496,6 +1496,20 @@ export class EspiralApp {
     const { arrangement } = this.deps;
     view.must('#arrangement-toggle').addEventListener('click', () => arrangement.toggle());
     view.must('#arrangement-reset').addEventListener('click', () => arrangement.reset());
+    view.must('#arrangement-loop').addEventListener('click', () => {
+      arrangement.setLoop(!this.deps.store.getState().arrangement.loop);
+    });
+    const setLoopRange = (): void => {
+      const start = Number(
+        view.q<HTMLSelectElement>('#arrangement-loop-start')?.value ?? 0
+      );
+      const end = Number(
+        view.q<HTMLSelectElement>('#arrangement-loop-end')?.value ?? 1
+      );
+      arrangement.setLoopRange(start, end);
+    };
+    view.must('#arrangement-loop-start').addEventListener('change', setLoopRange);
+    view.must('#arrangement-loop-end').addEventListener('change', setLoopRange);
     view.must('#arrangement-add').addEventListener('click', () => {
       const scene = view.q<HTMLSelectElement>('#arrangement-scene')?.value;
       if (scene && this.deps.store.getState().scenes[scene]) {

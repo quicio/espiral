@@ -86,6 +86,9 @@ export interface ArrangementState {
   readonly blocks: readonly ArrangementBlock[];
   readonly blockIndex: number;
   readonly bar: number;
+  readonly loop: boolean;
+  readonly loopStart: number;
+  readonly loopEnd: number;
 }
 
 export interface TransportState {

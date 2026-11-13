@@ -247,6 +247,27 @@ try {
       `Arrangement inesperado: ${arrangementBlocks} bloques, readout=${arrangementReadout}.`
     );
   }
+  await page.locator('#arrangement-loop').click();
+  await page.locator('#arrangement-loop-start').selectOption('1');
+  await page.locator('#arrangement-loop-end').selectOption('3');
+  await page.waitForTimeout(150);
+  const loopActive = await page
+    .locator('#arrangement-loop')
+    .getAttribute('aria-pressed');
+  const loopBlocks = await page.locator('.arrangement-block.is-loop').count();
+  const loopReadout = (
+    await page.locator('#arrangement-readout').textContent()
+  )?.trim();
+  if (loopActive !== 'true' || loopBlocks !== 2 || !loopReadout?.includes('loop 2–3')) {
+    throw new Error(
+      `Loop inesperado: pressed=${loopActive}, bloques=${loopBlocks}, readout=${loopReadout}.`
+    );
+  }
+  await page.locator('#arrangement-loop').click();
+  const loopBlocksOff = await page.locator('.arrangement-block.is-loop').count();
+  if (loopBlocksOff !== 0) {
+    throw new Error(`Loop desactivado dejó ${loopBlocksOff} bloques marcados.`);
+  }
 
   await page.locator('#tab-sound').click();
   const mixerRows = await page.locator('.mixer-row').count();

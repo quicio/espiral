@@ -116,7 +116,10 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
         { id: 'block-caos', sceneId: 'caos', bars: 4 }
       ],
       blockIndex: 0,
-      bar: 0
+      bar: 0,
+      loop: false,
+      loopStart: 0,
+      loopEnd: 4
     },
     transport: {
       bpm: 120,

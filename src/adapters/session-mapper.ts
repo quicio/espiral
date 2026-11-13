@@ -1282,11 +1282,31 @@ function readArrangement(
   const bar = Math.round(
     clamp(numberOr(data.bar, 0), 0, Math.max(0, (blocks[blockIndex]?.bars ?? 1) - 1))
   );
+  const total = blocks.length;
+  const loopStart =
+    total === 0
+      ? 0
+      : Math.round(
+          clamp(numberOr(data.loopStart, fallback.loopStart), 0, total - 1)
+        );
+  const loopEnd =
+    total === 0
+      ? 0
+      : Math.round(
+          clamp(
+            numberOr(data.loopEnd, fallback.loopEnd),
+            loopStart + 1,
+            total
+          )
+        );
   return {
     enabled: typeof data.enabled === 'boolean' ? data.enabled : fallback.enabled,
     blocks,
     blockIndex,
-    bar
+    bar,
+    loop: typeof data.loop === 'boolean' ? data.loop : fallback.loop,
+    loopStart,
+    loopEnd
   };
 }
 

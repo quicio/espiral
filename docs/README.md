@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.5.0
+version: 1.6.0
 updated: 2026-11-13
 ---
 
@@ -54,6 +54,7 @@ el código y la spec se corrige.
 | [26](specs/26-browser-preview.md) | Preview de sonidos del browser | implementada |
 | [27](specs/27-insert-rack-drag-drop.md) | Reordenar la cadena de dispositivos por drag/drop | implementada |
 | [28](specs/28-device-chain-presets.md) | Presets de cadenas de dispositivos | implementada |
+| [29](specs/29-arrangement-loop.md) | Loop y locators del arrangement | implementada |
 
 ## ADR
 
