@@ -35,6 +35,18 @@ Fix: si la máquina del track kick es `sampler`, se emite un evento `sample` con
 `trackId: 'kick'`, `sampleIndex: 0`, gain por velocity y duración `8n`. Si no, se
 mantiene el evento `kick` histórico.
 
+## Bug 3 — slots de batería viejos en el wizard
+
+Al cambiar de máquina, el wizard mergeaba `drumKitSoundMap(machineId)` sobre los
+sonidos actuales. Si la máquina nueva no tenía un slot (por ejemplo 909 no tiene
+rim ni shaker), el track conservaba el one-shot de la máquina anterior (808-rim,
+808-shaker).
+
+Fix: antes de aplicar la nueva máquina se eliminan todos los tracks de
+`SLOT_TRACK` y después se completa cada elemento sin sonido con la primera opción
+válida de `soundOptionsForTrack`. Así no quedan samples de otra máquina ni selects
+que muestran un sonido que el build no aplicaría.
+
 ## Tests y verificación
 
 - Test nuevo en `playback.test.ts`: un kick sampler produce un evento `sample`,

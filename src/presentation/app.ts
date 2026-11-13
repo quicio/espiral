@@ -13,9 +13,14 @@ import {
   DEFAULT_KIT_ID,
   SOUND_KITS,
   soundKit,
+  soundOptionsForTrack,
   type SoundKit
 } from '../domain/sound-kits';
-import { drumKit, drumKitSoundMap } from '../domain/drum-kits';
+import {
+  SLOT_TRACK,
+  drumKit,
+  drumKitSoundMap
+} from '../domain/drum-kits';
 import type { AutomationService } from '../application/automation';
 import type { ArrangementService } from '../application/arrangement';
 import type { BrowserService } from '../application/browser';
@@ -1742,7 +1747,7 @@ export class EspiralApp {
             ...this.armState,
             kitId,
             drumKitId: kit.drumKitId ?? this.armState.drumKitId,
-            sounds: { ...kit.sounds }
+            sounds: this.normalizeArmSounds({ ...kit.sounds })
           };
         }
       }
@@ -1753,11 +1758,18 @@ export class EspiralApp {
       const machineId = attr(event, 'data-arm-machine');
       if (!machineId) return;
       if (!drumKit(machineId)) return;
+      const drumTracks = new Set(Object.values(SLOT_TRACK));
+      const sounds = Object.fromEntries(
+        Object.entries(this.armState.sounds).filter(
+          ([trackId]) => !drumTracks.has(trackId)
+        )
+      );
+      Object.assign(sounds, drumKitSoundMap(machineId));
       this.armState = {
         ...this.armState,
         kitId: 'custom',
         drumKitId: machineId,
-        sounds: { ...this.armState.sounds, ...drumKitSoundMap(machineId) }
+        sounds: this.normalizeArmSounds(sounds)
       };
       this.renderArmWizardState();
     });
@@ -1799,12 +1811,25 @@ export class EspiralApp {
     });
   }
 
+  private normalizeArmSounds(
+    input: Readonly<Record<string, string>>
+  ): Record<string, string> {
+    const sounds = { ...input };
+    view.ARM_ELEMENT_IDS.forEach(trackId => {
+      if (sounds[trackId]) return;
+      const fallback = soundOptionsForTrack(trackId)[0];
+      if (fallback) sounds[trackId] = fallback.id;
+    });
+    return sounds;
+  }
+
   private openArmWizard(required: boolean): void {
     this.armRequired = required;
     this.armState = {
       ...this.armState,
       canCancel: !required,
-      hasSavedSession: this.deps.sessions.hasSaved()
+      hasSavedSession: this.deps.sessions.hasSaved(),
+      sounds: this.normalizeArmSounds(this.armState.sounds)
     };
     this.renderArmWizardState();
     const wizard = view.q<HTMLElement>('#arm-wizard');
