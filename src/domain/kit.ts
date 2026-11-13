@@ -42,6 +42,8 @@ export interface TrackState {
   readonly solo: boolean;
   readonly inserts: readonly InsertConfig[];
   readonly sends: readonly SendConfig[];
+  /** Si existe, el track va a ese bus en vez del master. */
+  readonly outputBusId?: string;
 }
 
 export interface BusState {
@@ -88,7 +90,8 @@ export function trackToConfig(track: TrackState): TrackConfig {
     mute: track.muted,
     solo: track.solo,
     inserts: track.inserts,
-    sends: track.sends
+    sends: track.sends,
+    ...(track.outputBusId ? { outputBusId: track.outputBusId } : {})
   };
 }
 

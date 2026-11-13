@@ -201,9 +201,13 @@ export const drivePlugin: PluginFactory = {
   definition: DRIVE,
   create() {
     const distortion = new Tone.Distortion({ distortion: 0.4, oversample: '2x', wet: 0.5 });
+    // La saturación puede dejar continua en materiales con mucho grave. Un
+    // paso alto inaudible mantiene el bus fuera del gate de DC (< 0.001).
+    const dcBlock = new Tone.Filter({ type: 'highpass', frequency: 24, Q: 0.7 });
+    distortion.connect(dcBlock);
     return {
       input: distortion,
-      output: distortion,
+      output: dcBlock,
       setParam(id, value, time = Tone.now()) {
         if (id === 'drive') distortion.distortion = value;
         else if (id === 'mix') distortion.wet.rampTo(value, 0.05, time);
@@ -216,6 +220,7 @@ export const drivePlugin: PluginFactory = {
       },
       dispose() {
         distortion.dispose();
+        dcBlock.dispose();
       }
     };
   }

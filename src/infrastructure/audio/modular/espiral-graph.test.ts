@@ -29,13 +29,44 @@ describe('createEspiralGraph', () => {
       'track-15',
       'track-16'
     ]);
-    expect(graph.buses.map(bus => bus.id)).toEqual(['reverb-bus', 'delay-bus']);
+    expect(graph.buses.map(bus => bus.id)).toEqual([
+      'reverb-bus',
+      'delay-bus',
+      'drum-bus'
+    ]);
     expect(graph.buses[0]?.inserts[0]?.pluginId).toBe('reverb');
     expect(graph.buses[1]?.inserts[0]?.pluginId).toBe('delay');
+    expect(graph.buses[2]?.inserts.map(insert => insert.pluginId)).toEqual([
+      'compressor',
+      'drive'
+    ]);
     expect(graph.tracks.find(track => track.id === 'bass')?.machine.samples).toHaveLength(6);
     expect(graph.tracks.find(track => track.id === 'hihat')?.machine.samples).toHaveLength(8);
     expect(graph.tracks.find(track => track.id === 'hihat')?.inserts).toHaveLength(2);
     expect(graph.tracks.find(track => track.id === 'kick')?.inserts).toHaveLength(0);
+    const drumIds = [
+      'kick',
+      'track-08',
+      'track-09',
+      'hihat',
+      'track-10',
+      'perc',
+      'track-11',
+      'track-12',
+      'track-16'
+    ];
+    drumIds.forEach(id => {
+      expect(graph.tracks.find(track => track.id === id)?.outputBusId).toBe(
+        'drum-bus'
+      );
+    });
+    ['bass', 'drone', 'pad', 'lead', 'track-13', 'track-14', 'track-15'].forEach(
+      id => {
+        expect(
+          graph.tracks.find(track => track.id === id)?.outputBusId
+        ).toBeUndefined();
+      }
+    );
     expect(graph.master.volumeDb).toBe(-4);
   });
 });

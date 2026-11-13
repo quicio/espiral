@@ -90,6 +90,7 @@ export interface SessionTrackDto {
   readonly solo: boolean;
   readonly inserts: readonly SessionInsertDto[];
   readonly sends: readonly SendConfig[];
+  readonly outputBusId?: string;
 }
 
 export interface SessionBusDto {
@@ -433,7 +434,8 @@ function toKitDto(kit: KitState): SessionKitDto {
         ...insert,
         params: { ...insert.params }
       })),
-      sends: track.sends.map(send => ({ ...send }))
+      sends: track.sends.map(send => ({ ...send })),
+      ...(track.outputBusId ? { outputBusId: track.outputBusId } : {})
     };
   });
   return {
@@ -652,6 +654,11 @@ function readKit(raw: unknown, current: KitState): KitState {
         typeof trackData.solo === 'boolean'
           ? trackData.solo
           : (currentTrack?.solo ?? false),
+      ...(typeof trackData.outputBusId === 'string'
+        ? { outputBusId: trackData.outputBusId }
+        : currentTrack?.outputBusId
+          ? { outputBusId: currentTrack.outputBusId }
+          : {}),
       inserts: readInserts(trackData.inserts) ?? currentTrack?.inserts ?? [],
       sends: readSends(trackData.sends) ?? currentTrack?.sends ?? []
     };

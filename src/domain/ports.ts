@@ -38,6 +38,7 @@ export interface AudioEnginePort {
   removeTrack(trackId: string): void;
   syncTracks(tracks: readonly TrackConfig[]): void;
   setTrackMachine(trackId: string, machine: MachineConfig): void;
+  setTrackOutput(trackId: string, outputBusId?: string): void;
   addBus(bus: BusConfig): void;
   removeBus(busId: string): void;
   syncBuses(buses: readonly BusConfig[]): void;

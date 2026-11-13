@@ -79,6 +79,29 @@ export function reverbInsert(wet: number, decay: number): InsertConfig {
   };
 }
 
+export function compressorInsert(
+  threshold: number,
+  ratio: number,
+  attack: number,
+  release: number
+): InsertConfig {
+  return {
+    id: 'compressor',
+    pluginId: 'compressor',
+    bypass: false,
+    params: { threshold, ratio, attack, release }
+  };
+}
+
+export function driveInsert(drive: number, mix: number): InsertConfig {
+  return {
+    id: 'drive',
+    pluginId: 'drive',
+    bypass: false,
+    params: { drive, mix }
+  };
+}
+
 export const DEFAULT_MIX: MixState = {
   kick: { volumeDb: -4, muted: false, solo: false, inserts: [] },
   bass: { volumeDb: -8, muted: false, solo: false, inserts: [] },

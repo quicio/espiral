@@ -25,6 +25,8 @@ export class Track {
   private readonly sampleRate: number;
   private chain: InsertChain;
   private chainFade: Tone.Gain;
+  private outputTarget: Tone.ToneAudioNode;
+  private outputBusId: string | undefined;
 
   constructor(
     config: TrackConfig,
@@ -52,11 +54,15 @@ export class Track {
     this.panner.connect(this.muteGain);
     this.muteGain.connect(this.output);
     this.compensation = createCompensation(compensationSamples, this.sampleRate);
+    this.outputBusId = config.outputBusId;
+    this.outputTarget =
+      (config.outputBusId ? resolveBus(config.outputBusId) : undefined) ??
+      masterInput;
     if (this.compensation) {
       this.output.connect(this.compensation);
-      this.compensation.connect(masterInput);
+      this.compensation.connect(this.outputTarget);
     } else {
-      this.output.connect(masterInput);
+      this.output.connect(this.outputTarget);
     }
 
     config.sends.forEach(send => {
@@ -82,6 +88,22 @@ export class Track {
 
   setMute(muted: boolean): void {
     this.muteGain.gain.rampTo(muted ? 0 : 1, 0.02, Tone.now());
+  }
+
+  setOutput(target: Tone.ToneAudioNode, outputBusId?: string): void {
+    if (target === this.outputTarget && outputBusId === this.outputBusId) {
+      return;
+    }
+    this.output.disconnect();
+    this.compensation?.disconnect();
+    if (this.compensation) {
+      this.output.connect(this.compensation);
+      this.compensation.connect(target);
+    } else {
+      this.output.connect(target);
+    }
+    this.outputTarget = target;
+    this.outputBusId = outputBusId;
   }
 
   addSend(

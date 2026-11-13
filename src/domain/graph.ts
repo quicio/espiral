@@ -67,6 +67,8 @@ export interface TrackConfig {
   readonly solo: boolean;
   readonly inserts: readonly InsertConfig[];
   readonly sends: readonly SendConfig[];
+  /** Si existe, el track va a ese bus en vez del master. */
+  readonly outputBusId?: string;
 }
 
 export function insertConfigsEqual(

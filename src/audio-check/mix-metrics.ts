@@ -273,6 +273,64 @@ async function run(): Promise<void> {
     }
   };
 
+  const busProbe: Scenario = {
+    name: 'bus-probe',
+    setup: store => {
+      store.update(state => ({
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: Object.fromEntries(
+            Object.entries(state.kit.tracks).map(([id, track]) => [
+              id,
+              { ...track, solo: id === 'kick', muted: false }
+            ])
+          ),
+          buses: state.kit.buses.map(bus =>
+            bus.id === 'drum-bus'
+              ? {
+                  ...bus,
+                  inserts: bus.inserts.filter(
+                    insert => insert.pluginId === 'compressor'
+                  )
+                }
+              : bus
+          )
+        }
+      }));
+    }
+  };
+
+  const busControl: Scenario = {
+    name: 'bus-control',
+    setup: store => {
+      store.update(state => ({
+        ...state,
+        kit: {
+          ...state.kit,
+          tracks: Object.fromEntries(
+            Object.entries(state.kit.tracks).map(([id, track]) => [
+              id,
+              { ...track, solo: id === 'kick', muted: false }
+            ])
+          ),
+          buses: state.kit.buses.map(bus =>
+            bus.id === 'drum-bus'
+              ? {
+                  ...bus,
+                  inserts: bus.inserts.map(insert =>
+                    insert.pluginId === 'compressor'
+                      ? { ...insert, params: { ...insert.params, threshold: -0.01 } }
+                      : insert
+                  )
+                }
+              : bus
+          )
+        }
+      }));
+    }
+  };
+
   const sidechainProbe: Scenario = {
     name: 'sidechain-probe',
     setup: store => {
@@ -324,18 +382,27 @@ async function run(): Promise<void> {
     }
   };
 
-  const scenarios = await Promise.all([
-    renderScenario({ name: 'mix' }),
-    renderScenario(kick),
-    renderScenario(sidechainProbe),
-    renderScenario(sidechainControl)
-  ]);
+  const scenarios = [];
+  for (const scenario of [
+    { name: 'mix' },
+    kick,
+    busProbe,
+    busControl,
+    sidechainProbe,
+    sidechainControl
+  ]) {
+    scenarios.push(await renderScenario(scenario));
+  }
 
   const mix = scenarios.find(entry => entry.name === 'mix');
   const kickMetrics = scenarios.find(entry => entry.name === 'kick-only');
+  const busProbeMetrics = scenarios.find(entry => entry.name === 'bus-probe');
+  const busControlMetrics = scenarios.find(
+    entry => entry.name === 'bus-control'
+  );
   const sidechain = scenarios.find(entry => entry.name === 'sidechain-probe');
   const control = scenarios.find(entry => entry.name === 'sidechain-control');
-  if (!mix || !kickMetrics || !sidechain || !control) {
+  if (!mix || !kickMetrics || !busProbeMetrics || !busControlMetrics || !sidechain || !control) {
     throw new Error('Faltan escenarios de mix-metrics.');
   }
 
@@ -344,10 +411,14 @@ async function run(): Promise<void> {
     ...mixMetrics(mix.audio),
     kickTailDb: kickTailDb(kickMetrics.audio),
     bassDipDb: sidechainDipDb(sidechain.audio, control.audio),
-    busGrDb: null,
+    busGrDb:
+      mixMetrics(busControlMetrics.audio).rmsDb -
+      mixMetrics(busProbeMetrics.audio).rmsDb,
     renderMs:
       mix.renderMs +
       kickMetrics.renderMs +
+      busProbeMetrics.renderMs +
+      busControlMetrics.renderMs +
       sidechain.renderMs +
       control.renderMs
   };

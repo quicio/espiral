@@ -2,7 +2,9 @@ import {
   channelName,
   CHANNEL_KEYS,
   DEFAULT_MIX,
+  compressorInsert,
   delayInsert,
+  driveInsert,
   reverbInsert,
   type ChannelKey
 } from './channels';
@@ -11,6 +13,18 @@ import type { BusState, KitState, TrackState } from './kit';
 import { machinePreset, type MachinePreset, type NoteSource } from './machines';
 
 export const SAMPLE_PATH = './audio/';
+
+const DRUM_TRACK_IDS = [
+  'kick',
+  'track-08',
+  'track-09',
+  'hihat',
+  'track-10',
+  'perc',
+  'track-11',
+  'track-12',
+  'track-16'
+] as const;
 
 export const BASS_FILES = [
   'bass-a.wav',
@@ -301,6 +315,10 @@ export function createDefaultKit(): KitState {
     const character = LAYER_CHARACTER[track.id];
     tracks[track.id] = character ? { ...track, ...character } : track;
   }
+  DRUM_TRACK_IDS.forEach(trackId => {
+    const track = tracks[trackId];
+    if (track) tracks[trackId] = { ...track, outputBusId: 'drum-bus' };
+  });
 
   const ordered = Object.fromEntries(
     DEFAULT_TRACK_ORDER.flatMap(id => {
@@ -327,7 +345,17 @@ export function createDefaultBuses(): readonly BusState[] {
       returnDb: -16,
       inserts: [delayInsert(1, 0.32, 0.375)],
       sends: []
-    }
+    },
+    {
+      id: 'drum-bus',
+      name: 'Drums',
+      returnDb: 0,
+      inserts: [
+        compressorInsert(-16, 4, 0.008, 0.12),
+        driveInsert(0.35, 0.3)
+      ],
+      sends: []
+    },
   ];
 }
 

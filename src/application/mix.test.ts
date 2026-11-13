@@ -70,10 +70,11 @@ describe('MixService', () => {
     expect(engine.volumes).toHaveLength(16);
     expect(engine.mutes).toHaveLength(16);
     expect(engine.syncedTracks.at(-1)).toHaveLength(16);
-    expect(engine.syncedBusCollections.at(-1)).toHaveLength(2);
+    expect(engine.syncedBusCollections.at(-1)).toHaveLength(3);
     expect(engine.returns.map(entry => entry.busId)).toEqual([
       'reverb-bus',
-      'delay-bus'
+      'delay-bus',
+      'drum-bus'
     ]);
     expect(engine.master.at(-1)).toBe(store.getState().masterVolume);
   });

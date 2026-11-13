@@ -133,6 +133,15 @@ export class ModularAudioEngine implements AudioEnginePort {
     globalThis.setTimeout(() => track.dispose(), 80);
   }
 
+  setTrackOutput(trackId: string, outputBusId?: string): void {
+    const track = this.tracks.get(trackId);
+    if (!track) return;
+    const target = outputBusId
+      ? this.buses.get(outputBusId)?.input
+      : undefined;
+    track.setOutput(target ?? this.master.input, target ? outputBusId : undefined);
+  }
+
   setTrackMachine(trackId: string, machine: MachineConfig): void {
     const track = this.tracks.get(trackId);
     if (!track) return;
@@ -165,6 +174,7 @@ export class ModularAudioEngine implements AudioEnginePort {
       if (!this.tracks.has(track.id)) {
         this.addTrack(track);
       } else {
+        this.setTrackOutput(track.id, track.outputBusId);
         this.setTrackMachine(track.id, track.machine);
       }
     });
