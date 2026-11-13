@@ -264,6 +264,45 @@ try {
   if (detailTrack !== 'Bass') {
     throw new Error(`El detalle de Sound no siguió la selección: ${detailTrack}.`);
   }
+  await page.locator('[data-add-insert="bass"]').selectOption('filter');
+  await page.waitForTimeout(150);
+  await page.locator('[data-add-insert="bass"]').selectOption('delay');
+  await page.waitForTimeout(200);
+  const insertRows = page.locator('[data-insert-row]');
+  const insertOrderBefore = await insertRows.evaluateAll(rows =>
+    rows.map(row => row.getAttribute('data-insert-row'))
+  );
+  if (insertOrderBefore.length < 2) {
+    throw new Error(`El rack no tiene inserts para reordenar: ${insertOrderBefore.length}.`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  const insertHandle = page.locator('[data-insert-drag]').first();
+  const insertTarget = insertRows.nth(1);
+  await insertTarget.scrollIntoViewIfNeeded();
+  const handleBox = await insertHandle.boundingBox();
+  const insertTargetBox = await insertTarget.boundingBox();
+  if (!handleBox || !insertTargetBox) {
+    throw new Error('No se pudo medir el drag/drop de inserts.');
+  }
+  await page.mouse.move(
+    handleBox.x + handleBox.width / 2,
+    handleBox.y + handleBox.height / 2
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    insertTargetBox.x + insertTargetBox.width / 2,
+    insertTargetBox.y + insertTargetBox.height / 2,
+    { steps: 20 }
+  );
+  await page.mouse.up();
+  await page.waitForTimeout(250);
+  const insertOrderAfter = await insertRows.evaluateAll(rows =>
+    rows.map(row => row.getAttribute('data-insert-row'))
+  );
+  if (JSON.stringify(insertOrderAfter) === JSON.stringify(insertOrderBefore)) {
+    throw new Error(`El drag/drop no reordenó los inserts: ${insertOrderAfter.join(',')}.`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator('#sound-bank-drawer summary').click();
   await page.waitForTimeout(150);
   const bankCards = await page.locator('[data-sound-preset]').count();

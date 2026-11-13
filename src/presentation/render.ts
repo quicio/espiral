@@ -803,9 +803,12 @@ export function renderSound(
       const plugin = plugins.find(definition => definition.id === insert.pluginId);
       const name = plugin?.name ?? insert.pluginId;
       const ref = `${selected.id}:${insert.id}`;
-      return `<div class="insert-row">
+      return `<div class="insert-row" data-insert-row="${ref}">
         <div class="insert-head">
-          <strong>${name}</strong>
+          <div class="insert-title">
+            <span class="insert-drag" draggable="true" data-insert-drag="${ref}" title="Arrastrar para reordenar" aria-hidden="true">⠿</span>
+            <strong>${name}</strong>
+          </div>
           <div class="insert-actions">
             <button class="small-toggle${insert.bypass ? ' is-active' : ''}" type="button" data-insert-move="up" data-insert-ref="${ref}" aria-label="Mover ${name} hacia arriba">↑</button>
             <button class="small-toggle" type="button" data-insert-move="down" data-insert-ref="${ref}" aria-label="Mover ${name} hacia abajo">↓</button>

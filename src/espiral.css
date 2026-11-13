@@ -2872,6 +2872,30 @@ body[data-view="sound"] .generative {
   gap: 0.75rem;
 }
 
+.insert-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.insert-drag {
+  color: var(--umbral-muted);
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+.insert-row.is-dragging {
+  opacity: 0.35;
+}
+
+.insert-row.is-drop-target {
+  outline: 1px dashed var(--umbral-trace);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--umbral-trace) 10%, transparent);
+}
+
 .insert-head strong {
   font-family: var(--font-mono);
   font-size: 0.72rem;

@@ -457,6 +457,7 @@ export class EspiralApp {
     this.bindChannelActions();
     this.bindClipActions();
     this.bindClipDrag();
+    this.bindInsertDrag();
     this.bindSessionActions();
     this.bindHistory();
     this.bindLiveInput();
@@ -1347,6 +1348,84 @@ export class EspiralApp {
     });
 
     grid.addEventListener('dragend', clear);
+  }
+
+  private bindInsertDrag(): void {
+    const container = view.must('#sound-channels');
+    let dragged: { trackId: string; insertId: string } | null = null;
+
+    const clear = (): void => {
+      dragged = null;
+      container
+        .querySelectorAll<HTMLElement>('.is-dragging, .is-drop-target')
+        .forEach(element =>
+          element.classList.remove('is-dragging', 'is-drop-target')
+        );
+    };
+
+    const targetRow = (event: Event): HTMLElement | null => {
+      if (!(event.target instanceof Element)) return null;
+      return event.target.closest<HTMLElement>('[data-insert-row]');
+    };
+
+    container.addEventListener('dragstart', event => {
+      const handle =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-insert-drag]')
+          : null;
+      const ref = handle?.getAttribute('data-insert-drag');
+      const parsed = ref ? parseInsertRef(ref) : null;
+      if (!parsed) return;
+      dragged = parsed;
+      handle?.closest<HTMLElement>('.insert-row')?.classList.add('is-dragging');
+      if (event instanceof DragEvent && event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', ref ?? '');
+      }
+    });
+
+    container.addEventListener('dragover', event => {
+      if (!dragged) return;
+      const row = targetRow(event);
+      const ref = row?.getAttribute('data-insert-row');
+      const target = ref ? parseInsertRef(ref) : null;
+      if (!row || !target || target.trackId !== dragged.trackId) return;
+      event.preventDefault();
+      if (event instanceof DragEvent && event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'move';
+      }
+      container
+        .querySelectorAll<HTMLElement>('.is-drop-target')
+        .forEach(element => element.classList.remove('is-drop-target'));
+      row.classList.add('is-drop-target');
+    });
+
+    container.addEventListener('dragleave', event => {
+      targetRow(event)?.classList.remove('is-drop-target');
+    });
+
+    container.addEventListener('drop', event => {
+      const row = targetRow(event);
+      const ref = row?.getAttribute('data-insert-row');
+      const target = ref ? parseInsertRef(ref) : null;
+      if (!dragged || !target || target.trackId !== dragged.trackId) return;
+      event.preventDefault();
+      const inserts =
+        this.deps.store.getState().kit.tracks[dragged.trackId]?.inserts ?? [];
+      const targetIndex = inserts.findIndex(
+        insert => insert.id === target.insertId
+      );
+      if (targetIndex >= 0) {
+        this.deps.mix.reorderInsert(
+          dragged.trackId,
+          dragged.insertId,
+          targetIndex
+        );
+      }
+      clear();
+    });
+
+    container.addEventListener('dragend', clear);
   }
 
   private bindLiveInput(): void {

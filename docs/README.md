@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.3.0
+version: 1.4.0
 updated: 2026-11-12
 ---
 
@@ -52,6 +52,7 @@ el código y la spec se corrige.
 | [24](specs/24-dynamic-scenes-and-clip-moves.md) | Escenas dinámicas y movimiento de clips | implementada |
 | [25](specs/25-browser-favorites-and-recents.md) | Favoritos y recientes del browser | implementada |
 | [26](specs/26-browser-preview.md) | Preview de sonidos del browser | implementada |
+| [27](specs/27-insert-rack-drag-drop.md) | Reordenar la cadena de dispositivos por drag/drop | implementada |
 
 ## ADR
 

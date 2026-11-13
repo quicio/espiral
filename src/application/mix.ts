@@ -147,6 +147,23 @@ export class MixService {
     this.commitInserts(trackId, inserts);
   }
 
+  reorderInsert(trackId: string, insertId: string, targetIndex: number): void {
+    if (!this.engine.supportsInserts) return;
+    const track = this.store.getState().kit.tracks[trackId];
+    if (!track) return;
+
+    const inserts = [...track.inserts];
+    const index = inserts.findIndex(entry => entry.id === insertId);
+    if (index < 0) return;
+    const target = Math.max(0, Math.min(inserts.length - 1, Math.round(targetIndex)));
+    if (target === index) return;
+
+    const [insert] = inserts.splice(index, 1);
+    if (!insert) return;
+    inserts.splice(target, 0, insert);
+    this.commitInserts(trackId, inserts);
+  }
+
   setEffectWet(trackId: string, effect: EffectKind, wet: number): void {
     this.engine.setEffectWet(trackId, effect, wet);
   }
