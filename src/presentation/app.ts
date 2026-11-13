@@ -87,7 +87,11 @@ export class EspiralApp {
   private lastState: InstrumentState | null = null;
   private unsubscribe: (() => void) | null = null;
   private meterFrame: number | null = null;
+  private renderFrame: number | null = null;
+  private pendingRenderState: InstrumentState | null = null;
+  private sessionFocus: { row: number; col: number } | null = null;
   private meterTargetsDirty = true;
+  private currentView: ViewId = 'performance';
   private armRequired = true;
   private midiConnected = false;
   private armState: view.ArmWizardState = {
@@ -116,10 +120,6 @@ export class EspiralApp {
     this.lastState = this.deps.store.getState();
     this.unsubscribe = this.deps.store.subscribe(state => this.handleState(state));
 
-    view.renderAll(this.lastState, this.deps.catalog, this.deps.mix, {
-      runtime: this.deps.runtime,
-      chains: this.deps.deviceChains.list()
-    });
     this.syncHistoryButtons();
     const initial = (location.hash || '').replace('#', '');
     this.setView(isView(initial) ? initial : 'performance', { scroll: false });
@@ -138,6 +138,11 @@ export class EspiralApp {
       cancelAnimationFrame(this.meterFrame);
       this.meterFrame = null;
     }
+    if (this.renderFrame !== null) {
+      cancelAnimationFrame(this.renderFrame);
+      this.renderFrame = null;
+    }
+    this.pendingRenderState = null;
   }
 
   private startMeter(): void {
@@ -266,10 +271,16 @@ export class EspiralApp {
     this.syncHistoryButtons();
     if (!previous) {
       this.meterTargetsDirty = true;
-      view.renderAll(state, this.deps.catalog, this.deps.mix, {
-        runtime: this.deps.runtime,
-        chains: this.deps.deviceChains.list()
-      });
+      view.renderActiveView(
+        state,
+        this.deps.catalog,
+        this.deps.mix,
+        this.currentView,
+        {
+          runtime: this.deps.runtime,
+          chains: this.deps.deviceChains.list()
+        }
+      );
       return;
     }
 
@@ -300,21 +311,14 @@ export class EspiralApp {
       view.syncTransport(state);
       view.syncMixValues(state, this.deps.mix);
       view.syncRouting(state, this.deps.mix);
-      view.updatePatternClasses(state, this.deps.catalog);
+      if (this.currentView === 'performance' || this.currentView === 'sequencer') {
+        view.syncPlayhead(state);
+      }
       return;
     }
 
     this.meterTargetsDirty = true;
-    view.renderAll(state, this.deps.catalog, this.deps.mix, {
-      sound:
-        previous.kit !== state.kit ||
-        previous.masterVolume !== state.masterVolume ||
-        previous.selected !== state.selected ||
-        previous.favorites !== state.favorites ||
-        previous.recentSounds !== state.recentSounds,
-      runtime: this.deps.runtime,
-      chains: this.deps.deviceChains.list()
-    });
+    this.scheduleRender(state);
   }
 
   private renderCatalog(): void {
@@ -1318,7 +1322,10 @@ export class EspiralApp {
       const next = view.q<HTMLButtonElement>(
         `[data-clip-launch][data-session-row="${row + delta[0]}"][data-session-col="${col + delta[1]}"]`
       );
-      next?.focus();
+      if (next) {
+        this.sessionFocus = { row: row + delta[0], col: col + delta[1] };
+        next.focus();
+      }
     });
 
     view.must('#clip-inspector').addEventListener('change', event => {
@@ -1812,6 +1819,9 @@ export class EspiralApp {
       .find(entry => entry.id === this.armState.presetId);
     const mixPreset = view.q<HTMLSelectElement>('#mix-preset');
     if (mixPreset) mixPreset.value = this.armState.presetId;
+    void this.deps.playback.prepare().catch(() => {
+      // El primer play vuelve a intentar preparar el motor.
+    });
     this.closeArmWizard();
     this.setView('session');
     this.deps.status.generative(
@@ -1970,6 +1980,37 @@ export class EspiralApp {
     view.renderSession(this.deps.store.getState(), this.deps.runtime);
   }
 
+  private scheduleRender(state: InstrumentState): void {
+    this.pendingRenderState = state;
+    this.meterTargetsDirty = true;
+    if (this.renderFrame !== null) return;
+    this.renderFrame = requestAnimationFrame(() => {
+      this.renderFrame = null;
+      const next = this.pendingRenderState;
+      this.pendingRenderState = null;
+      if (!next) return;
+      view.renderActiveView(
+        next,
+        this.deps.catalog,
+        this.deps.mix,
+        this.currentView,
+        {
+          runtime: this.deps.runtime,
+          chains: this.deps.deviceChains.list()
+        }
+      );
+      this.restoreSessionFocus();
+    });
+  }
+
+  private cancelScheduledRender(): void {
+    if (this.renderFrame !== null) {
+      cancelAnimationFrame(this.renderFrame);
+      this.renderFrame = null;
+    }
+    this.pendingRenderState = null;
+  }
+
   private refreshSound(): void {
     this.meterTargetsDirty = true;
     view.renderSound(
@@ -1981,11 +2022,27 @@ export class EspiralApp {
   }
 
   private focusSessionCell(row: number, col: number): void {
+    this.sessionFocus = { row, col };
+    this.restoreSessionFocus();
+  }
+
+  private restoreSessionFocus(): void {
+    const focus = this.sessionFocus;
+    const grid = view.q<HTMLElement>('#session-grid');
+    if (!focus || !grid || this.currentView !== 'session') return;
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      active.isConnected
+    ) {
+      return;
+    }
     view
       .q<HTMLButtonElement>(
-        `[data-clip-launch][data-session-row="${row}"][data-session-col="${col}"]`
+        `[data-clip-launch][data-session-row="${focus.row}"][data-session-col="${focus.col}"]`
       )
-      ?.focus();
+      ?.focus({ preventScroll: true });
   }
 
   private toggleMute(trackId: string): void {
@@ -1996,6 +2053,8 @@ export class EspiralApp {
   }
 
   private setView(id: ViewId, options: { scroll?: boolean } = {}): void {
+    this.currentView = id;
+    this.cancelScheduledRender();
     document.body.dataset.view = id;
     view.qa<HTMLButtonElement>('.view-tab').forEach(tab => {
       const active = tab.getAttribute('data-view') === id;
@@ -2007,29 +2066,17 @@ export class EspiralApp {
       if (section) section.hidden = name !== id;
     });
 
-    const state = this.deps.store.getState();
-    if (id === 'performance') view.renderPerformance(state, this.deps.catalog);
-    if (id === 'session') view.renderSession(state, this.deps.runtime);
-    if (id === 'arrangement') view.renderArrangement(state, this.deps.catalog);
-    if (id === 'sequencer') {
-      view.renderSequencer(state, this.deps.catalog);
-      view.renderAutomation(state, this.deps.catalog);
-    }
-    if (id === 'sound') {
-      this.meterTargetsDirty = true;
-      view.renderSound(
-        state,
-        this.deps.catalog,
-        this.deps.mix,
-        this.deps.deviceChains.list()
-      );
-    }
-    if (id === 'routing') {
-      this.meterTargetsDirty = true;
-      view.renderRouting(state, this.deps.mix);
-    }
-    if (id === 'modulation') view.renderModulation(state, this.deps.mix);
-    view.updatePatternClasses(state, this.deps.catalog);
+    this.meterTargetsDirty = true;
+    view.renderActiveView(
+      this.deps.store.getState(),
+      this.deps.catalog,
+      this.deps.mix,
+      id,
+      {
+        runtime: this.deps.runtime,
+        chains: this.deps.deviceChains.list()
+      }
+    );
 
     if (options.scroll !== false) this.revealView(id);
     if (history.replaceState) history.replaceState(null, '', `#${id}`);

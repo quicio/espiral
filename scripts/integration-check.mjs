@@ -60,6 +60,8 @@ try {
     undefined,
     { timeout: 12_000 }
   );
+  await page.locator('#tab-performance').click();
+  await page.waitForTimeout(150);
 
   const armedBpm = (await page.locator('#bpm-value').textContent())?.trim();
   if (armedBpm !== '130') {
@@ -248,6 +250,7 @@ try {
     );
   }
   await page.locator('#arrangement-loop').click();
+  await page.waitForTimeout(120);
   await page.locator('#arrangement-loop-start').selectOption('1');
   await page.locator('#arrangement-loop-end').selectOption('3');
   await page.waitForTimeout(150);
@@ -264,6 +267,7 @@ try {
     );
   }
   await page.locator('#arrangement-loop').click();
+  await page.waitForTimeout(120);
   const loopBlocksOff = await page.locator('.arrangement-block.is-loop').count();
   if (loopBlocksOff !== 0) {
     throw new Error(`Loop desactivado dejó ${loopBlocksOff} bloques marcados.`);

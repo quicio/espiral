@@ -153,17 +153,33 @@ export const reverbPlugin: PluginFactory = {
   definition: REVERB,
   create() {
     const reverb = new Tone.Reverb({ decay: 4, preDelay: 0.02, wet: 0.5 });
+    let pendingDecay: number | null = null;
+    let decayTimer: ReturnType<typeof setTimeout> | null = null;
     return {
       input: reverb,
       output: reverb,
       setParam(id, value, time = Tone.now()) {
         if (id === 'wet') reverb.wet.rampTo(value, 0.05, time);
-        else if (id === 'decay' && Math.abs(Number(reverb.decay) - value) > 0.001) {
-          reverb.decay = value;
+        else if (id === 'decay') {
+          pendingDecay = value;
+          if (decayTimer) clearTimeout(decayTimer);
+          decayTimer = setTimeout(() => {
+            decayTimer = null;
+            const next = pendingDecay;
+            pendingDecay = null;
+            if (
+              next !== null &&
+              Math.abs(Number(reverb.decay) - next) > 0.001
+            ) {
+              reverb.decay = next;
+            }
+          }, 180);
         }
       },
       getParam(id) {
-        return id === 'decay' ? Number(reverb.decay) : reverb.wet.value;
+        return id === 'decay'
+          ? pendingDecay ?? Number(reverb.decay)
+          : reverb.wet.value;
       },
       getAudioParam(id) {
         return id === 'wet' ? reverb.wet : null;
@@ -172,6 +188,9 @@ export const reverbPlugin: PluginFactory = {
         await reverb.ready;
       },
       dispose() {
+        if (decayTimer) clearTimeout(decayTimer);
+        decayTimer = null;
+        pendingDecay = null;
         reverb.dispose();
       }
     };

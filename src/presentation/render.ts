@@ -2317,28 +2317,44 @@ function routeTargetValue(route: {
   return `${route.target.trackId}:${route.target.insertId}:${route.target.paramId}`;
 }
 
-export function renderAll(
+export type RenderView =
+  | 'performance'
+  | 'session'
+  | 'arrangement'
+  | 'sequencer'
+  | 'sound'
+  | 'routing'
+  | 'modulation';
+
+export function renderActiveView(
   state: InstrumentState,
   catalog: Catalog,
   mixService: MixService,
+  currentView: RenderView,
   options: {
-    sound?: boolean;
     runtime?: PlaybackRuntime;
     chains?: readonly DeviceChainPreset[];
   } = {}
 ): void {
-  renderPerformance(state, catalog);
   renderSceneSwitcher(state, catalog);
-  renderSession(state, options.runtime);
-  renderArrangement(state, catalog);
-  renderSequencer(state, catalog);
-  if (options.sound !== false) {
+  syncSceneOptions(state);
+  syncLoopOptions(state);
+
+  if (currentView === 'performance') renderPerformance(state, catalog);
+  else if (currentView === 'session') renderSession(state, options.runtime);
+  else if (currentView === 'arrangement') renderArrangement(state, catalog);
+  else if (currentView === 'sequencer') {
+    renderSequencer(state, catalog);
+    renderAutomation(state, catalog);
+    renderLocks(state, mixService);
+  } else if (currentView === 'sound') {
     renderSound(state, catalog, mixService, options.chains);
+  } else if (currentView === 'routing') {
+    renderRouting(state, mixService);
+  } else {
+    renderModulation(state, mixService);
   }
-  renderAutomation(state, catalog);
-  renderRouting(state, mixService);
-  renderModulation(state, mixService);
-  renderLocks(state, mixService);
+
   syncDynamics(state);
   syncTrackManagement(state, mixService);
   syncParams(state);
@@ -2349,7 +2365,9 @@ export function renderAll(
   syncFreeze(state);
   syncUndo(state);
   syncPaste(state);
-  updatePatternClasses(state, catalog);
+  if (currentView === 'performance' || currentView === 'sequencer') {
+    updatePatternClasses(state, catalog);
+  }
 }
 
 function renderPulse(state: InstrumentState, catalog: Catalog): void {

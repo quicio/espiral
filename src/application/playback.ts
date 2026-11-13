@@ -53,6 +53,10 @@ export class PlaybackService {
     this.unsubscribe = this.clock.onStep((time, stepCount) => this.handleStep(time, stepCount));
   }
 
+  async prepare(): Promise<void> {
+    await this.engine.prepare();
+  }
+
   async start(): Promise<void> {
     const state = this.store.getState();
     if (this.running || state.transport.preparing) return;

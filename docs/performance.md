@@ -10,6 +10,7 @@ Chromium headless, 16 tracks, armado por defecto, 128 BPM.
 | escenario | antes | después |
 |---|---|---|
 | long tasks en 16 s de arrangement | 127 ms y 87 ms | **ninguna** |
+| long tasks de carga + armado + vistas | 262 / 131 / 97 ms | **129 / 62 ms** |
 | CPU meter al cambiar bloque | 45–71% | 0–9% |
 | perfil de 8 s: `querySelector*` | base | ~1/3 |
 | `test:audio` | PCM determinista | idéntico |
@@ -29,22 +30,15 @@ scheduler llega tarde.
 4. **Ticker de modulación** sólo cuando está habilitada y a 30 Hz para el camino
    de control (spec 32).
 5. **Preview aislado** en un track fuera del estado (spec 26).
+6. **Render por vista activa** y coalescing en `requestAnimationFrame`; varias
+   actualizaciones de estado producen un solo render (spec 33).
+7. **Prewarm del motor** al terminar el armado del set (spec 33).
+8. **Debounce de `decay` en el reverb** para no regenerar el impulso en cada
+   movimiento del slider.
 
 ## Palancas de tuning pendientes (bajo riesgo)
 
-### 1. Renderizar sólo la vista activa
-
-Hoy `renderAll` reconstruye Performance, Session, Arrange, Sequencer y, si
-corresponde, Sound en cada cambio estructural, aunque estén ocultas. En una
-máquina lenta eso son decenas de milisegundos.
-
-Propuesta: un `renderActiveView(state)` que renderice sólo la vista visible y
-deje el resto para `setView`. Las vistas ocultas ya se renderizan al entrar.
-Requiere auditar qué código depende de DOM oculto (meters, locks, atajos).
-
-Impacto esperado: alto en cambios de escena/preset. Riesgo: medio.
-
-### 2. Virtualizar Sound y el banco
+### 1. Virtualizar Sound y el banco
 
 El mixer de 16 filas, el rack y las 23 tarjetas del browser se reconstruyen con
 `innerHTML` en cada cambio estructural. Se puede:
@@ -55,7 +49,7 @@ El mixer de 16 filas, el rack y las 23 tarjetas del browser se reconstruyen con
 
 Impacto: medio. Riesgo: medio.
 
-### 3. Medidores con CSS y menos lecturas de audio
+### 2. Medidores con CSS y menos lecturas de audio
 
 `Tone.Meter.getValue()` por track y bus sigue leyendo el analizador. Alternativas:
 
@@ -65,23 +59,25 @@ Impacto: medio. Riesgo: medio.
 
 Impacto: bajo-medio. Riesgo: bajo.
 
-### 4. Tuning del scheduler
+### 3. Tuning del scheduler
 
 - Subir `lookAhead` de 100 ms a 150–200 ms para performance (no para MIDI en
   vivo).
 - Evaluar `latencyHint: 'balanced'` o `'playback'` en el `AudioContext` como
-  “modo seguro” con recarga. Aumenta estabilidad y latencia.
+  “modo seguro”. Aumenta estabilidad y latencia. **No se puede cambiar en
+  runtime**: hay que crear el `Tone.Context` antes de que Tone inicialice su
+  singleton/Transport. Un reemplazo tardío rompe el scheduler, así que queda
+  como cambio de arranque, no como toggle en caliente.
 - Evitar cambios de BPM con rampas largas durante transiciones pesadas.
 
 Impacto: alto contra underruns, a costa de latencia. Riesgo: bajo si es opt-in.
 
-### 5. Reverb y drive
+### 4. Reverb y drive
 
 - `Tone.Reverb` es un convolver con impulso generado; cada insert de reverb es
-  un convolver propio y cambiar `decay` regenera el impulso. Preferir el bus de
-  reverb compartido o un reverb algorítmico.
+  un convolver propio. Ya hay debounce de `decay` para no regenerar el impulso
+  en cada movimiento; queda compartir impulso o usar reverb algorítmico.
 - `Tone.Distortion` usa `oversample: '2x'`; `'none'` o `'2x'` selectivo baja CPU.
-- Debounce de parámetros que regeneran buffers (reverb decay).
 
 Impacto: alto si hay muchos inserts. Riesgo: bajo-medio (cambia el sonido).
 

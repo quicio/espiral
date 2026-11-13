@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.9.0
+version: 1.10.0
 updated: 2026-11-13
 ---
 
@@ -59,6 +59,7 @@ el código y la spec se corrige.
 | [30](specs/30-arrangement-performance-recording.md) | Grabación de performance a arrangement | implementada |
 | [31](specs/31-scene-change-audio-performance.md) | Evitar reconstrucción de cadenas en cambios de escena | implementada |
 | [32](specs/32-main-thread-tuning.md) | Tuning del hilo principal durante playback | implementada |
+| [33](specs/33-active-view-render.md) | Render por vista y coalescing de cambios | implementada |
 
 ## ADR
 
