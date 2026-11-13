@@ -17,8 +17,9 @@ npx playwright install chromium         # una sola vez, requerido por los checks
 
 npm run dev                             # Vite con HMR
 npm run typecheck                       # tsc --noEmit        (~3 s)
-npm test                                # vitest              209 tests, ~3 s
-npm run build                           # typecheck + bundle  (~5 s)
+npm test                                # guard de kits + vitest 220 tests, ~3 s
+npm run test:kits                       # drum kits vs disco (wavs declarados/huérfanos)
+npm run build                           # typecheck + bundle  (~8 s)
 
 npm run test:audio                      # render offline determinista (Playwright)
 npm run test:integration                # app viva en Chromium (Playwright)

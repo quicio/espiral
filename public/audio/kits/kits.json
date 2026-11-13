@@ -1,0 +1,420 @@
+{
+  "909": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-909/Detroit/samples",
+    "license": "Public Domain",
+    "gainDb": -0.3,
+    "slots": {
+      "kick": {
+        "file": "kick.wav",
+        "peakDb": -0.8,
+        "kb": 40.0
+      },
+      "snare": {
+        "file": "snare.wav",
+        "peakDb": -9.5,
+        "kb": 11.7
+      },
+      "clap": {
+        "file": "clap-1.wav",
+        "peakDb": -0.7,
+        "kb": 34.4
+      },
+      "hat-closed": {
+        "file": "hihat-closed.wav",
+        "peakDb": -15.9,
+        "kb": 5.5
+      },
+      "hat-open": {
+        "file": "hihat-open-1.wav",
+        "peakDb": -10.5,
+        "kb": 21.7
+      },
+      "tom": {
+        "file": "tom-h.wav",
+        "peakDb": -11.8,
+        "kb": 26.7
+      },
+      "perc": {
+        "file": "rim.wav",
+        "peakDb": -6.5,
+        "kb": 17.6
+      }
+    }
+  },
+  "909t": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-909/Detroit/samples",
+    "license": "Public Domain",
+    "gainDb": -1.0,
+    "slots": {
+      "kick": {
+        "file": "kick-short.wav",
+        "peakDb": -0.0,
+        "kb": 22.9
+      },
+      "snare": {
+        "file": "snare.wav",
+        "peakDb": -9.5,
+        "kb": 11.7
+      },
+      "clap": {
+        "file": "clap-2.wav",
+        "peakDb": -1.2,
+        "kb": 28.2
+      },
+      "hat-closed": {
+        "file": "hihat-close.wav",
+        "peakDb": -8.8,
+        "kb": 8.7
+      },
+      "hat-open": {
+        "file": "hihat-open-2.wav",
+        "peakDb": -18.3,
+        "kb": 17.2
+      },
+      "tom": {
+        "file": "tom-l.wav",
+        "peakDb": -7.6,
+        "kb": 29.8
+      },
+      "perc": {
+        "file": "rim.wav",
+        "peakDb": -6.5,
+        "kb": 17.6
+      }
+    }
+  },
+  "909sp": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-909/SP/samples",
+    "license": "Public Domain",
+    "gainDb": -1.0,
+    "slots": {
+      "kick": {
+        "file": "kick-2.wav",
+        "peakDb": -0.0,
+        "kb": 40.5
+      },
+      "snare": {
+        "file": "snare.wav",
+        "peakDb": -4.1,
+        "kb": 23.6
+      },
+      "clap": {
+        "file": "clap2.wav",
+        "peakDb": -0.0,
+        "kb": 18.9
+      },
+      "hat-closed": {
+        "file": "hihat-closed-2.wav",
+        "peakDb": -14.3,
+        "kb": 15.3
+      },
+      "hat-open": {
+        "file": "hihat-open-2.wav",
+        "peakDb": -5.7,
+        "kb": 23.7
+      },
+      "tom": {
+        "file": "tom-m.wav",
+        "peakDb": -2.7,
+        "kb": 34.7
+      },
+      "perc": {
+        "file": "rim.wav",
+        "peakDb": -3.1,
+        "kb": 4.4
+      }
+    }
+  },
+  "808": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-808/samples",
+    "license": "Public Domain",
+    "gainDb": 0.1,
+    "slots": {
+      "kick": {
+        "file": "05.BD.808.wav",
+        "peakDb": -3.3,
+        "kb": 109.4
+      },
+      "snare": {
+        "file": "05.SD5.808.wav",
+        "peakDb": -1.3,
+        "kb": 20.2
+      },
+      "clap": {
+        "file": "05.CP.808.wav",
+        "peakDb": -1.1,
+        "kb": 34.2
+      },
+      "hat-closed": {
+        "file": "05.CH.808.wav",
+        "peakDb": -7.4,
+        "kb": 8.2
+      },
+      "hat-open": {
+        "file": "05.OH.808.wav",
+        "peakDb": -3.1,
+        "kb": 53.8
+      },
+      "tom": {
+        "file": "05.MT.808.wav",
+        "peakDb": -7.6,
+        "kb": 25.5
+      },
+      "perc": {
+        "file": "05.CB.808.wav",
+        "peakDb": -2.2,
+        "kb": 45.4
+      },
+      "rim": {
+        "file": "05.RS.808.wav",
+        "peakDb": -4.5,
+        "kb": 2.2
+      },
+      "shaker": {
+        "file": "05.MA.808.wav",
+        "peakDb": -3.2,
+        "kb": 3.2
+      }
+    }
+  },
+  "505": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-505/samples",
+    "license": "Public Domain",
+    "gainDb": 0.4,
+    "slots": {
+      "kick": {
+        "file": "tr505-kick.wav",
+        "peakDb": -2.0,
+        "kb": 11.8
+      },
+      "snare": {
+        "file": "tr505-snare.wav",
+        "peakDb": -3.4,
+        "kb": 14.4
+      },
+      "clap": {
+        "file": "tr505-clap.wav",
+        "peakDb": -3.0,
+        "kb": 14.6
+      },
+      "hat-closed": {
+        "file": "tr505-hihat-closed.wav",
+        "peakDb": -3.0,
+        "kb": 10.3
+      },
+      "hat-open": {
+        "file": "tr505-hihat-open.wav",
+        "peakDb": -9.5,
+        "kb": 28.9
+      },
+      "tom": {
+        "file": "tr505-tom-m.wav",
+        "peakDb": -1.4,
+        "kb": 28.6
+      },
+      "perc": {
+        "file": "tr505-cowb-h.wav",
+        "peakDb": -4.6,
+        "kb": 14.9
+      },
+      "rim": {
+        "file": "tr505-rim.wav",
+        "peakDb": -4.1,
+        "kb": 6.8
+      },
+      "shaker": {
+        "file": "tr505-timbal.wav",
+        "peakDb": -2.9,
+        "kb": 28.7
+      }
+    }
+  },
+  "cr78": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/CR-78/samples",
+    "license": "Public Domain",
+    "gainDb": 0.1,
+    "slots": {
+      "kick": {
+        "file": "kick.wav",
+        "peakDb": -6.1,
+        "kb": 20.6
+      },
+      "snare": {
+        "file": "snare.wav",
+        "peakDb": -6.1,
+        "kb": 13.3
+      },
+      "hat-closed": {
+        "file": "hihat.wav",
+        "peakDb": -7.0,
+        "kb": 3.0
+      },
+      "hat-open": {
+        "file": "hihat-metal.wav",
+        "peakDb": -11.0,
+        "kb": 7.3
+      },
+      "tom": {
+        "file": "conga-l.wav",
+        "peakDb": -5.9,
+        "kb": 30.3
+      },
+      "perc": {
+        "file": "bongo-l.wav",
+        "peakDb": -4.4,
+        "kb": 11.0
+      },
+      "rim": {
+        "file": "rim.wav",
+        "peakDb": -1.1,
+        "kb": 4.4
+      },
+      "shaker": {
+        "file": "tamb-short.wav",
+        "peakDb": -12.0,
+        "kb": 15.5
+      }
+    }
+  },
+  "linn": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/LM-2/samples",
+    "license": "Public Domain",
+    "gainDb": -1.0,
+    "slots": {
+      "kick": {
+        "file": "kick.wav",
+        "peakDb": -0.0,
+        "kb": 17.6
+      },
+      "snare": {
+        "file": "snare-m.wav",
+        "peakDb": -0.0,
+        "kb": 12.2
+      },
+      "clap": {
+        "file": "clap.wav",
+        "peakDb": -0.0,
+        "kb": 16.6
+      },
+      "hat-closed": {
+        "file": "hihat-closed.wav",
+        "peakDb": -0.0,
+        "kb": 10.0
+      },
+      "hat-open": {
+        "file": "hihat-open.wav",
+        "peakDb": -0.0,
+        "kb": 52.9
+      },
+      "tom": {
+        "file": "conga-m.wav",
+        "peakDb": -0.0,
+        "kb": 23.8
+      },
+      "perc": {
+        "file": "conga-hh.wav",
+        "peakDb": -0.0,
+        "kb": 9.6
+      },
+      "rim": {
+        "file": "conga-lll.wav",
+        "peakDb": -0.0,
+        "kb": 81.9
+      },
+      "shaker": {
+        "file": "cabasa.wav",
+        "peakDb": -0.0,
+        "kb": 6.9
+      }
+    }
+  },
+  "mrk2": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/MRK-2/samples",
+    "license": "Public Domain",
+    "gainDb": -0.9,
+    "slots": {
+      "kick": {
+        "file": "kick.wav",
+        "peakDb": -0.1,
+        "kb": 12.0
+      },
+      "snare": {
+        "file": "snare.wav",
+        "peakDb": -0.1,
+        "kb": 16.7
+      },
+      "hat-closed": {
+        "file": "hihat-closed.wav",
+        "peakDb": -0.1,
+        "kb": 28.8
+      },
+      "hat-open": {
+        "file": "hihat-open.wav",
+        "peakDb": -0.1,
+        "kb": 128.4
+      },
+      "tom": {
+        "file": "tom.wav",
+        "peakDb": -0.1,
+        "kb": 10.4
+      },
+      "perc": {
+        "file": "bongo.wav",
+        "peakDb": -0.1,
+        "kb": 6.2
+      },
+      "rim": {
+        "file": "clave.wav",
+        "peakDb": -0.1,
+        "kb": 11.2
+      },
+      "shaker": {
+        "file": "block.wav",
+        "peakDb": -0.1,
+        "kb": 11.4
+      }
+    }
+  },
+  "pearl": {
+    "source": "https://raw.githubusercontent.com/oramics/sampled/master/DRUMS/pearl-master-studio/samples",
+    "license": "Public Domain",
+    "gainDb": -0.8,
+    "slots": {
+      "kick": {
+        "file": "kick-01.wav",
+        "peakDb": -0.2,
+        "kb": 32.5
+      },
+      "snare": {
+        "file": "snare-01.wav",
+        "peakDb": -1.5,
+        "kb": 40.3
+      },
+      "clap": {
+        "file": "snare-03.wav",
+        "peakDb": -1.1,
+        "kb": 32.0
+      },
+      "hat-closed": {
+        "file": "hihat-closed.wav",
+        "peakDb": -5.8,
+        "kb": 30.6
+      },
+      "hat-open": {
+        "file": "hihat-open.wav",
+        "peakDb": -7.7,
+        "kb": 55.0
+      },
+      "tom": {
+        "file": "tom-01.wav",
+        "peakDb": -2.9,
+        "kb": 84.7
+      },
+      "perc": {
+        "file": "tom-02.wav",
+        "peakDb": -3.0,
+        "kb": 84.7
+      }
+    }
+  }
+}

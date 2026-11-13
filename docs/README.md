@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.14.0
+version: 1.15.0
 updated: 2026-11-13
 ---
 
@@ -64,6 +64,7 @@ el código y la spec se corrige.
 | [35](specs/35-audio-startup-prepared-meters.md) | Arranque de audio y medidores preparados | implementada |
 | [36](specs/36-clean-view-cache.md) | Cache de vistas limpias al cambiar de pestaña | implementada |
 | [37](specs/37-sampler-audioworklet.md) | Sampler en AudioWorklet con fallback | implementada |
+| [38](specs/38-drum-kits.md) | Drum kits: máquinas con samples de dominio público | implementada |
 
 ## ADR
 
@@ -74,6 +75,7 @@ el código y la spec se corrige.
 | [0003](adr/0003-plugins-con-schema.md) | Plugins por schema de parámetros, terceros fuera de alcance | aceptada |
 | [0004](adr/0004-verificacion-audio-offline.md) | Verificación por render offline determinista + Playwright | aceptada |
 | [0005](adr/0005-clips-respaldados-por-escenas.md) | Clips respaldados por escenas y patrón vivo | aceptada |
+| [0006](adr/0006-drum-kit-samples-dominio-publico.md) | Drum kits desde packs de dominio público, normalizados por kit | aceptada |
 
 ## Cómo agregar una spec o un ADR
 

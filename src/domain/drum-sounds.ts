@@ -1,14 +1,29 @@
 import type { MachineConfig } from './graph';
+import {
+  DRUM_KITS,
+  SLOT_LABEL,
+  SLOT_TRACK,
+  drumKitSoundId,
+  drumKitSoundName,
+  drumSlotMachine,
+  type DrumSlot
+} from './drum-kits';
 
 export interface DrumSound {
   readonly id: string;
   readonly name: string;
-  readonly trackId: 'kick' | 'bass' | 'hihat' | 'perc';
+  readonly trackId: string;
   readonly machineId: string;
   readonly machine: MachineConfig;
+  /**
+   * Sonidos históricos que ya no se ofrecen en los selects pero siguen
+   * resolviendo, para que los kits guardados en sesiones viejas no se rompan.
+   */
+  readonly legacy?: boolean;
 }
 
-export const DRUM_SOUNDS: readonly DrumSound[] = [
+/** Kicks sintetizados: otra familia de sonido, sin samples. */
+const SYNTH_SOUNDS: readonly DrumSound[] = [
   {
     id: 'kick-tight',
     name: 'Kick Tight',
@@ -42,6 +57,21 @@ export const DRUM_SOUNDS: readonly DrumSound[] = [
       envelope: { attack: 0.001, decay: 0.18, sustain: 0.01, release: 0.55 }
     }
   },
+  {
+    id: 'kick-sub',
+    name: 'Kick Sub',
+    trackId: 'kick',
+    machineId: 'core-kick',
+    machine: {
+      kind: 'membrane',
+      oscillator: 'sine',
+      envelope: { attack: 0.001, decay: 0.7, sustain: 0.01, release: 2.4 }
+    }
+  }
+];
+
+/** Bajos muestreados: se ofrecen en el track de bajo. */
+const BASS_SOUNDS: readonly DrumSound[] = [
   {
     id: 'bass-sub',
     name: 'Bass Sub',
@@ -82,82 +112,6 @@ export const DRUM_SOUNDS: readonly DrumSound[] = [
     }
   },
   {
-    id: 'hat-tight',
-    name: 'Hat Tight',
-    trackId: 'hihat',
-    machineId: 'core-hihat',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/hihat-03.wav'],
-      voices: 1,
-      fadeIn: 0.002,
-      fadeOut: 0.025
-    }
-  },
-  {
-    id: 'hat-soft',
-    name: 'Hat Soft',
-    trackId: 'hihat',
-    machineId: 'core-hihat',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/hihat-01.wav'],
-      voices: 1,
-      fadeIn: 0.003,
-      fadeOut: 0.08
-    }
-  },
-  {
-    id: 'hat-open',
-    name: 'Hat Open',
-    trackId: 'hihat',
-    machineId: 'core-hihat',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/hihat-07.wav'],
-      voices: 1,
-      fadeIn: 0.002,
-      fadeOut: 0.35
-    }
-  },
-  {
-    id: 'perc-dry',
-    name: 'Perc Dry',
-    trackId: 'perc',
-    machineId: 'core-perc',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/perc.wav'],
-      voices: 2,
-      fadeIn: 0.002,
-      fadeOut: 0.06
-    }
-  },
-  {
-    id: 'perc-room',
-    name: 'Perc Room',
-    trackId: 'perc',
-    machineId: 'core-perc',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/perc.wav'],
-      voices: 4,
-      fadeIn: 0.008,
-      fadeOut: 0.22
-    }
-  },
-  {
-    id: 'kick-sub',
-    name: 'Kick Sub',
-    trackId: 'kick',
-    machineId: 'core-kick',
-    machine: {
-      kind: 'membrane',
-      oscillator: 'sine',
-      envelope: { attack: 0.001, decay: 0.7, sustain: 0.01, release: 2.4 }
-    }
-  },
-  {
     id: 'bass-pick',
     name: 'Bass Pick',
     trackId: 'bass',
@@ -182,59 +136,66 @@ export const DRUM_SOUNDS: readonly DrumSound[] = [
       fadeIn: 0.004,
       fadeOut: 0.12
     }
-  },
-  {
-    id: 'hat-closed',
-    name: 'Hat Closed',
-    trackId: 'hihat',
-    machineId: 'core-hihat',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/hihat-05.wav'],
-      voices: 1,
-      fadeIn: 0.002,
-      fadeOut: 0.04
-    }
-  },
-  {
-    id: 'hat-metal',
-    name: 'Hat Metal',
-    trackId: 'hihat',
-    machineId: 'core-hihat',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/hihat-08.wav'],
-      voices: 1,
-      fadeIn: 0.002,
-      fadeOut: 0.2
-    }
-  },
-  {
-    id: 'perc-tom',
-    name: 'Perc Tom',
-    trackId: 'perc',
-    machineId: 'core-perc',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/perc.wav'],
-      voices: 2,
-      fadeIn: 0.004,
-      fadeOut: 0.18
-    }
-  },
-  {
-    id: 'perc-click',
-    name: 'Perc Click',
-    trackId: 'perc',
-    machineId: 'core-perc',
-    machine: {
-      kind: 'sampler',
-      samples: ['./audio/perc.wav'],
-      voices: 1,
-      fadeIn: 0.001,
-      fadeOut: 0.03
-    }
   }
+];
+
+/**
+ * Sonidos viejos construidos sobre los mismos dos wavs (`hihat-0x`, `perc.wav`).
+ * Se mantienen resolubles por compatibilidad, pero no se ofrecen como opción.
+ */
+const LEGACY_SOUNDS: readonly DrumSound[] = [
+  legacy('hat-tight', 'Hat Tight', 'hihat', 'hihat-03.wav', 1, 0.002, 0.025),
+  legacy('hat-soft', 'Hat Soft', 'hihat', 'hihat-01.wav', 1, 0.003, 0.08),
+  legacy('hat-open', 'Hat Open', 'hihat', 'hihat-07.wav', 1, 0.002, 0.35),
+  legacy('hat-closed', 'Hat Closed', 'hihat', 'hihat-05.wav', 1, 0.002, 0.04),
+  legacy('hat-metal', 'Hat Metal', 'hihat', 'hihat-08.wav', 1, 0.002, 0.2),
+  legacy('perc-dry', 'Perc Dry', 'perc', 'perc.wav', 2, 0.002, 0.06),
+  legacy('perc-room', 'Perc Room', 'perc', 'perc.wav', 4, 0.008, 0.22),
+  legacy('perc-tom', 'Perc Tom', 'perc', 'perc.wav', 2, 0.004, 0.18),
+  legacy('perc-click', 'Perc Click', 'perc', 'perc.wav', 1, 0.001, 0.03)
+];
+
+function legacy(
+  id: string,
+  name: string,
+  trackId: string,
+  file: string,
+  voices: number,
+  fadeIn: number,
+  fadeOut: number
+): DrumSound {
+  return {
+    id,
+    name,
+    trackId,
+    machineId: `core-${trackId}`,
+    machine: {
+      kind: 'sampler',
+      samples: [`./audio/${file}`],
+      voices,
+      fadeIn,
+      fadeOut
+    },
+    legacy: true
+  };
+}
+
+/** Un sonido por cada slot de cada drum kit: `909-kick`, `808-clap`, … */
+const KIT_SOUNDS: readonly DrumSound[] = DRUM_KITS.flatMap(kit =>
+  kit.sounds.map(sound => ({
+    id: drumKitSoundId(kit.id, sound.slot),
+    name: drumKitSoundName(kit.id, sound.slot),
+    trackId: SLOT_TRACK[sound.slot],
+    machineId: `kit-${kit.id}`,
+    machine: drumSlotMachine(kit.id, sound.slot)
+  }))
+);
+
+export const DRUM_SOUNDS: readonly DrumSound[] = [
+  ...SYNTH_SOUNDS,
+  ...KIT_SOUNDS,
+  ...BASS_SOUNDS,
+  ...LEGACY_SOUNDS
 ];
 
 export function drumSound(id: string): DrumSound | undefined {
@@ -242,5 +203,9 @@ export function drumSound(id: string): DrumSound | undefined {
 }
 
 export function drumSoundsForTrack(trackId: string): readonly DrumSound[] {
-  return DRUM_SOUNDS.filter(sound => sound.trackId === trackId);
+  return DRUM_SOUNDS.filter(sound => sound.trackId === trackId && !sound.legacy);
+}
+
+export function drumSoundLabel(slot: DrumSlot): string {
+  return SLOT_LABEL[slot];
 }

@@ -39,6 +39,7 @@ import {
   soundOptionsForTrack,
   type SoundKit
 } from '../domain/sound-kits';
+import { DRUM_KITS } from '../domain/drum-kits';
 import type { MixService } from '../application/mix';
 import type { PlaybackRuntime } from '../application/runtime';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
@@ -329,6 +330,7 @@ export interface ArmWizardState {
   readonly progression: ProgressionId;
   readonly bpm: number;
   readonly kitId: string;
+  readonly drumKitId: string;
   readonly sounds: Readonly<Record<string, string>>;
   readonly elements: ReadonlySet<string>;
   readonly canCancel: boolean;
@@ -440,6 +442,18 @@ export function renderArmWizard(
       </div>`;
   }
 
+  const machinesRoot = q('#arm-machines');
+  if (machinesRoot) {
+    machinesRoot.innerHTML = DRUM_KITS.map(
+      kit => `<div class="arm-kit-card${kit.id === arm.drumKitId ? ' is-selected' : ''}">
+        <button class="arm-kit-select" type="button" data-arm-machine="${kit.id}" aria-pressed="${kit.id === arm.drumKitId}" title="${kit.machine} (${kit.year}) · ${kit.sounds.length} sonidos · ${kit.license}">
+          <strong>${kit.code}</strong>
+          <span class="arm-machine-styles">${kit.styles.slice(0, 2).join(' · ')}</span>
+        </button>
+      </div>`
+    ).join('');
+  }
+
   const soundsRoot = q('#arm-sounds');
   if (soundsRoot) {
     soundsRoot.innerHTML = ARM_ELEMENT_IDS.flatMap(trackId => {
@@ -467,9 +481,10 @@ export function renderArmWizard(
     arm.kitId === 'custom'
       ? { name: 'Custom' }
       : kits.find(kit => kit.id === arm.kitId);
+  const selectedMachine = DRUM_KITS.find(kit => kit.id === arm.drumKitId);
   const kitStatus = q('#arm-kit-status');
   if (kitStatus) {
-    kitStatus.textContent = `Kit: ${selectedKit?.name ?? 'Custom'}`;
+    kitStatus.textContent = `Kit: ${selectedKit?.name ?? 'Custom'} · ${selectedMachine?.code ?? 'sin máquina'}`;
   }
 
   const build = q<HTMLButtonElement>('#arm-build');

@@ -66,6 +66,9 @@ El transporte queda detenido. El usuario decide cuándo reproducir.
 - Los sonidos por elemento se deshabilitan cuando el elemento no está seleccionado.
 - El botón de armar se deshabilita si no hay elementos seleccionados.
 
+> Desde la [spec 38](38-drum-kits.md) el wizard tiene dos secciones más: **Batería**
+> (máquina completa) y **Sonidos**, separada de la de kits.
+
 ## Criterios de aceptación
 
 - Al cargar la app, el wizard cubre el instrumento y el shell no es interactivo.

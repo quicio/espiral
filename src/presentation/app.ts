@@ -15,6 +15,7 @@ import {
   soundKit,
   type SoundKit
 } from '../domain/sound-kits';
+import { drumKit, drumKitSoundMap } from '../domain/drum-kits';
 import type { AutomationService } from '../application/automation';
 import type { ArrangementService } from '../application/arrangement';
 import type { BrowserService } from '../application/browser';
@@ -115,6 +116,7 @@ export class EspiralApp {
     progression: 'menor',
     bpm: 128,
     kitId: DEFAULT_KIT_ID,
+    drumKitId: soundKit(DEFAULT_KIT_ID)?.drumKitId ?? '',
     sounds: { ...(soundKit(DEFAULT_KIT_ID)?.sounds ?? {}) },
     elements: new Set(
       view.ARM_ELEMENT_IDS.filter(trackId => trackId !== 'pad')
@@ -1739,10 +1741,24 @@ export class EspiralApp {
           this.armState = {
             ...this.armState,
             kitId,
+            drumKitId: kit.drumKitId ?? this.armState.drumKitId,
             sounds: { ...kit.sounds }
           };
         }
       }
+      this.renderArmWizardState();
+    });
+
+    view.must('#arm-machines').addEventListener('click', event => {
+      const machineId = attr(event, 'data-arm-machine');
+      if (!machineId) return;
+      if (!drumKit(machineId)) return;
+      this.armState = {
+        ...this.armState,
+        kitId: 'custom',
+        drumKitId: machineId,
+        sounds: { ...this.armState.sounds, ...drumKitSoundMap(machineId) }
+      };
       this.renderArmWizardState();
     });
 

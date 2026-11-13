@@ -1,8 +1,8 @@
 ---
 id: handoff
 status: vigente
-version: 1.1.0
-updated: 2026-11-12
+version: 1.2.0
+updated: 2026-11-13
 ---
 
 # Handoff — Espiral
@@ -15,18 +15,20 @@ AudioWorklet para plugins.
 
 Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
-## Estado medido (2026-11-12)
+## Estado medido (2026-11-13)
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **209 pasan / 31 archivos** en ~3 s | `npm test` |
+| tests unitarios | **220 pasan / 32 archivos** en ~3 s | `npm test` |
+| guard de drum kits | 9 máquinas · 71 one-shots · 1.79 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
-| build | ~5 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 527.56 kB (134.51 kB gzip) | salida de `npm run build` |
-| código | 109 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| build | ~8 s (Vite, con typecheck previo) | `npm run build` |
+| bundle principal | 555.29 kB (141.60 kB gzip) | salida de `npm run build` |
+| samples de batería | 1.79 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
+| código | 119 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 38 en `docs/specs/` | `ls docs/specs` |
-| ADRs | 5 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio tras el commit de spec 24 | `git status` |
+| ADRs | 6 en `docs/adr/` | `ls docs/adr` |
+| git | árbol con cambios de spec 38 sin commitear | `git status` |
 
 **Los checks de Playwright ya corren en esta máquina** (Chromium instalado el
 2026-11-12). Un clone fresco sigue necesitando `npx playwright install chromium`;
@@ -63,6 +65,7 @@ Puertos en `src/domain/ports.ts`: `AudioEnginePort`, `ClockPort`,
 
 ```bash
 npm run typecheck && npm test                 # rápido, sin navegador
+npm run test:kits                             # wavs declarados vs public/audio/kits
 npm run build                                 # verifica que el bundle arma
 npm run test:audio                            # PCM determinista (Playwright)
 npm run test:integration                      # app viva: clicks, estado, audio
@@ -85,6 +88,7 @@ Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opc
 | `03-tracks-and-ui` dice **diseño** | el README ya lista 16 tracks, routing, mod matrix y locks como presentes | confirmar con `git log` y actualizar la spec, no el README |
 | Specs 02 (plugin SDK) en diseño | el rack de inserts ya existe en la UI | verificar alcance antes de implementar terceros |
 | Medidores por track / baseline de performance | pendiente declarado en `architecture.md` | Fase 4 |
+| Batería sin round-robin ni velocity | un one-shot por slot, mismo sample en cada golpe | agregar variantes por slot y elegir por paso en una spec nueva |
 | Mover clips entre tracks | fuera de alcance en spec 24: el patrón vivo es por instrumento | evaluar en M3 si aparece la necesidad |
 | Escenas vacías sin snapshot | `addScene` duplica la escena actual para garantizar un snapshot completo | diseñar en una spec nueva si se pide Session View puro |
 
