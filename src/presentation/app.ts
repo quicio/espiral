@@ -19,6 +19,7 @@ import type { AutomationService } from '../application/automation';
 import type { ArrangementService } from '../application/arrangement';
 import type { BrowserService } from '../application/browser';
 import type { ClipService } from '../application/clip';
+import type { DeviceChainService } from '../application/device-chains';
 import type { ExportService } from '../application/export';
 import type { HistoryService } from '../application/history';
 import type { MixService } from '../application/mix';
@@ -59,6 +60,7 @@ interface PresentationDependencies {
   readonly liveInput: LiveInputService;
   readonly automation: AutomationService;
   readonly mix: MixService;
+  readonly deviceChains: DeviceChainService;
   readonly sessions: SessionService;
   readonly presets: PresetService;
   readonly kits: SoundKitRepositoryPort;
@@ -106,7 +108,8 @@ export class EspiralApp {
     this.unsubscribe = this.deps.store.subscribe(state => this.handleState(state));
 
     view.renderAll(this.lastState, this.deps.catalog, this.deps.mix, {
-      runtime: this.deps.runtime
+      runtime: this.deps.runtime,
+      chains: this.deps.deviceChains.list()
     });
     this.syncHistoryButtons();
     const initial = (location.hash || '').replace('#', '');
@@ -216,7 +219,8 @@ export class EspiralApp {
     this.syncHistoryButtons();
     if (!previous) {
       view.renderAll(state, this.deps.catalog, this.deps.mix, {
-        runtime: this.deps.runtime
+        runtime: this.deps.runtime,
+        chains: this.deps.deviceChains.list()
       });
       return;
     }
@@ -259,7 +263,8 @@ export class EspiralApp {
         previous.selected !== state.selected ||
         previous.favorites !== state.favorites ||
         previous.recentSounds !== state.recentSounds,
-      runtime: this.deps.runtime
+      runtime: this.deps.runtime,
+      chains: this.deps.deviceChains.list()
     });
   }
 
@@ -977,6 +982,39 @@ export class EspiralApp {
     });
 
     view.must('#sound-channels').addEventListener('click', event => {
+      const chainSave = attr(event, 'data-chain-save');
+      const chainApply = attr(event, 'data-chain-apply');
+      const chainRemove = attr(event, 'data-chain-remove');
+      if (chainSave !== null) {
+        const name =
+          view.q<HTMLInputElement>('[data-chain-name]')?.value ?? '';
+        const preset = this.deps.deviceChains.saveCurrent(name);
+        this.refreshSound();
+        if (preset) {
+          const select = view.q<HTMLSelectElement>('[data-chain-select]');
+          if (select) select.value = preset.id;
+          const input = view.q<HTMLInputElement>('[data-chain-name]');
+          if (input) input.value = preset.name;
+        }
+        return;
+      }
+      if (chainApply !== null) {
+        const presetId = view.q<HTMLSelectElement>('[data-chain-select]')?.value;
+        if (presetId) {
+          this.deps.deviceChains.apply(presetId);
+          this.refreshSound();
+        }
+        return;
+      }
+      if (chainRemove !== null) {
+        const presetId = view.q<HTMLSelectElement>('[data-chain-select]')?.value;
+        if (presetId) {
+          this.deps.deviceChains.remove(presetId);
+          this.refreshSound();
+        }
+        return;
+      }
+
       const select = attr(event, 'data-sound-select');
       const mute = attr(event, 'data-sound-mute');
       const solo = attr(event, 'data-sound-solo');
@@ -1863,6 +1901,15 @@ export class EspiralApp {
     view.renderSession(this.deps.store.getState(), this.deps.runtime);
   }
 
+  private refreshSound(): void {
+    view.renderSound(
+      this.deps.store.getState(),
+      this.deps.catalog,
+      this.deps.mix,
+      this.deps.deviceChains.list()
+    );
+  }
+
   private focusSessionCell(row: number, col: number): void {
     view
       .q<HTMLButtonElement>(
@@ -1898,7 +1945,14 @@ export class EspiralApp {
       view.renderSequencer(state, this.deps.catalog);
       view.renderAutomation(state, this.deps.catalog);
     }
-    if (id === 'sound') view.renderSound(state, this.deps.catalog, this.deps.mix);
+    if (id === 'sound') {
+      view.renderSound(
+        state,
+        this.deps.catalog,
+        this.deps.mix,
+        this.deps.deviceChains.list()
+      );
+    }
     if (id === 'routing') view.renderRouting(state, this.deps.mix);
     if (id === 'modulation') view.renderModulation(state, this.deps.mix);
     view.updatePatternClasses(state, this.deps.catalog);

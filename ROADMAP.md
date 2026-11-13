@@ -117,10 +117,11 @@ Pendiente: mover clips entre tracks y crear escenas vacías sin snapshot.
 **Resultado:** explorar el instrumento se siente como abrir el browser de Ableton:
 buscar, escuchar y arrastrar.
 
-**Estado:** primer corte implementado (specs 17, 25, 26 y 27). Búsqueda, drag/drop de
-sonidos, drawer compacto, favoritos, recientes persistidos en sesión, preview sin
-aplicar y reordenamiento del rack por drag/drop. Pendiente: presets de cadenas de
-dispositivos.
+**Estado:** M2 completo para el alcance actual (specs 17, 25, 26, 27 y 28).
+Búsqueda, drag/drop de sonidos, drawer compacto, favoritos, recientes persistidos
+en sesión, preview sin aplicar, reordenamiento del rack y presets de cadenas.
+Las macros ya funcionan como fuentes de la matriz de modulación; queda como deuda
+menor un mapeo directo macro→parámetro.
 
 ### Alcance
 

@@ -1,8 +1,8 @@
 ---
 id: docs-index
 status: vigente
-version: 1.4.0
-updated: 2026-11-12
+version: 1.5.0
+updated: 2026-11-13
 ---
 
 # Documentación
@@ -53,6 +53,7 @@ el código y la spec se corrige.
 | [25](specs/25-browser-favorites-and-recents.md) | Favoritos y recientes del browser | implementada |
 | [26](specs/26-browser-preview.md) | Preview de sonidos del browser | implementada |
 | [27](specs/27-insert-rack-drag-drop.md) | Reordenar la cadena de dispositivos por drag/drop | implementada |
+| [28](specs/28-device-chain-presets.md) | Presets de cadenas de dispositivos | implementada |
 
 ## ADR
 

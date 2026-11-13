@@ -19,12 +19,12 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **195 pasan / 30 archivos** en ~3 s | `npm test` |
+| tests unitarios | **200 pasan / 31 archivos** en ~3 s | `npm test` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~5 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 527.56 kB (134.51 kB gzip) | salida de `npm run build` |
 | código | 109 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 28 en `docs/specs/` | `ls docs/specs` |
+| specs | 29 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio tras el commit de spec 24 | `git status` |
 

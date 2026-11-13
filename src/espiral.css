@@ -2928,6 +2928,57 @@ body[data-view="sound"] .generative {
   font-size: 0.7rem;
 }
 
+.insert-chain-presets {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--umbral-rule-faint);
+}
+
+.insert-chain-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 10rem;
+}
+
+.insert-chain-field span {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--umbral-muted);
+}
+
+.insert-chain-field select,
+.insert-chain-name {
+  min-height: 30px;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--umbral-rule-faint);
+  border-radius: 0;
+  background: var(--umbral-bg);
+  color: var(--umbral-ink);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.insert-chain-name {
+  flex: 1 1 10rem;
+  color-scheme: dark;
+}
+
+.insert-chain-presets .small-toggle {
+  min-height: 30px;
+}
+
+.insert-chain-presets .line-action {
+  min-height: 30px;
+}
+
 .plugin-params {
   display: grid;
   gap: 0.35rem;

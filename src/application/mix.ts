@@ -164,6 +164,35 @@ export class MixService {
     this.commitInserts(trackId, inserts);
   }
 
+  replaceInserts(
+    trackId: string,
+    inserts: readonly InsertConfig[]
+  ): boolean {
+    if (!this.engine.supportsInserts) return false;
+    const track = this.store.getState().kit.tracks[trackId];
+    if (!track) return false;
+
+    const definitions = new Set(this.listPlugins().map(entry => entry.id));
+    const next = inserts
+      .filter(insert => definitions.has(insert.pluginId))
+      .map(insert => ({ ...insert, params: { ...insert.params } }));
+    this.commitInserts(trackId, next);
+
+    const kept = new Set(next.map(insert => insert.id));
+    this.store.update(state => ({
+      ...state,
+      modulation: {
+        ...state.modulation,
+        routes: state.modulation.routes.filter(
+          route =>
+            route.target.trackId !== trackId ||
+            kept.has(route.target.insertId)
+        )
+      }
+    }));
+    return true;
+  }
+
   setEffectWet(trackId: string, effect: EffectKind, wet: number): void {
     this.engine.setEffectWet(trackId, effect, wet);
   }

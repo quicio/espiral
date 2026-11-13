@@ -1,5 +1,6 @@
 import type { AutomationTargetId } from '../domain/automation';
 import { AUTOMATION_TARGET_IDS } from '../domain/automation';
+import type { DeviceChainPreset } from '../domain/device-chain';
 import {
   CHANNELS,
   PATTERN_LENGTH,
@@ -755,7 +756,8 @@ export function renderSequencer(state: InstrumentState, _catalog: Catalog): void
 export function renderSound(
   state: InstrumentState,
   _catalog: Catalog,
-  mixService: MixService
+  mixService: MixService,
+  chains: readonly DeviceChainPreset[] = []
 ): void {
   const container = q('#sound-channels');
   if (!container) return;
@@ -828,6 +830,27 @@ export function renderSound(
       </select>`
     : '<span class="sound-none">rack no disponible</span>';
 
+  const chainControls = mixService.supportsInserts
+    ? `<div class="insert-chain-presets">
+        <label class="insert-chain-field">
+          <span>Cadena</span>
+          <select data-chain-select aria-label="Cadenas guardadas">
+            <option value="">Elegir…</option>
+            ${chains
+              .map(
+                preset =>
+                  `<option value="${preset.id}">${escapeHtml(preset.name)}</option>`
+              )
+              .join('')}
+          </select>
+        </label>
+        <button class="small-toggle" type="button" data-chain-apply aria-label="Aplicar cadena"${chains.length === 0 ? ' disabled' : ''}>Aplicar</button>
+        <button class="small-toggle" type="button" data-chain-remove aria-label="Eliminar cadena"${chains.length === 0 ? ' disabled' : ''}>×</button>
+        <input class="insert-chain-name" data-chain-name maxlength="40" placeholder="Nombre de la cadena" aria-label="Nombre de la cadena">
+        <button class="line-action" type="button" data-chain-save${selected.inserts.length === 0 ? ' disabled' : ''}>Guardar cadena</button>
+      </div>`
+    : '';
+
   const sends =
     mixService.supportsRouting && state.kit.buses.length > 0
       ? `<div class="sound-sends">${state.kit.buses
@@ -894,6 +917,7 @@ export function renderSound(
     <div class="sound-effects">
       <div class="insert-rack">${rack}</div>
       ${add}
+      ${chainControls}
     </div>
   </section>`;
 
@@ -2207,14 +2231,20 @@ export function renderAll(
   state: InstrumentState,
   catalog: Catalog,
   mixService: MixService,
-  options: { sound?: boolean; runtime?: PlaybackRuntime } = {}
+  options: {
+    sound?: boolean;
+    runtime?: PlaybackRuntime;
+    chains?: readonly DeviceChainPreset[];
+  } = {}
 ): void {
   renderPerformance(state, catalog);
   renderSceneSwitcher(state, catalog);
   renderSession(state, options.runtime);
   renderArrangement(state, catalog);
   renderSequencer(state, catalog);
-  if (options.sound !== false) renderSound(state, catalog, mixService);
+  if (options.sound !== false) {
+    renderSound(state, catalog, mixService, options.chains);
+  }
   renderAutomation(state, catalog);
   renderRouting(state, mixService);
   renderModulation(state, mixService);
@@ -2337,6 +2367,20 @@ function renderMachineParams(track: TrackState, mixService: MixService): string 
 function formatPan(pan: number): string {
   if (Math.abs(pan) < 0.005) return 'C';
   return `${pan < 0 ? 'L' : 'R'} ${Math.round(Math.abs(pan) * 100)}`;
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    character =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[character] ?? character
+  );
 }
 
 export function q<T extends Element = HTMLElement>(selector: string, root: ParentNode = document): T | null {

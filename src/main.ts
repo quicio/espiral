@@ -6,6 +6,7 @@ import { ArrangementService } from './application/arrangement';
 import { AutomationService } from './application/automation';
 import { BrowserService } from './application/browser';
 import { ClipService } from './application/clip';
+import { DeviceChainService } from './application/device-chains';
 import { ExportService } from './application/export';
 import { HistoryService } from './application/history';
 import { createInitialState } from './application/initial-state';
@@ -27,6 +28,7 @@ import { ToneOfflineRenderer } from './infrastructure/audio/offline-renderer';
 import { UmbralGenerative } from './infrastructure/generative/umbral-generative';
 import { BrowserFileGateway } from './infrastructure/persistence/browser-file-gateway';
 import { HttpPresetRepository } from './infrastructure/persistence/http-preset-repository';
+import { LocalDeviceChainPresetRepository } from './infrastructure/persistence/local-device-chain-preset-repository';
 import { LocalSessionRepository } from './infrastructure/persistence/local-session-repository';
 import { LocalSoundKitRepository } from './infrastructure/persistence/local-sound-kit-repository';
 import { WebMidiInput } from './infrastructure/midi/web-midi';
@@ -60,6 +62,12 @@ async function boot(): Promise<void> {
   const automation = new AutomationService(store, engine, status);
   const clips = new ClipService(store, runtime, status);
   const mix = new MixService(store, engine);
+  const deviceChains = new DeviceChainService(
+    store,
+    mix,
+    new LocalDeviceChainPresetRepository(),
+    status
+  );
   const scenes = new SceneService(store, mix, runtime, status);
   const arrangement = new ArrangementService(store, scenes, status);
   const playback = new PlaybackService(
@@ -126,6 +134,7 @@ async function boot(): Promise<void> {
     liveInput,
     automation,
     mix,
+    deviceChains,
     sessions,
     presets,
     kits: new LocalSoundKitRepository(),

@@ -1,4 +1,5 @@
 import type { EffectKind, NoteDuration, SoundEvent } from './audio';
+import type { DeviceChainPreset } from './device-chain';
 import type {
   PatternChannel
 } from './channels';
@@ -206,6 +207,12 @@ export interface PresetRepositoryPort {
 export interface SoundKitRepositoryPort {
   list(): readonly SoundKit[];
   save(kit: SoundKit): void;
+  remove(id: string): void;
+}
+
+export interface DeviceChainPresetRepositoryPort {
+  list(): readonly DeviceChainPreset[];
+  save(preset: DeviceChainPreset): void;
   remove(id: string): void;
 }
 

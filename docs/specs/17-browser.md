@@ -34,8 +34,5 @@ Convertir el banco de sonidos en un browser más directo y arrastrable.
 
 ## Pendiente
 
-- Presets de cadenas de dispositivos.
-
-Favoritos y recientes se implementaron en `spec-25`.
-Preview/audition se implementó en `spec-26`.
-El drag/drop dentro del rack se implementó en `spec-27`.
+Sin pendientes del primer corte: favoritos (`spec-25`), preview (`spec-26`),
+reordenamiento del rack (`spec-27`) y presets de cadenas (`spec-28`).

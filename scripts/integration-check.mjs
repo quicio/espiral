@@ -302,6 +302,32 @@ try {
   if (JSON.stringify(insertOrderAfter) === JSON.stringify(insertOrderBefore)) {
     throw new Error(`El drag/drop no reordenó los inserts: ${insertOrderAfter.join(',')}.`);
   }
+  const insertsBeforeSave = await insertRows.count();
+  await page.locator('[data-chain-name]').fill('Bass Chain');
+  await page.locator('[data-chain-save]').click();
+  await page.waitForTimeout(200);
+  const chainValue = await page
+    .locator('[data-chain-select] option')
+    .filter({ hasText: 'Bass Chain' })
+    .getAttribute('value');
+  if (!chainValue) throw new Error('La cadena no se guardó.');
+  await page.locator('[data-insert-remove]').first().click();
+  await page.waitForTimeout(200);
+  const insertsAfterRemove = await page.locator('[data-insert-row]').count();
+  if (insertsAfterRemove !== insertsBeforeSave - 1) {
+    throw new Error(
+      `Eliminar insert dejó ${insertsAfterRemove} de ${insertsBeforeSave}.`
+    );
+  }
+  await page.locator('[data-chain-select]').selectOption(chainValue);
+  await page.locator('[data-chain-apply]').click();
+  await page.waitForTimeout(250);
+  const insertsAfterApply = await page.locator('[data-insert-row]').count();
+  if (insertsAfterApply !== insertsBeforeSave) {
+    throw new Error(
+      `La cadena no restauró el rack: ${insertsAfterApply} de ${insertsBeforeSave}.`
+    );
+  }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.locator('#sound-bank-drawer summary').click();
   await page.waitForTimeout(150);

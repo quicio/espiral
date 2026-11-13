@@ -104,8 +104,20 @@ describe('MixService', () => {
     expect(engine.transitions).toBe(2);
   });
 
-  it('reorders inserts by target index', () => {
+  it('replaces a chain and drops unknown plugins', () => {
     const { store, mix } = setup();
+
+    mix.replaceInserts('kick', [
+      { id: 'filter', pluginId: 'filter', bypass: false, params: { cutoff: 900 } },
+      { id: 'ghost', pluginId: 'ghost', bypass: false, params: {} }
+    ]);
+
+    const inserts = store.getState().kit.tracks.kick?.inserts ?? [];
+    expect(inserts.map(insert => insert.id)).toEqual(['filter']);
+    expect(inserts[0]?.params.cutoff).toBe(900);
+  });
+
+  it('reorders inserts by target index', () => {    const { store, mix } = setup();
     mix.addInsert('kick', 'filter');
     mix.addInsert('kick', 'filter');
     mix.addInsert('kick', 'filter');
