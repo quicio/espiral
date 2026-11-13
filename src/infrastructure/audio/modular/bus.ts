@@ -129,12 +129,15 @@ export class Bus {
     }, 80);
   }
 
+  prepareMeter(): void {
+    if (this.meter) return;
+    this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
+    this.volume.connect(this.meter);
+  }
+
   getLevel(): number {
-    if (!this.meter) {
-      this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
-      this.volume.connect(this.meter);
-    }
-    return readMeter(this.meter);
+    this.prepareMeter();
+    return readMeter(this.meter!);
   }
 
   prepare(): Promise<void> {

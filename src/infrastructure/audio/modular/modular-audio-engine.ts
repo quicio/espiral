@@ -188,6 +188,10 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   private async prepareInternal(): Promise<void> {
     if (!isOfflineContext()) await Tone.start();
+    if (!isOfflineContext()) {
+      this.tracks.forEach(track => track.prepareMeter());
+      this.buses.forEach(bus => bus.prepareMeter());
+    }
     await Promise.all([
       ...Array.from(this.tracks.values(), track => track.prepare()),
       ...Array.from(this.buses.values(), bus => bus.prepare()),

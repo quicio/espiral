@@ -52,6 +52,16 @@ const METER_INTERVAL_MS = 1000 / 25;
 const METER_TRACK_BATCH = 8;
 const METER_BUS_BATCH = 4;
 
+const ALL_VIEWS: readonly ViewId[] = [
+  'performance',
+  'session',
+  'arrangement',
+  'sequencer',
+  'sound',
+  'routing',
+  'modulation'
+];
+
 interface MeterTarget {
   readonly id: string;
   readonly fill: HTMLElement | null;
@@ -92,6 +102,7 @@ export class EspiralApp {
   private renderFrame: number | null = null;
   private pendingRenderState: InstrumentState | null = null;
   private sessionFocus: { row: number; col: number } | null = null;
+  private readonly dirtyViews = new Set<ViewId>(ALL_VIEWS);
   private meterTargetsDirty = true;
   private currentView: ViewId = 'performance';
   private armRequired = true;
@@ -298,6 +309,7 @@ export class EspiralApp {
     this.syncHistoryButtons();
     if (!previous) {
       this.meterTargetsDirty = true;
+      ALL_VIEWS.forEach(id => this.dirtyViews.add(id));
       view.renderActiveView(
         state,
         this.deps.catalog,
@@ -308,6 +320,7 @@ export class EspiralApp {
           chains: this.deps.deviceChains.list()
         }
       );
+      this.dirtyViews.delete(this.currentView);
       return;
     }
 
@@ -345,6 +358,7 @@ export class EspiralApp {
     }
 
     this.meterTargetsDirty = true;
+    ALL_VIEWS.forEach(id => this.dirtyViews.add(id));
     this.scheduleRender(state);
   }
 
@@ -2005,6 +2019,7 @@ export class EspiralApp {
 
   private refreshSession(): void {
     view.renderSession(this.deps.store.getState(), this.deps.runtime);
+    this.dirtyViews.delete('session');
   }
 
   private scheduleRender(state: InstrumentState): void {
@@ -2026,6 +2041,7 @@ export class EspiralApp {
           chains: this.deps.deviceChains.list()
         }
       );
+      this.dirtyViews.delete(this.currentView);
       this.restoreSessionFocus();
     });
   }
@@ -2046,6 +2062,7 @@ export class EspiralApp {
       this.deps.mix,
       this.deps.deviceChains.list()
     );
+    this.dirtyViews.delete('sound');
   }
 
   private focusSessionCell(row: number, col: number): void {
@@ -2093,17 +2110,28 @@ export class EspiralApp {
       if (section) section.hidden = name !== id;
     });
 
-    this.meterTargetsDirty = true;
-    view.renderActiveView(
-      this.deps.store.getState(),
-      this.deps.catalog,
-      this.deps.mix,
-      id,
-      {
-        runtime: this.deps.runtime,
-        chains: this.deps.deviceChains.list()
+    if (this.dirtyViews.has(id)) {
+      this.meterTargetsDirty = true;
+      const state = this.deps.store.getState();
+      view.renderActiveView(
+        state,
+        this.deps.catalog,
+        this.deps.mix,
+        id,
+        {
+          runtime: this.deps.runtime,
+          chains: this.deps.deviceChains.list()
+        }
+      );
+      this.dirtyViews.delete(id);
+      this.restoreSessionFocus();
+    } else {
+      const state = this.deps.store.getState();
+      view.syncTransport(state);
+      if (id === 'performance' || id === 'sequencer') {
+        view.syncPlayhead(state);
       }
-    );
+    }
 
     if (options.scroll !== false) this.revealView(id);
     if (history.replaceState) history.replaceState(null, '', `#${id}`);

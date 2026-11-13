@@ -269,8 +269,9 @@ warp, waveform, slice y pitch/loop del clip.
 **Estado:** performance mode implementado (spec 21). Los cambios de escena ya no
 reconstruyen cadenas de inserts idénticas (spec 31), el hilo principal bajó su
 carga continua (spec 32), los renders se hacen por vista con coalescing (spec 33)
-y los samples comparten buffers por URL (spec 34), con medidores perezosos y
-arranque de audio idempotente (spec 35). Pendiente: fullscreen, mobile,
+y los samples comparten buffers por URL (spec 34), con medidores preparados y
+arranque de audio idempotente (spec 35) y cache de vistas limpias (spec 36).
+Pendiente: fullscreen, mobile,
 compatibilidad amplia, auditoría de accesibilidad completa, baseline formal de CPU
 y latencia, y sampler en AudioWorklet.
 

@@ -1,6 +1,6 @@
 ---
 id: spec-35
-title: Arranque de audio y medidores perezosos
+title: Arranque de audio y medidores preparados
 status: implementada
 version: 0.1.0
 updated: 2026-11-13
@@ -8,31 +8,31 @@ fase: 5
 depends_on: [spec-32, spec-34]
 ---
 
-# Arranque de audio y medidores perezosos
+# Arranque de audio y medidores preparados
 
 ## Objetivo
 
-Reducir el trabajo que se paga al iniciar y al abrir vistas, sin cambiar el
-sonido ni el modelo de datos.
+Reducir el trabajo que se paga al iniciar y evitar que abrir Sound/Routing durante
+el playback modifique el grafo de audio.
 
 ## Cambios
 
-### Medidores por track/bus perezosos
+### Medidores preparados antes del transporte
 
-Cada `Track` y `Bus` creaba un `Tone.Meter` (AnalyserNode) y lo conectaba al
-grafo aunque la vista Sound/Routing nunca se abriera. Con 16 tracks más buses,
-eso era costo permanente en el hilo de audio.
+Cada `Track` y `Bus` crea su `Tone.Meter` (AnalyserNode) en `prepare()`, antes de
+que el transporte arranque. Antes se creaban en el primer `getLevel()`, que podía
+ocurrir mientras sonaba la música al abrir Sound/Routing por primera vez.
 
-Ahora el medidor se crea la primera vez que `getLevel()` se llama. La UI sólo
-pide niveles cuando hay medidores en el DOM (Sound o Routing). Al abrir esas
-vistas se crean una vez y se reutilizan.
+- En el render offline no se crean: no hay UI que los lea.
+- `prepare()` es idempotente, así que el prewarm y el play comparten el trabajo.
+- Los medidores se siguen leyendo en batches de 8 tracks / 4 buses por muestra de
+  25 Hz para no leer 16 analizadores en un tick.
 
 ### Medidores repartidos por frame
 
 El loop de medidores actualiza como máximo 8 tracks y 4 buses por muestra de
-25 Hz, en round-robin. Evita que la primera apertura de Sound cree/lea 16
-analizadores en un solo tick. Cada medidor se refresca varias veces por segundo;
-el CPU meter y el master siguen a 25 Hz.
+25 Hz, en round-robin. Evita leer 16 analizadores en un solo tick. Cada medidor
+se refresca varias veces por segundo; el CPU meter y el master siguen a 25 Hz.
 
 ### `prepare()` idempotente
 
@@ -63,6 +63,6 @@ disponible y se persiste por sesión. No cambia el buffer del `AudioContext`.
 
 - Los medidores de tracks pueden verse menos frecuentes cuando hay muchos
   tracks; el master y el CPU meter no.
-- Un medidor creado tarde no existe para el motor hasta que la UI lo pide; no
-  afecta audio.
+- Los medidores ahora se pagan en `prepare()`; si el usuario nunca abre
+  Sound/Routing, es un costo fijo pequeño a cambio de no tocar el grafo en vivo.
 - El lookahead mayor agrega latencia de scheduling; sigue siendo configurable.

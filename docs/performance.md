@@ -39,11 +39,14 @@ scheduler llega tarde.
    movimiento del slider.
 9. **Buffers de sample compartidos** por URL: la integración pasó de 57 respuestas
    `.wav` a 17 peticiones únicas (spec 34).
-10. **Medidores por track/bus perezosos**: no se crean AnalyserNodes hasta que la
-    vista Sound/Routing los pide, y se reparten en batches por frame (spec 35).
+10. **Medidores preparados antes del transporte**: se crean en `prepare()` para
+    no tocar el grafo de audio al abrir Sound/Routing, y se leen en batches
+    (spec 35).
 11. **`prepare()` idempotente** para que prewarm y primer play no dupliquen el
     trabajo (spec 35).
 12. **Lookahead por defecto de 150 ms** (configurable) (spec 35).
+13. **Cache de vistas limpias**: cambiar de pestaña sin cambios estructurales no
+    reconstruye el DOM (spec 36).
 
 ## Palancas de tuning pendientes (bajo riesgo)
 
