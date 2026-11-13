@@ -1775,12 +1775,12 @@ body[data-view="sound"] .generative {
 }
 
 .session-scene-head,
-.session-scene-launch {
+.session-scene-cell {
   position: sticky;
   left: 0;
   z-index: 2;
-  flex: 0 0 6.8rem;
-  min-width: 6.8rem;
+  flex: 0 0 8.6rem;
+  min-width: 8.6rem;
   background: var(--umbral-bg);
   box-shadow: 1px 0 0 var(--umbral-rule-faint);
 }
@@ -1800,11 +1800,19 @@ body[data-view="sound"] .generative {
   color: var(--umbral-muted);
 }
 
+.session-scene-cell {
+  display: flex;
+  align-items: stretch;
+  gap: 0.2rem;
+  padding-right: 0.35rem;
+}
+
 .session-scene-launch {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.6rem 0.7rem;
+  padding: 0.6rem 0.5rem 0.6rem 0.7rem;
   border: 1px solid var(--umbral-rule-faint);
   border-radius: 0;
   background: transparent;
@@ -1815,6 +1823,48 @@ body[data-view="sound"] .generative {
   text-align: left;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.session-scene-tools {
+  display: grid;
+  grid-template-columns: repeat(2, 1.15rem);
+  grid-auto-rows: 1fr;
+  gap: 0.1rem;
+  opacity: 0.45;
+  transition: opacity 120ms ease;
+}
+
+.session-scene-cell:hover .session-scene-tools,
+.session-scene-cell:focus-within .session-scene-tools {
+  opacity: 1;
+}
+
+.session-scene-tool {
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--umbral-rule-faint);
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.session-scene-tool:hover,
+.session-scene-tool:focus-visible {
+  border-color: var(--umbral-trace);
+  color: var(--umbral-ink);
+}
+
+.session-scene-tool[aria-pressed="true"] {
+  color: var(--umbral-trace);
+  border-color: var(--umbral-trace);
+}
+
+.session-scene-tool:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .session-scene-launch:hover,
@@ -1940,6 +1990,18 @@ body[data-view="sound"] .generative {
 
 .session-clip.is-stopped {
   opacity: 0.45;
+}
+
+.session-clip.is-dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+}
+
+.session-cell.is-drop-target,
+.session-clip.is-drop-target {
+  outline: 1px dashed var(--umbral-trace);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--umbral-trace) 12%, transparent);
 }
 
 .session-scene-launch.is-queued {

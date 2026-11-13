@@ -6,8 +6,8 @@ import {
   type ChannelKey
 } from '../domain/channels';
 import {
-  CLIP_SCENE_ORDER,
   clipId,
+  sceneIdList,
   type ClipFollowAction,
   type ClipState
 } from '../domain/clip';
@@ -143,6 +143,28 @@ export function renderPerformance(state: InstrumentState, catalog: Catalog): voi
   }).join('');
 }
 
+export function renderSceneSwitcher(
+  state: InstrumentState,
+  catalog: Catalog
+): void {
+  const grid = q('.scene-grid');
+  if (!grid) return;
+  grid.innerHTML = sceneIdList(state.scenes)
+    .map((sceneId, index) => {
+      const scene = state.scenes[sceneId];
+      if (!scene) return '';
+      const builtin = catalog.scenes.find(entry => entry.id === sceneId);
+      const description =
+        builtin?.description ??
+        (sceneId === state.scene ? 'escena activa' : `slot ${index + 1}`);
+      return `<button class="scene${sceneId === state.scene ? ' is-active' : ''}" type="button" data-scene="${sceneId}" aria-pressed="${sceneId === state.scene}">
+        <span class="scene__name">${scene.name}</span>
+        <span class="scene__desc">${description}</span>
+      </button>`;
+    })
+    .join('');
+}
+
 export function renderSession(
   state: InstrumentState,
   runtime?: PlaybackRuntime
@@ -196,7 +218,8 @@ export function renderSession(
       .join('')}
   </div>`;
 
-  const rows = CLIP_SCENE_ORDER.map((sceneId, rowIndex) => {
+  const sceneIds = sceneIdList(state.scenes);
+  const rows = sceneIds.map((sceneId, rowIndex) => {
     const scene = state.scenes[sceneId];
     if (!scene) return '';
     const scenePending = tracks.some(track => {
@@ -213,7 +236,7 @@ export function renderSession(
         const id = clipId(sceneId, track.id);
         const clip = state.clips[id];
         if (!clip) {
-          return `<button class="session-cell session-cell--empty" type="button" data-clip-create="${sceneId}:${track.id}" aria-label="Crear clip de ${track.name} en ${scene.name}">+</button>`;
+          return `<button class="session-cell session-cell--empty" type="button" data-clip-create="${sceneId}:${track.id}" data-session-row="${rowIndex}" data-session-col="${trackIndex}" data-session-scene="${sceneId}" data-session-track="${track.id}" aria-label="Crear clip de ${track.name} en ${scene.name}">+</button>`;
         }
         const active = state.activeClips[track.id] === clip.id;
         const stopped = state.activeClips[track.id] === null;
@@ -250,18 +273,26 @@ export function renderSession(
         const preview = Array.from({ length: 16 }, (_, index) =>
           `<span class="session-preview-step${steps?.[index] ? ' is-on' : ''}"></span>`
         ).join('');
-        return `<button class="${classes}" type="button" data-clip-launch="${clip.id}" data-session-row="${rowIndex}" data-session-col="${trackIndex}" tabindex="${clip.id === anchorId ? '0' : '-1'}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name} · ${stateLabel}" title="${clip.name} · ${scene.name} · ${stateLabel}">
+        return `<button class="${classes}" type="button" draggable="true" data-clip-launch="${clip.id}" data-session-row="${rowIndex}" data-session-col="${trackIndex}" data-session-scene="${sceneId}" data-session-track="${track.id}" tabindex="${clip.id === anchorId ? '0' : '-1'}" style="--clip-color:${clip.color}" aria-pressed="${active}" aria-label="Lanzar ${clip.name} · ${stateLabel}" title="${clip.name} · ${scene.name} · ${stateLabel}">
           <span class="session-clip-preview" aria-hidden="true">${preview}</span>
           <span class="session-clip-state">${stateLabel}</span>
         </button>`;
       })
       .join('');
 
-    return `<div class="session-row">
-      <button class="session-scene-launch${scenePending ? ' is-queued' : ''}" type="button" data-scene-launch="${sceneId}" aria-label="Lanzar escena ${scene.name}">
-        <span class="session-scene-play">▶</span>
-        <span>${scene.name}</span>
-      </button>
+    return `<div class="session-row" data-session-scene-row="${sceneId}">
+      <div class="session-scene-cell">
+        <button class="session-scene-launch${scenePending ? ' is-queued' : ''}" type="button" data-scene-launch="${sceneId}" aria-label="Lanzar escena ${scene.name}">
+          <span class="session-scene-play">▶</span>
+          <span>${scene.name}</span>
+        </button>
+        <div class="session-scene-tools">
+          <button class="session-scene-tool" type="button" data-scene-apply="${sceneId}" aria-pressed="${sceneId === state.scene}" aria-label="Aplicar escena ${scene.name}" title="Aplicar escena">A</button>
+          <button class="session-scene-tool" type="button" data-scene-move="${sceneId}" data-scene-offset="-1" aria-label="Mover escena ${scene.name} hacia arriba" title="Mover arriba">↑</button>
+          <button class="session-scene-tool" type="button" data-scene-move="${sceneId}" data-scene-offset="1" aria-label="Mover escena ${scene.name} hacia abajo" title="Mover abajo">↓</button>
+          <button class="session-scene-tool" type="button" data-scene-delete="${sceneId}" aria-label="Eliminar escena ${scene.name}" title="Eliminar escena" ${sceneId === state.scene ? 'disabled' : ''}>×</button>
+        </div>
+      </div>
       ${cells}
     </div>`;
   }).join('');
@@ -587,17 +618,12 @@ function followAfterOptions(current: number): string {
 
 export function renderArrangement(
   state: InstrumentState,
-  catalog: Catalog
+  _catalog: Catalog
 ): void {
   const timeline = q('#arrangement-timeline');
   if (!timeline) return;
 
-  const sceneSelect = q<HTMLSelectElement>('#arrangement-scene');
-  if (sceneSelect && sceneSelect.options.length === 0) {
-    sceneSelect.innerHTML = catalog.scenes
-      .map(scene => `<option value="${scene.id}">${scene.label}</option>`)
-      .join('');
-  }
+  syncSceneOptions(state);
 
   const toggle = q<HTMLButtonElement>('#arrangement-toggle');
   if (toggle) {
@@ -612,29 +638,29 @@ export function renderArrangement(
   const activeBlock =
     state.arrangement.blocks[state.arrangement.blockIndex];
   const activeScene = activeBlock
-    ? catalog.scenes.find(scene => scene.id === activeBlock.sceneId)
+    ? state.scenes[activeBlock.sceneId]
     : undefined;
   const readout = q('#arrangement-readout');
   if (readout) {
     readout.textContent = state.arrangement.enabled
-      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.label ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}`
+      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.name ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}`
       : `Arrangement detenido · ${state.arrangement.blocks.length} bloques`;
   }
 
   timeline.innerHTML = state.arrangement.blocks
     .map((block, index) => {
-      const scene = catalog.scenes.find(entry => entry.id === block.sceneId);
+      const scene = state.scenes[block.sceneId];
       const active =
         state.arrangement.enabled &&
         index === state.arrangement.blockIndex;
       return `<div class="arrangement-block${active ? ' is-active' : ''}" data-arrangement-block="${block.id}">
         <div class="arrangement-block-head">
           <span class="arrangement-index">${String(index + 1).padStart(2, '0')}</span>
-          <strong>${scene?.label ?? block.sceneId}</strong>
+          <strong>${scene?.name ?? block.sceneId}</strong>
         </div>
         <label class="arrangement-bars">
           <span>Compases</span>
-          <input type="number" min="1" max="64" step="1" value="${block.bars}" data-arrangement-bars="${block.id}" aria-label="Compases de ${scene?.label ?? block.sceneId}">
+          <input type="number" min="1" max="64" step="1" value="${block.bars}" data-arrangement-bars="${block.id}" aria-label="Compases de ${scene?.name ?? block.sceneId}">
         </label>
         <div class="arrangement-block-actions">
           <button class="small-toggle" type="button" data-arrangement-move="-1" data-arrangement-block="${block.id}" aria-label="Mover bloque a la izquierda">←</button>
@@ -644,6 +670,29 @@ export function renderArrangement(
       </div>`;
     })
     .join('');
+}
+
+function syncSceneOptions(state: InstrumentState): void {
+  const options = sceneIdList(state.scenes)
+    .map(sceneId => {
+      const scene = state.scenes[sceneId];
+      return `<option value="${sceneId}">${scene?.name ?? sceneId}</option>`;
+    })
+    .join('');
+
+  const arrangementSelect = q<HTMLSelectElement>('#arrangement-scene');
+  if (arrangementSelect) {
+    const current = arrangementSelect.value;
+    arrangementSelect.innerHTML = options;
+    if (state.scenes[current]) arrangementSelect.value = current;
+  }
+
+  const exportSelect = q<HTMLSelectElement>('#export-scene');
+  if (exportSelect) {
+    const current = exportSelect.value;
+    exportSelect.innerHTML = '<option value="">Actual</option>' + options;
+    if (current && state.scenes[current]) exportSelect.value = current;
+  }
 }
 
 export function renderSequencer(state: InstrumentState, _catalog: Catalog): void {
@@ -2127,6 +2176,7 @@ export function renderAll(
   options: { sound?: boolean; runtime?: PlaybackRuntime } = {}
 ): void {
   renderPerformance(state, catalog);
+  renderSceneSwitcher(state, catalog);
   renderSession(state, options.runtime);
   renderArrangement(state, catalog);
   renderSequencer(state, catalog);

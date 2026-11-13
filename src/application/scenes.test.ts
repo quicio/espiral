@@ -61,4 +61,61 @@ describe('SceneService', () => {
       state.scenes.deriva.pattern.steps.kick
     );
   });
+
+  it('adds a scene duplicating the current row and its clips', () => {
+    const { store, scenes } = setup();
+    const before = Object.keys(store.getState().scenes);
+
+    const id = scenes.addScene();
+
+    expect(id).toBe('escena-5');
+    const state = store.getState();
+    expect(Object.keys(state.scenes)).toEqual([...before, 'escena-5']);
+    expect(state.scenes['escena-5']?.name).toBe('Escena 5');
+    expect(state.scene).toBe('umbral');
+    expect(state.clips[clipId('escena-5', 'kick')]?.pattern.steps).toEqual(
+      state.clips[clipId('umbral', 'kick')]?.pattern.steps
+    );
+  });
+
+  it('reorders scenes without touching the current one', () => {
+    const { store, scenes } = setup();
+
+    scenes.moveScene('caos', -1);
+
+    expect(Object.keys(store.getState().scenes)).toEqual([
+      'umbral',
+      'deriva',
+      'caos',
+      'pulso'
+    ]);
+    expect(store.getState().scene).toBe('umbral');
+  });
+
+  it('removes a non-active scene, its clips and its arrangement blocks', () => {
+    const { store, scenes } = setup();
+
+    scenes.removeScene('deriva');
+
+    const state = store.getState();
+    expect(Object.keys(state.scenes)).toEqual(['umbral', 'pulso', 'caos']);
+    expect(state.clips[clipId('deriva', 'kick')]).toBeUndefined();
+    expect(
+      state.arrangement.blocks.some(block => block.sceneId === 'deriva')
+    ).toBe(false);
+  });
+
+  it('refuses to remove the active scene or the last scene', () => {
+    const { store, scenes } = setup();
+
+    scenes.removeScene('umbral');
+    expect(Object.keys(store.getState().scenes)).toHaveLength(4);
+
+    scenes.removeScene('deriva');
+    scenes.removeScene('pulso');
+    scenes.removeScene('caos');
+    expect(Object.keys(store.getState().scenes)).toEqual(['umbral']);
+    scenes.removeScene('umbral');
+    expect(Object.keys(store.getState().scenes)).toHaveLength(1);
+  });
 });

@@ -1,12 +1,13 @@
 import {
   applyTrackPatternData,
+  clipColorForScene,
   clipsForTrack,
-  CLIP_SCENE_ORDER,
-  CLIP_COLORS,
   clipId,
   createClipForTrack,
   emptyClipPattern,
+  materializeClips,
   nextQuantizedStep,
+  sceneIdList,
   trackPatternData,
   type ClipFollowAction,
   type ClipQuantize,
@@ -64,7 +65,8 @@ export class ClipService {
     const state = this.store.getState();
     const source = state.clips[sourceId];
     if (!source) return;
-    const emptyScene = CLIP_SCENE_ORDER.find(
+    const sceneIds = sceneIdList(state.scenes);
+    const emptyScene = sceneIds.find(
       sceneId => !state.clips[clipId(sceneId, source.trackId)]
     );
     if (!emptyScene) {
@@ -79,7 +81,7 @@ export class ClipService {
       id: clipId(emptyScene, source.trackId),
       sceneId: emptyScene,
       name: source.name,
-      color: CLIP_COLORS[emptyScene] ?? source.color
+      color: clipColorForScene(emptyScene, sceneIds.indexOf(emptyScene))
     };
     this.store.update(current => ({
       ...current,
@@ -118,6 +120,71 @@ export class ClipService {
     }));
     if (active) delete this.runtime.clipStartedAt[clip.trackId];
     this.status.generative(`${clip.name} eliminado.`);
+  }
+
+  /**
+   * Mueve un clip a otro slot del mismo track. Si el destino está ocupado,
+   * los dos clips intercambian posición. El radio de acción es la fila del
+   * track: mover entre instrumentos queda fuera de alcance.
+   */
+  moveClip(sourceId: string, targetSceneId: SceneId): void {
+    const state = this.store.getState();
+    const source = state.clips[sourceId];
+    if (!source) return;
+    if (source.sceneId === targetSceneId) return;
+    const targetScene = state.scenes[targetSceneId];
+    if (!targetScene) return;
+
+    const clips = materializeClips(state);
+    const currentSource = clips[sourceId] ?? source;
+    const targetId = clipId(targetSceneId, currentSource.trackId);
+    if (targetId === sourceId) return;
+    const target = clips[targetId];
+
+    const next: Record<string, ClipState> = { ...clips };
+    delete next[sourceId];
+    if (target) delete next[targetId];
+    next[targetId] = {
+      ...currentSource,
+      id: targetId,
+      sceneId: targetSceneId
+    };
+    if (target) {
+      next[sourceId] = {
+        ...target,
+        id: sourceId,
+        sceneId: currentSource.sceneId
+      };
+    }
+
+    const activeClips = Object.fromEntries(
+      Object.entries(state.activeClips).map(([trackId, activeId]) => [
+        trackId,
+        activeId === sourceId
+          ? targetId
+          : activeId === targetId
+            ? sourceId
+            : activeId
+      ])
+    );
+    this.runtime.pendingClipActions = this.runtime.pendingClipActions.map(
+      action =>
+        action.kind === 'clip'
+          ? {
+              ...action,
+              clipId:
+                action.clipId === sourceId
+                  ? targetId
+                  : action.clipId === targetId
+                    ? sourceId
+                    : action.clipId
+            }
+          : action
+    );
+    this.store.update(current => ({ ...current, clips: next, activeClips }));
+    const targetName =
+      state.scenes[targetSceneId]?.name ?? targetSceneId;
+    this.status.generative(`${currentSource.name} movido a ${targetName}.`);
   }
 
   launchClip(clipId: string, quantize = this.store.getState().clipQuantize): void {
@@ -256,10 +323,11 @@ export class ClipService {
       }
     }
 
+    const scene = state.scenes[clip.sceneId];
     const data =
       clip.pattern ??
-      (state.scenes[clip.sceneId]
-        ? trackPatternData(state.scenes[clip.sceneId].pattern, clip.trackId)
+      (scene
+        ? trackPatternData(scene.pattern, clip.trackId)
         : null);
     if (!data) {
       this.status.generative(`El clip ${clip.name} no tiene patrón.`);
@@ -325,7 +393,11 @@ export class ClipService {
         return;
       }
 
-      const choices = clipsForTrack(state.clips, trackId);
+      const choices = clipsForTrack(
+        state.clips,
+        trackId,
+        sceneIdList(state.scenes)
+      );
       if (choices.length === 0) return;
       const target = followTarget(clip, choices);
       if (!target) {

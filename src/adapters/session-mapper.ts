@@ -11,10 +11,9 @@ import {
   type PatternChannel
 } from '../domain/channels';
 import {
-  CLIP_COLORS,
-  CLIP_SCENE_ORDER,
   DEFAULT_CLIP_QUANTIZE,
   activeClipsForScene,
+  clipColorForScene,
   createClipsFromScenes,
   emptyClipPattern,
   materializeClips,
@@ -155,7 +154,7 @@ export interface SessionClipDto {
 }
 
 export interface SessionDto {
-  readonly version: 2;
+  readonly version: 3;
   readonly seed: number;
   readonly scene: SceneId;
   readonly params: GenerativeParams;
@@ -213,7 +212,7 @@ export class SessionMapper implements SessionCodec {
     });
 
     return {
-      version: 2,
+      version: 3,
       seed: state.seed,
       scene: state.scene,
       params: state.params,
@@ -256,12 +255,16 @@ export class SessionMapper implements SessionCodec {
 
   fromDto(raw: unknown, current: InstrumentState): InstrumentState {
     const data = asRecord(raw);
-    if (!data || (data.version !== 1 && data.version !== 2)) {
+    if (
+      !data ||
+      (data.version !== 1 && data.version !== 2 && data.version !== 3)
+    ) {
       throw new Error('Sesión inválida');
     }
 
-    const version = data.version;
-    const scene = isSceneId(data.scene, this.generative) ? data.scene : current.scene;
+    const version = data.version as 1 | 2 | 3;
+    const scene =
+      typeof data.scene === 'string' ? data.scene : current.scene;
     const params = readParams(data.params, this.generative.defaultParams);
     const root =
       typeof data.root === 'number' &&
@@ -368,9 +371,17 @@ export class SessionMapper implements SessionCodec {
     const parsedScenes = readScenes(
       data.scenes,
       current.scenes,
-      this.generative
+      this.generative,
+      version
     );
-    const withScenes = { ...base, scenes: parsedScenes };
+    const resolvedScene = parsedScenes[scene]
+      ? scene
+      : (Object.keys(parsedScenes)[0] ?? current.scene);
+    const withScenes = {
+      ...base,
+      scene: resolvedScene,
+      scenes: parsedScenes
+    };
     const clips = readClips(data.clips, withScenes.scenes);
     const activeClips = readActiveClips(
       data.activeClips,
@@ -386,7 +397,11 @@ export class SessionMapper implements SessionCodec {
       clips,
       activeClips,
       clipQuantize: readClipQuantize(data.clipQuantize),
-      arrangement: readArrangement(data.arrangement, current.arrangement)
+      arrangement: readArrangement(
+        data.arrangement,
+        current.arrangement,
+        withScenes.scenes
+      )
     };
   }
 }
@@ -475,16 +490,22 @@ function toSceneDto(snapshot: SceneSnapshot): SessionSceneDto {
 function readScenes(
   raw: unknown,
   fallback: SceneCollection,
-  generative: GenerativePort
+  generative: GenerativePort,
+  version: 1 | 2 | 3
 ): SceneCollection {
   const data = asRecord(raw);
   if (!data) return fallback;
 
-  const next: SceneCollection = { ...fallback };
+  const template = Object.values(fallback)[0];
+  const parsed: Record<string, SceneSnapshot> = {};
   Object.entries(data).forEach(([id, value]) => {
-    if (!isSceneId(id, generative)) return;
+    if (version < 3) {
+      if (!isSceneId(id, generative)) return;
+    } else if (!isSceneKey(id)) {
+      return;
+    }
     const sceneData = asRecord(value);
-    const previous = fallback[id];
+    const previous = fallback[id] ?? template;
     if (!sceneData || !previous) return;
 
     const root =
@@ -507,7 +528,7 @@ function readScenes(
       sceneKit
     );
 
-    next[id] = {
+    parsed[id] = {
       id,
       name: typeof sceneData.name === 'string' ? sceneData.name : previous.name,
       kit: sceneKit,
@@ -527,7 +548,16 @@ function readScenes(
       )
     };
   });
-  return next;
+
+  if (version < 3) return { ...fallback, ...parsed };
+  const ordered = Object.keys(parsed);
+  return ordered.length > 0
+    ? (Object.fromEntries(ordered.map(id => [id, parsed[id]!])) as SceneCollection)
+    : fallback;
+}
+
+function isSceneKey(value: string): boolean {
+  return /^[a-z0-9][a-z0-9-]{0,63}$/i.test(value);
 }
 
 function readPatternState(raw: unknown, fallback: PatternState): PatternState {
@@ -1176,7 +1206,10 @@ function readClips(raw: unknown, scenes: SceneCollection): ClipCollection {
     const record = asRecord(value);
     if (!record) return;
     const rawSceneId = record.sceneId;
-    const sceneId = isClipSceneId(rawSceneId) ? rawSceneId : null;
+    const sceneId =
+      typeof rawSceneId === 'string' && isSceneKey(rawSceneId)
+        ? rawSceneId
+        : null;
     const trackId = typeof record.trackId === 'string' ? record.trackId : null;
     if (!sceneId || !trackId) return;
     const scene = scenes[sceneId];
@@ -1195,7 +1228,7 @@ function readClips(raw: unknown, scenes: SceneCollection): ClipCollection {
       color:
         typeof record.color === 'string'
           ? record.color
-          : (existing?.color ?? CLIP_COLORS[sceneId]),
+          : (existing?.color ?? clipColorForScene(sceneId)),
       followAction: isClipFollowAction(record.followAction)
         ? record.followAction
         : (existing?.followAction ?? 'none'),
@@ -1216,14 +1249,16 @@ function readClips(raw: unknown, scenes: SceneCollection): ClipCollection {
 
 function readArrangement(
   raw: unknown,
-  fallback: ArrangementState
+  fallback: ArrangementState,
+  scenes: SceneCollection
 ): ArrangementState {
   const data = asRecord(raw);
-  if (!data) return fallback;
-  const rawBlocks = Array.isArray(data.blocks) ? data.blocks : [];
+  if (!data || !Array.isArray(data.blocks)) return fallback;
+  const rawBlocks = data.blocks;
   const blocks = rawBlocks.flatMap(value => {
     const record = asRecord(value);
     if (!record || !isClipSceneId(record.sceneId)) return [];
+    if (!scenes[record.sceneId]) return [];
     const id = typeof record.id === 'string' ? record.id : null;
     if (!id) return [];
     return [
@@ -1234,9 +1269,8 @@ function readArrangement(
       }
     ];
   });
-  if (blocks.length === 0) return fallback;
   const blockIndex = Math.round(
-    clamp(numberOr(data.blockIndex, 0), 0, blocks.length - 1)
+    clamp(numberOr(data.blockIndex, 0), 0, Math.max(0, blocks.length - 1))
   );
   const bar = Math.round(
     clamp(numberOr(data.bar, 0), 0, Math.max(0, (blocks[blockIndex]?.bars ?? 1) - 1))
@@ -1307,10 +1341,7 @@ function readClipQuantize(raw: unknown): ClipQuantize {
 }
 
 function isClipSceneId(value: unknown): value is SceneId {
-  return (
-    typeof value === 'string' &&
-    (CLIP_SCENE_ORDER as readonly string[]).includes(value)
-  );
+  return typeof value === 'string' && isSceneKey(value);
 }
 
 function isClipFollowAction(value: unknown): value is ClipFollowAction {

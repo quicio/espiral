@@ -183,4 +183,51 @@ describe('ClipService', () => {
     expect(state.clips[kick]?.followAction).toBe('random');
     expect(state.clips[kick]?.followAfter).toBe(4);
   });
+
+  it('moves an active clip to an empty slot and remaps its id', () => {
+    const { store, clips } = setup();
+    const umbralKick = clipId('umbral', 'kick');
+    clips.removeClip(clipId('deriva', 'kick'));
+    const pattern = store.getState().clips[umbralKick]?.pattern.steps;
+
+    clips.moveClip(umbralKick, 'deriva');
+
+    const state = store.getState();
+    const moved = clipId('deriva', 'kick');
+    expect(state.clips[umbralKick]).toBeUndefined();
+    expect(state.clips[moved]?.pattern.steps).toEqual(pattern);
+    expect(state.activeClips.kick).toBe(moved);
+  });
+
+  it('swaps clips when the target slot is occupied', () => {
+    const { store, clips } = setup();
+    const umbralKick = clipId('umbral', 'kick');
+    const derivaKick = clipId('deriva', 'kick');
+    const umbralPattern = store.getState().clips[umbralKick]?.pattern.steps;
+    const derivaPattern = store.getState().clips[derivaKick]?.pattern.steps;
+
+    clips.launchClip(derivaKick);
+    clips.moveClip(umbralKick, 'deriva');
+
+    const state = store.getState();
+    expect(state.clips[umbralKick]?.pattern.steps).toEqual(derivaPattern);
+    expect(state.clips[derivaKick]?.pattern.steps).toEqual(umbralPattern);
+    expect(state.activeClips.kick).toBe(umbralKick);
+  });
+
+  it('moves a clip to a dynamic scene added at runtime', () => {
+    const { store, clips } = setup();
+    store.update(state => ({
+      ...state,
+      scenes: {
+        ...state.scenes,
+        'escena-5': { ...state.scenes.umbral, id: 'escena-5', name: 'Escena 5' }
+      }
+    }));
+
+    clips.moveClip(clipId('umbral', 'kick'), 'escena-5');
+
+    expect(store.getState().clips[clipId('escena-5', 'kick')]).toBeDefined();
+    expect(store.getState().clips[clipId('umbral', 'kick')]).toBeUndefined();
+  });
 });

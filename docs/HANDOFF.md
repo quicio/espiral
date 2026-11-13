@@ -1,8 +1,8 @@
 ---
 id: handoff
 status: vigente
-version: 1.0.0
-updated: 2026-11-10
+version: 1.1.0
+updated: 2026-11-12
 ---
 
 # Handoff — Espiral
@@ -15,23 +15,22 @@ AudioWorklet para plugins.
 
 Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
-## Estado medido (2026-11-10)
+## Estado medido (2026-11-12)
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **176 pasan / 29 archivos** en 2.5 s | `npm test` |
-| typecheck | limpio, 3.2 s | `npm run typecheck` |
-| build | 3.7 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 520.02 kB (132.59 kB gzip) | salida de `npm run build` |
+| tests unitarios | **186 pasan / 29 archivos** en ~2 s | `npm test` |
+| typecheck | limpio, ~3 s | `npm run typecheck` |
+| build | ~3 s (Vite, con typecheck previo) | `npm run build` |
+| bundle principal | 527.56 kB (134.51 kB gzip) | salida de `npm run build` |
 | código | 109 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 24 en `docs/specs/` | `ls docs/specs` |
+| specs | 25 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio, HEAD `fb52274` al momento de la medición | `git status` |
+| git | árbol limpio tras el commit de spec 24 | `git status` |
 
-**Los dos checks de Playwright no corren en un clone fresco.** Verificado hoy:
-`npm run test:audio` y `npm run test:integration` abortan pidiendo
-`npx playwright install`. Instalá el navegador una vez y recién después son
-verificables. CI los corre con `npx playwright install --with-deps chromium`.
+**Los checks de Playwright ya corren en esta máquina** (Chromium instalado el
+2026-11-12). Un clone fresco sigue necesitando `npx playwright install chromium`;
+CI usa `npx playwright install --with-deps chromium`.
 
 ## Mapa de capas
 
@@ -83,9 +82,9 @@ prueba final de lo visual.
 | `docs/specs/00-roadmap.md` vs `ROADMAP.md` | el primero es histórico y lo dice; el vigente es el de la raíz | no actualizar el histórico |
 | `03-tracks-and-ui` dice **diseño** | el README ya lista 16 tracks, routing, mod matrix y locks como presentes | confirmar con `git log` y actualizar la spec, no el README |
 | Specs 02 (plugin SDK) en diseño | el rack de inserts ya existe en la UI | verificar alcance antes de implementar terceros |
-| Playwright no instalado | bloquea `test:audio` / `test:integration` | `npx playwright install chromium` |
 | Medidores por track / baseline de performance | pendiente declarado en `architecture.md` | Fase 4 |
-| Clip Grid usa escenas como backing store | M1.2 debe desacoplar clip y patrón; editar un track detenido no persiste hasta relanzar | spec 13, ADR-0005 |
+| Mover clips entre tracks | fuera de alcance en spec 24: el patrón vivo es por instrumento | evaluar en M3 si aparece la necesidad |
+| Escenas vacías sin snapshot | `addScene` duplica la escena actual para garantizar un snapshot completo | diseñar en una spec nueva si se pide Session View puro |
 
 ## Qué NO hacer
 

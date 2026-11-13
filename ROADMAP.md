@@ -77,9 +77,10 @@ Specs relacionadas: `docs/specs/01` a `docs/specs/12`.
 **Resultado:** cada track puede tener clips independientes en una grilla. Lanzar un clip
 o una escena no reinicia el resto de la música.
 
-**Estado:** M1.1 y M1.2 implementados (specs 13 y 16 / ADR-0005). Clips con patrón
-propio, creación, duplicado, rename, color y delete. Pendiente: filas/slots dinámicos más
-allá de las cuatro escenas y drag/drop de clips.
+**Estado:** M1.1, M1.2 y M1.3 implementados (specs 13, 16 y 24 / ADR-0005). Clips con
+patrón propio, creación, duplicado, rename, color, delete, escenas dinámicas
+(agregar, reordenar, eliminar) y drag/drop vertical de clips dentro de un track.
+Pendiente: mover clips entre tracks y crear escenas vacías sin snapshot.
 
 ### Alcance
 

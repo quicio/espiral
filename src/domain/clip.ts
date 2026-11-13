@@ -1,5 +1,5 @@
 import type { KitState, TrackState } from './kit';
-import type { SceneId } from './models';
+import { BUILTIN_SCENE_IDS, type BuiltinSceneId, type SceneId } from './models';
 import {
   countSteps,
   emptyStepValues,
@@ -20,19 +20,40 @@ export type ClipFollowAction =
 
 export type ClipQuantize = 'immediate' | 'beat' | 'bar' | '2bar';
 
-export const CLIP_SCENE_ORDER: readonly SceneId[] = [
-  'umbral',
-  'deriva',
-  'pulso',
-  'caos'
+export const CLIP_SCENE_ORDER: readonly SceneId[] = BUILTIN_SCENE_IDS;
+
+const CLIP_PALETTE: readonly string[] = [
+  '#c0816e',
+  '#7a9e9f',
+  '#b98a4a',
+  '#8e7cc3',
+  '#6f8f5f',
+  '#a86b8c',
+  '#5f8399',
+  '#9b7b4f'
 ];
 
-export const CLIP_COLORS: Readonly<Record<SceneId, string>> = {
-  umbral: '#c0816e',
-  deriva: '#7a9e9f',
-  pulso: '#b98a4a',
-  caos: '#8e7cc3'
+export const CLIP_COLORS: Readonly<Record<BuiltinSceneId, string>> = {
+  umbral: CLIP_PALETTE[0]!,
+  deriva: CLIP_PALETTE[1]!,
+  pulso: CLIP_PALETTE[2]!,
+  caos: CLIP_PALETTE[3]!
 };
+
+export function clipColorForScene(sceneId: SceneId, index = -1): string {
+  const builtin = CLIP_COLORS[sceneId as BuiltinSceneId];
+  if (builtin) return builtin;
+  if (index >= 0) return CLIP_PALETTE[index % CLIP_PALETTE.length]!;
+  let hash = 0;
+  for (let position = 0; position < sceneId.length; position += 1) {
+    hash = (hash * 31 + sceneId.charCodeAt(position)) | 0;
+  }
+  return CLIP_PALETTE[Math.abs(hash) % CLIP_PALETTE.length]!;
+}
+
+export function sceneIdList(scenes: object): readonly SceneId[] {
+  return Object.keys(scenes);
+}
 
 export const DEFAULT_CLIP_QUANTIZE: ClipQuantize = 'bar';
 
@@ -75,7 +96,7 @@ export function createClipsFromScenes(
   scenes: SceneCollection
 ): ClipCollection {
   const clips: Record<string, ClipState> = {};
-  CLIP_SCENE_ORDER.forEach(sceneId => {
+  sceneIdList(scenes).forEach((sceneId, sceneIndex) => {
     const scene = scenes[sceneId];
     if (!scene) return;
     Object.values(scene.kit.tracks)
@@ -83,7 +104,12 @@ export function createClipsFromScenes(
       .forEach(track => {
         const pattern = trackPatternData(scene.pattern, track.id);
         if (!pattern) return;
-        const clip = createClipForTrack(sceneId, track, pattern);
+        const clip = createClipForTrack(
+          sceneId,
+          track,
+          pattern,
+          clipColorForScene(sceneId, sceneIndex)
+        );
         clips[clip.id] = clip;
       });
   });
@@ -93,14 +119,15 @@ export function createClipsFromScenes(
 export function createClipForTrack(
   sceneId: SceneId,
   track: TrackState,
-  pattern: TrackPatternData
+  pattern: TrackPatternData,
+  color = clipColorForScene(sceneId)
 ): ClipState {
   return {
     id: clipId(sceneId, track.id),
     trackId: track.id,
     sceneId,
     name: track.name,
-    color: CLIP_COLORS[sceneId],
+    color,
     followAction: 'none',
     followAfter: 0,
     pattern
@@ -113,13 +140,18 @@ export function addClipsForTrack(
   trackId: string
 ): ClipCollection {
   const next: Record<string, ClipState> = { ...clips };
-  CLIP_SCENE_ORDER.forEach(sceneId => {
+  sceneIdList(scenes).forEach((sceneId, sceneIndex) => {
     const scene = scenes[sceneId];
     const track = scene?.kit.tracks[trackId];
     if (!scene || !track?.hasPattern) return;
     const pattern = trackPatternData(scene.pattern, trackId);
     if (!pattern) return;
-    const clip = createClipForTrack(sceneId, track, pattern);
+    const clip = createClipForTrack(
+      sceneId,
+      track,
+      pattern,
+      clipColorForScene(sceneId, sceneIndex)
+    );
     if (!next[clip.id]) next[clip.id] = clip;
   });
   return next;
@@ -156,15 +188,19 @@ export function activeClipsForScene(
 
 export function clipsForTrack(
   clips: ClipCollection,
-  trackId: string
+  trackId: string,
+  sceneOrder: readonly SceneId[] = CLIP_SCENE_ORDER
 ): readonly ClipState[] {
   return Object.values(clips)
     .filter(clip => clip.trackId === trackId)
     .sort(
-      (a, b) =>
-        CLIP_SCENE_ORDER.indexOf(a.sceneId) -
-        CLIP_SCENE_ORDER.indexOf(b.sceneId)
+      (a, b) => sceneIndex(sceneOrder, a.sceneId) - sceneIndex(sceneOrder, b.sceneId)
     );
+}
+
+function sceneIndex(order: readonly SceneId[], sceneId: SceneId): number {
+  const index = order.indexOf(sceneId);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
 export function trackPatternData(
@@ -193,6 +229,20 @@ export function emptyClipPattern(): TrackPatternData {
     velocity: emptyStepValues(1),
     probability: emptyStepValues(1),
     ratchets: emptyStepValues(1)
+  };
+}
+
+export function cloneTrackPatternData(
+  data: TrackPatternData
+): TrackPatternData {
+  return {
+    steps: [...data.steps],
+    pulses: data.pulses,
+    frozen: data.frozen,
+    locks: data.locks.map(step => step.map(lock => ({ ...lock }))),
+    velocity: [...data.velocity],
+    probability: [...data.probability],
+    ratchets: [...data.ratchets]
   };
 }
 

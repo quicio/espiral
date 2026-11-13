@@ -5,7 +5,19 @@ import type { ModulationState } from './modulation';
 import type { Pattern, PatternState, PatternSteps } from './pattern';
 import type { SceneCollection } from './scene';
 
-export type SceneId = 'umbral' | 'deriva' | 'pulso' | 'caos';
+export type BuiltinSceneId = 'umbral' | 'deriva' | 'pulso' | 'caos';
+/**
+ * Las escenas base siguen teniendo autocompletado, pero el modelo admite
+ * escenas creadas en runtime. El orden vigente vive en `state.scenes`.
+ */
+export type SceneId = BuiltinSceneId | (string & {});
+
+export const BUILTIN_SCENE_IDS: readonly BuiltinSceneId[] = [
+  'umbral',
+  'deriva',
+  'pulso',
+  'caos'
+];
 export type ScaleId =
   | 'minor'
   | 'harmonic'

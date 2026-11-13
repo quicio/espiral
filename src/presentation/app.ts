@@ -112,7 +112,7 @@ export class EspiralApp {
     this.openArmWizard(true);
     this.deps.status.instrument('Detenido');
     this.deps.status.generative(
-      `Semilla ${this.lastState.seed} · escena ${this.deps.catalog.sceneLabel(this.lastState.scene)}.`
+      `Semilla ${this.lastState.seed} · escena ${this.lastState.scenes[this.lastState.scene]?.name ?? this.deps.catalog.sceneLabel(this.lastState.scene)}.`
     );
     this.startMeter();
   }
@@ -452,6 +452,7 @@ export class EspiralApp {
     this.bindDynamics();
     this.bindChannelActions();
     this.bindClipActions();
+    this.bindClipDrag();
     this.bindSessionActions();
     this.bindHistory();
     this.bindLiveInput();
@@ -783,13 +784,17 @@ export class EspiralApp {
   }
 
   private bindSceneButtons(): void {
-    view.qa<HTMLButtonElement>('[data-scene]').forEach(button => {
-      button.addEventListener('click', () => {
-        const id = button.getAttribute('data-scene');
-        if (id && this.deps.catalog.scenes.some(scene => scene.id === id)) {
-          this.deps.scenes.apply(id as SceneId);
-        }
-      });
+    const grid = view.q('.scene-grid');
+    if (!grid) return;
+    grid.addEventListener('click', event => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-scene]')
+          : null;
+      const id = target?.getAttribute('data-scene');
+      if (id && this.deps.store.getState().scenes[id]) {
+        this.deps.scenes.apply(id);
+      }
     });
   }
 
@@ -1071,7 +1076,12 @@ export class EspiralApp {
   }
 
   private bindClipActions(): void {
-    const { clips, patterns } = this.deps;
+    const { clips, patterns, scenes } = this.deps;
+
+    view.must('#session-add-scene').addEventListener('click', () => {
+      scenes.addScene();
+      this.refreshSession();
+    });
 
     view.must<HTMLSelectElement>('#clip-quantize').addEventListener('change', event => {
       if (!(event.target instanceof HTMLSelectElement)) return;
@@ -1089,19 +1099,33 @@ export class EspiralApp {
       const stop = attr(event, 'data-clip-stop');
       const scene = attr(event, 'data-scene-launch');
       const select = attr(event, 'data-select');
+      const sceneApply = attr(event, 'data-scene-apply');
+      const sceneMove = attr(event, 'data-scene-move');
+      const sceneOffset = attr(event, 'data-scene-offset');
+      const sceneDelete = attr(event, 'data-scene-delete');
 
-      if (clip) {
+      if (sceneApply && this.deps.store.getState().scenes[sceneApply]) {
+        scenes.apply(sceneApply);
+      } else if (sceneMove) {
+        scenes.moveScene(sceneMove, Number(sceneOffset ?? 0));
+      } else if (sceneDelete) {
+        scenes.removeScene(sceneDelete);
+      } else if (clip) {
         clips.launchClip(clip);
         const trackId = this.deps.store.getState().clips[clip]?.trackId;
         if (trackId) patterns.selectChannel(trackId);
       } else if (create) {
         const [sceneId, trackId] = create.split(':');
-        if (sceneId && trackId && isSceneId(sceneId)) {
+        if (
+          sceneId &&
+          trackId &&
+          this.deps.store.getState().scenes[sceneId]
+        ) {
           clips.createClip(sceneId, trackId);
         }
       } else if (stop) {
         clips.stopTrack(stop);
-      } else if (scene && isSceneId(scene)) {
+      } else if (scene && this.deps.store.getState().scenes[scene]) {
         clips.launchScene(scene);
       } else if (select) {
         patterns.selectChannel(select);
@@ -1121,6 +1145,26 @@ export class EspiralApp {
       const clipId = target.getAttribute('data-clip-launch');
       if (!clipId || !Number.isFinite(row) || !Number.isFinite(col)) return;
       const trackId = this.deps.store.getState().clips[clipId]?.trackId;
+
+      if (
+        event.altKey &&
+        (event.key === 'ArrowUp' || event.key === 'ArrowDown')
+      ) {
+        event.preventDefault();
+        const state = this.deps.store.getState();
+        const current = state.clips[clipId];
+        if (!current) return;
+        const sceneIds = Object.keys(state.scenes);
+        const index = sceneIds.indexOf(current.sceneId);
+        const target = index + (event.key === 'ArrowUp' ? -1 : 1);
+        const targetScene = sceneIds[target];
+        if (targetScene) {
+          clips.moveClip(clipId, targetScene);
+          this.refreshSession();
+          this.focusSessionCell(target, col);
+        }
+        return;
+      }
 
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -1212,6 +1256,77 @@ export class EspiralApp {
     });
   }
 
+  private bindClipDrag(): void {
+    const grid = view.must('#session-grid');
+    let dragged: string | null = null;
+
+    const clear = (): void => {
+      dragged = null;
+      grid
+        .querySelectorAll<HTMLElement>('.is-dragging, .is-drop-target')
+        .forEach(element =>
+          element.classList.remove('is-dragging', 'is-drop-target')
+        );
+    };
+
+    const dropCell = (event: Event): HTMLElement | null => {
+      if (!(event.target instanceof Element) || !dragged) return null;
+      const cell = event.target.closest<HTMLElement>(
+        '[data-session-scene][data-session-track]'
+      );
+      if (!cell) return null;
+      const trackId = cell.getAttribute('data-session-track');
+      const clip = this.deps.store.getState().clips[dragged];
+      return clip && trackId === clip.trackId ? cell : null;
+    };
+
+    grid.addEventListener('dragstart', event => {
+      const target =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('[data-clip-launch]')
+          : null;
+      if (!target) return;
+      dragged = target.getAttribute('data-clip-launch');
+      target.classList.add('is-dragging');
+      if (event instanceof DragEvent && event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', dragged ?? '');
+      }
+    });
+
+    grid.addEventListener('dragover', event => {
+      const cell = dropCell(event);
+      if (!cell) return;
+      event.preventDefault();
+      if (event instanceof DragEvent && event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'move';
+      }
+      grid
+        .querySelectorAll<HTMLElement>('.is-drop-target')
+        .forEach(element => element.classList.remove('is-drop-target'));
+      cell.classList.add('is-drop-target');
+    });
+
+    grid.addEventListener('dragleave', event => {
+      if (!(event.target instanceof Element)) return;
+      event.target
+        .closest<HTMLElement>('[data-session-scene]')
+        ?.classList.remove('is-drop-target');
+    });
+
+    grid.addEventListener('drop', event => {
+      const cell = dropCell(event);
+      if (!cell || !dragged) return;
+      event.preventDefault();
+      const sceneId = cell.getAttribute('data-session-scene');
+      if (sceneId) this.deps.clips.moveClip(dragged, sceneId);
+      clear();
+      this.refreshSession();
+    });
+
+    grid.addEventListener('dragend', clear);
+  }
+
   private bindLiveInput(): void {
     view.must('#midi-connect').addEventListener('click', () => {
       void this.toggleMidi();
@@ -1244,7 +1359,9 @@ export class EspiralApp {
     view.must('#arrangement-reset').addEventListener('click', () => arrangement.reset());
     view.must('#arrangement-add').addEventListener('click', () => {
       const scene = view.q<HTMLSelectElement>('#arrangement-scene')?.value;
-      if (scene && isSceneId(scene)) arrangement.addBlock(scene);
+      if (scene && this.deps.store.getState().scenes[scene]) {
+        arrangement.addBlock(scene);
+      }
     });
 
     view.must('#arrangement-timeline').addEventListener('click', event => {

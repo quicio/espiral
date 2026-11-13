@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { SessionMapper } from '../adapters/session-mapper';
 import { ClipService } from '../application/clip';
 import { createInitialState } from '../application/initial-state';
+import { MixService } from '../application/mix';
 import { PlaybackRuntime } from '../application/runtime';
+import { SceneService } from '../application/scenes';
 import { Store } from '../application/store';
 import { TrackService } from '../application/tracks';
 import {
@@ -219,7 +221,7 @@ describe('SessionMapper', () => {
 
   it('rejects an invalid version', () => {
     const { store, mapper } = setup();
-    expect(() => mapper.fromDto({ version: 3 }, store.getState())).toThrow('Sesión inválida');
+    expect(() => mapper.fromDto({ version: 4 }, store.getState())).toThrow('Sesión inválida');
   });
 
   it('loads legacy sessions without inserts', () => {
@@ -295,6 +297,67 @@ describe('SessionMapper', () => {
     expect(restored.pattern.steps.kick).toEqual(
       restored.scenes.deriva.pattern.steps.kick
     );
+  });
+
+  it('round-trips dynamic scenes, their order and their clips', () => {
+    const { store, mapper } = setup();
+    const scenes = new SceneService(
+      store,
+      new MixService(store, new FakeAudioEngine()),
+      new PlaybackRuntime(),
+      new FakeStatus()
+    );
+    const dynamicId = scenes.addScene()!;
+    scenes.moveScene(dynamicId, -1);
+
+    const original = store.getState();
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(original))),
+      original
+    );
+
+    expect(Object.keys(restored.scenes)).toEqual(
+      Object.keys(original.scenes)
+    );
+    expect(restored.scenes[dynamicId]?.name).toBe('Escena 5');
+    expect(restored.clips[clipId(dynamicId, 'kick')]?.pattern.steps).toEqual(
+      original.clips[clipId(dynamicId, 'kick')]?.pattern.steps
+    );
+  });
+
+  it('loads version 2 sessions with the four base scenes', () => {
+    const { store, mapper } = setup();
+    const dto = JSON.parse(JSON.stringify(mapper.toDto(store.getState())));
+
+    const restored = mapper.fromDto({ ...dto, version: 2 }, store.getState());
+
+    expect(Object.keys(restored.scenes)).toEqual([
+      'umbral',
+      'deriva',
+      'pulso',
+      'caos'
+    ]);
+    expect(restored.clips[clipId('umbral', 'kick')]).toBeDefined();
+  });
+
+  it('round-trips a session after removing a scene', () => {
+    const { store, mapper } = setup();
+    const scenes = new SceneService(
+      store,
+      new MixService(store, new FakeAudioEngine()),
+      new PlaybackRuntime(),
+      new FakeStatus()
+    );
+    scenes.removeScene('caos');
+
+    const original = store.getState();
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(original))),
+      original
+    );
+
+    expect(Object.keys(restored.scenes)).toEqual(['umbral', 'deriva', 'pulso']);
+    expect(restored.clips[clipId('caos', 'kick')]).toBeUndefined();
   });
 
   it('round-trips the arrangement', () => {

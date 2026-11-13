@@ -91,7 +91,10 @@ export class PresetMapper implements PresetCodec {
       ? data.scene
       : current.scene;
     const selectedScene =
-      scenes[scene] ?? current.scenes[current.scene];
+      scenes[scene] ??
+      current.scenes[current.scene] ??
+      Object.values(scenes)[0];
+    if (!selectedScene) throw new Error('Preset sin escena');
     const selected =
       typeof data.selected === 'string' &&
       selectedScene.pattern.steps[data.selected] !== undefined

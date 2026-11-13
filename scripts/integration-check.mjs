@@ -152,6 +152,54 @@ try {
     throw new Error(`Stop all dejó ${activeAfterStop} clips activos.`);
   }
 
+  await page.locator('#session-add-scene').click();
+  await page.waitForTimeout(150);
+  const rowsAfterAdd = await page.locator('.session-row').count();
+  const dynamicClip = await page
+    .locator('[data-clip-launch="clip-escena-5-kick"]')
+    .count();
+  const arrangementHasDynamic = await page
+    .locator('#arrangement-scene option[value="escena-5"]')
+    .count();
+  if (rowsAfterAdd !== 6 || dynamicClip !== 1 || arrangementHasDynamic !== 1) {
+    throw new Error(
+      `Escena dinámica incompleta: ${rowsAfterAdd} filas, ${dynamicClip} clips, ${arrangementHasDynamic} opciones.`
+    );
+  }
+  await page.setViewportSize({ width: 1440, height: 1400 });
+  await page.locator('[data-clip-launch="clip-umbral-kick"]').click();
+  await page.waitForTimeout(120);
+  const dragSource = page.locator('[data-clip-launch="clip-umbral-kick"]');
+  const dragTarget = page.locator('[data-clip-launch="clip-escena-5-kick"]');
+  const sourceBox = await dragSource.boundingBox();
+  const targetBox = await dragTarget.boundingBox();
+  if (!sourceBox || !targetBox) throw new Error('No se pudo medir el drag/drop.');
+  await page.mouse.move(
+    sourceBox.x + sourceBox.width / 2,
+    sourceBox.y + sourceBox.height / 2
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    targetBox.x + targetBox.width / 2,
+    targetBox.y + targetBox.height / 2,
+    { steps: 20 }
+  );
+  await page.mouse.up();
+  await page.waitForTimeout(250);
+  const movedActive = await page
+    .locator('[data-clip-launch="clip-escena-5-kick"]')
+    .getAttribute('aria-pressed');
+  if (movedActive !== 'true') {
+    throw new Error(`El drag/drop no conservó el clip activo: ${movedActive}.`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.locator('[data-scene-delete="escena-5"]').click();
+  await page.waitForTimeout(150);
+  const rowsAfterDelete = await page.locator('.session-row').count();
+  if (rowsAfterDelete !== 5) {
+    throw new Error(`Eliminar escena dejó ${rowsAfterDelete} filas.`);
+  }
+
   await page.locator('#tab-session').focus();
   await page.keyboard.press('Space');
   await page.waitForFunction(
