@@ -643,6 +643,18 @@ export function renderArrangement(
     loop.classList.toggle('is-active', state.arrangement.loop);
   }
 
+  const record = q<HTMLButtonElement>('#arrangement-record');
+  if (record) {
+    record.textContent = state.arrangement.recording
+      ? 'Detener grabación'
+      : 'Grabar';
+    record.setAttribute(
+      'aria-pressed',
+      state.arrangement.recording ? 'true' : 'false'
+    );
+    record.classList.toggle('is-active', state.arrangement.recording);
+  }
+
   const activeBlock =
     state.arrangement.blocks[state.arrangement.blockIndex];
   const activeScene = activeBlock
@@ -653,9 +665,11 @@ export function renderArrangement(
     : '';
   const readout = q('#arrangement-readout');
   if (readout) {
-    readout.textContent = state.arrangement.enabled
-      ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.name ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}${loopLabel}`
-      : `Arrangement detenido · ${state.arrangement.blocks.length} bloques${loopLabel}`;
+    readout.textContent = state.arrangement.recording
+      ? `Grabando · ${state.arrangement.blocks.length} bloques`
+      : state.arrangement.enabled
+        ? `Bloque ${state.arrangement.blockIndex + 1}/${state.arrangement.blocks.length} · ${activeScene?.name ?? activeBlock?.sceneId ?? '—'} · compás ${state.arrangement.bar + 1}/${activeBlock?.bars ?? 0}${loopLabel}`
+        : `Arrangement detenido · ${state.arrangement.blocks.length} bloques${loopLabel}`;
   }
 
   timeline.innerHTML = state.arrangement.blocks

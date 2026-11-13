@@ -109,6 +109,7 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     },
     arrangement: {
       enabled: false,
+      recording: false,
       blocks: [
         { id: 'block-umbral', sceneId: 'umbral', bars: 4 },
         { id: 'block-deriva', sceneId: 'deriva', bars: 4 },

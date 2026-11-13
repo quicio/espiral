@@ -269,6 +269,41 @@ try {
     throw new Error(`Loop desactivado dejó ${loopBlocksOff} bloques marcados.`);
   }
 
+  await page.locator('#arrangement-record').click();
+  await page.locator('#tab-session').click();
+  await page.locator('#transport-play').click();
+  await page.waitForFunction(
+    () =>
+      (document.querySelector('#instrument-status')?.textContent ?? '').trim() ===
+      'Reproduciendo',
+    undefined,
+    { timeout: 6000 }
+  );
+  await page.waitForTimeout(1300);
+  await page.locator('[data-scene-launch="deriva"]').click();
+  await page.waitForTimeout(1300);
+  await page.locator('[data-scene-launch="pulso"]').click();
+  await page.waitForTimeout(1300);
+  await page.locator('#transport-play').click();
+  await page.waitForTimeout(300);
+  await page.locator('#tab-arrangement').click();
+  const recordedBlocks = await page.locator('.arrangement-block').count();
+  const recordedNames = await page
+    .locator('.arrangement-block strong')
+    .allTextContents();
+  const recordPressed = await page
+    .locator('#arrangement-record')
+    .getAttribute('aria-pressed');
+  if (
+    recordedBlocks < 2 ||
+    !recordedNames.some(name => name.includes('Deriva')) ||
+    recordPressed !== 'false'
+  ) {
+    throw new Error(
+      `Grabación incompleta: ${recordedBlocks} bloques, ${recordedNames.join(',')}, rec=${recordPressed}.`
+    );
+  }
+
   await page.locator('#tab-sound').click();
   const mixerRows = await page.locator('.mixer-row').count();
   const bankDrawerOpen = await page

@@ -396,6 +396,7 @@ describe('SessionMapper', () => {
       ...state,
       arrangement: {
         enabled: true,
+        recording: false,
         blocks: [
           { id: 'a', sceneId: 'pulso', bars: 2 },
           { id: 'b', sceneId: 'caos', bars: 6 }

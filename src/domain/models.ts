@@ -83,6 +83,7 @@ export interface ArrangementBlock {
 
 export interface ArrangementState {
   readonly enabled: boolean;
+  readonly recording: boolean;
   readonly blocks: readonly ArrangementBlock[];
   readonly blockIndex: number;
   readonly bar: number;

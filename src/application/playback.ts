@@ -109,6 +109,7 @@ export class PlaybackService {
     this.running = false;
     this.clock.stop();
     this.engine.stop();
+    this.arrangement?.stopRecording();
     this.clips.clearPending();
     this.restoreLocks();
     this.store.update(current => ({

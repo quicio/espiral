@@ -1,6 +1,7 @@
-import type { ArrangementState } from '../domain/models';
+import type { ArrangementBlock, ArrangementState } from '../domain/models';
 import type { SceneId } from '../domain/models';
 import type { StatusPort } from '../domain/ports';
+import type { PlaybackRuntime } from './runtime';
 import type { SceneService } from './scenes';
 import type { Store } from './store';
 
@@ -8,10 +9,13 @@ const BAR_STEPS = 16;
 const DEFAULT_BARS = 4;
 
 export class ArrangementService {
+  private recordBlockStarts: number[] = [];
+
   constructor(
     private readonly store: Store,
     private readonly scenes: SceneService,
-    private readonly status: StatusPort
+    private readonly status: StatusPort,
+    private readonly runtime: PlaybackRuntime
   ) {}
 
   toggle(): void {
@@ -68,6 +72,98 @@ export class ArrangementService {
     const loopStart = clamp(Math.round(start), 0, total - 1);
     const loopEnd = clamp(Math.round(end), loopStart + 1, total);
     this.update({ ...state.arrangement, loopStart, loopEnd });
+  }
+
+  toggleRecording(): void {
+    if (this.store.getState().arrangement.recording) {
+      this.stopRecording();
+    } else {
+      this.startRecording();
+    }
+  }
+
+  startRecording(): void {
+    const state = this.store.getState();
+    this.recordBlockStarts = [];
+    this.update({
+      ...state.arrangement,
+      recording: true,
+      enabled: false,
+      blocks: [],
+      blockIndex: 0,
+      bar: 0,
+      loop: false,
+      loopStart: 0,
+      loopEnd: 0
+    });
+    this.status.generative(
+      'Grabación armada. Reproducí y lanzá escenas para escribir el arrangement.'
+    );
+  }
+
+  stopRecording(): void {
+    const state = this.store.getState();
+    if (!state.arrangement.recording) return;
+    const bar = Math.floor(this.runtime.absoluteStep / BAR_STEPS);
+    const blocks = this.finalizeTake(state.arrangement.blocks, bar);
+    this.recordBlockStarts = [];
+    this.update({
+      ...state.arrangement,
+      recording: false,
+      blocks,
+      blockIndex: 0,
+      bar: 0,
+      loopStart: 0,
+      loopEnd: blocks.length
+    });
+    this.status.generative(
+      blocks.length > 0
+        ? `Grabación terminada · ${blocks.length} bloques.`
+        : 'No se grabó ninguna escena.'
+    );
+  }
+
+  recordScene(sceneId: SceneId): void {
+    const state = this.store.getState();
+    if (!state.arrangement.recording || !state.transport.playing) return;
+
+    const bar = Math.floor(this.runtime.absoluteStep / BAR_STEPS);
+    const blocks = [...state.arrangement.blocks];
+    const last = blocks.at(-1);
+    if (last?.sceneId === sceneId) return;
+
+    if (last) {
+      const lastStart = this.recordBlockStarts.at(-1) ?? bar;
+      blocks[blocks.length - 1] = {
+        ...last,
+        bars: Math.max(1, bar - lastStart)
+      };
+    }
+
+    const id = `block-${Date.now().toString(36)}-${blocks.length}`;
+    blocks.push({ id, sceneId, bars: 1 });
+    this.recordBlockStarts.push(bar);
+    this.update({
+      ...state.arrangement,
+      blocks,
+      blockIndex: 0,
+      bar: 0,
+      loopStart: 0,
+      loopEnd: blocks.length
+    });
+    this.status.generative(`Grabado ${sceneId} · compás ${bar + 1}.`);
+  }
+
+  private finalizeTake(
+    blocks: readonly ArrangementBlock[],
+    bar: number
+  ): readonly ArrangementBlock[] {
+    if (blocks.length === 0) return blocks;
+    const last = blocks[blocks.length - 1];
+    if (!last) return blocks;
+    const start = this.recordBlockStarts.at(-1) ?? bar;
+    const bars = Math.max(1, bar - start + (bar === start ? 1 : 0));
+    return [...blocks.slice(0, -1), { ...last, bars }];
   }
 
   addBlock(sceneId: SceneId): void {

@@ -60,9 +60,9 @@ Nueva vista **Arrange**:
 
 ## Pendiente
 
-- Grabación de performance a arrangement.
 - Automatización por bloque.
 - Bloques por track/clip en la timeline.
 - Export del arrangement.
 
 Locators y loop se implementaron en `spec-29`.
+La grabación de performance se implementó en `spec-30`.

@@ -804,6 +804,7 @@ export class EspiralApp {
       const id = target?.getAttribute('data-scene');
       if (id && this.deps.store.getState().scenes[id]) {
         this.deps.scenes.apply(id);
+        this.deps.arrangement.recordScene(id);
       }
     });
   }
@@ -1167,6 +1168,7 @@ export class EspiralApp {
 
       if (sceneApply && this.deps.store.getState().scenes[sceneApply]) {
         scenes.apply(sceneApply);
+        this.deps.arrangement.recordScene(sceneApply);
       } else if (sceneMove) {
         scenes.moveScene(sceneMove, Number(sceneOffset ?? 0));
       } else if (sceneDelete) {
@@ -1188,6 +1190,7 @@ export class EspiralApp {
         clips.stopTrack(stop);
       } else if (scene && this.deps.store.getState().scenes[scene]) {
         clips.launchScene(scene);
+        this.deps.arrangement.recordScene(scene);
       } else if (select) {
         patterns.selectChannel(select);
       }
@@ -1495,6 +1498,9 @@ export class EspiralApp {
   private bindArrangement(): void {
     const { arrangement } = this.deps;
     view.must('#arrangement-toggle').addEventListener('click', () => arrangement.toggle());
+    view.must('#arrangement-record').addEventListener('click', () => {
+      arrangement.toggleRecording();
+    });
     view.must('#arrangement-reset').addEventListener('click', () => arrangement.reset());
     view.must('#arrangement-loop').addEventListener('click', () => {
       arrangement.setLoop(!this.deps.store.getState().arrangement.loop);

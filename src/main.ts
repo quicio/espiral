@@ -69,7 +69,7 @@ async function boot(): Promise<void> {
     status
   );
   const scenes = new SceneService(store, mix, runtime, status);
-  const arrangement = new ArrangementService(store, scenes, status);
+  const arrangement = new ArrangementService(store, scenes, status, runtime);
   const playback = new PlaybackService(
     store,
     clock,

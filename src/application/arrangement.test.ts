@@ -14,8 +14,8 @@ function setup() {
   const runtime = new PlaybackRuntime();
   const mix = new MixService(store, engine);
   const scenes = new SceneService(store, mix, runtime, status);
-  const arrangement = new ArrangementService(store, scenes, status);
-  return { store, status, arrangement };
+  const arrangement = new ArrangementService(store, scenes, status, runtime);
+  return { store, status, arrangement, runtime };
 }
 
 describe('ArrangementService', () => {
@@ -112,5 +112,66 @@ describe('ArrangementService', () => {
     const state = store.getState().arrangement;
     expect(state.loopStart).toBe(2);
     expect(state.loopEnd).toBe(3);
+  });
+
+  it('records scene launches as blocks with bar lengths', () => {
+    const { store, runtime, arrangement } = setup();
+    store.update(state => ({
+      ...state,
+      transport: { ...state.transport, playing: true }
+    }));
+
+    arrangement.startRecording();
+    runtime.absoluteStep = 0;
+    arrangement.recordScene('umbral');
+    runtime.absoluteStep = 16;
+    arrangement.recordScene('deriva');
+    runtime.absoluteStep = 48;
+    arrangement.recordScene('pulso');
+    runtime.absoluteStep = 64;
+    arrangement.stopRecording();
+
+    const state = store.getState().arrangement;
+    expect(state.recording).toBe(false);
+    expect(state.blocks.map(block => block.sceneId)).toEqual([
+      'umbral',
+      'deriva',
+      'pulso'
+    ]);
+    expect(state.blocks.map(block => block.bars)).toEqual([1, 2, 1]);
+    expect(state.loopEnd).toBe(3);
+  });
+
+  it('does not duplicate the same scene while recording', () => {
+    const { store, runtime, arrangement } = setup();
+    store.update(state => ({
+      ...state,
+      transport: { ...state.transport, playing: true }
+    }));
+
+    arrangement.startRecording();
+    runtime.absoluteStep = 0;
+    arrangement.recordScene('umbral');
+    runtime.absoluteStep = 16;
+    arrangement.recordScene('umbral');
+    runtime.absoluteStep = 32;
+    arrangement.stopRecording();
+
+    const state = store.getState().arrangement;
+    expect(state.blocks).toHaveLength(1);
+    expect(state.blocks[0]?.bars).toBe(2);
+  });
+
+  it('clears the previous take when recording starts', () => {
+    const { store, arrangement } = setup();
+    arrangement.setLoop(true);
+
+    arrangement.startRecording();
+
+    const state = store.getState().arrangement;
+    expect(state.recording).toBe(true);
+    expect(state.enabled).toBe(false);
+    expect(state.loop).toBe(false);
+    expect(state.blocks).toEqual([]);
   });
 });

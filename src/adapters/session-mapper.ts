@@ -1301,6 +1301,7 @@ function readArrangement(
         );
   return {
     enabled: typeof data.enabled === 'boolean' ? data.enabled : fallback.enabled,
+    recording: false,
     blocks,
     blockIndex,
     bar,
