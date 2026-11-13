@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { planLatency, validateGraph, type GraphConfig, type TrackConfig } from './graph';
+import {
+  insertConfigsEqual,
+  planLatency,
+  validateGraph,
+  type GraphConfig,
+  type TrackConfig
+} from './graph';
 
 function config(overrides: Partial<GraphConfig> = {}): GraphConfig {
   return {
@@ -164,3 +170,44 @@ function track(
     sends
   };
 }
+
+describe('insertConfigsEqual', () => {
+  const chain = [
+    {
+      id: 'filter',
+      pluginId: 'filter',
+      bypass: false,
+      params: { cutoff: 1200, q: 1 }
+    }
+  ] as const;
+
+  it('compares ids, plugins, bypass, params and latency', () => {
+    expect(insertConfigsEqual(chain, [...chain])).toBe(true);
+    expect(
+      insertConfigsEqual(chain, [{ ...chain[0], bypass: true }])
+    ).toBe(false);
+    expect(
+      insertConfigsEqual(chain, [
+        { ...chain[0], params: { cutoff: 1200, q: 2 } }
+      ])
+    ).toBe(false);
+    expect(
+      insertConfigsEqual(chain, [{ ...chain[0], latencySamples: 128 }])
+    ).toBe(false);
+  });
+
+  it('detects order changes and empty chains', () => {
+    const second = {
+      id: 'delay',
+      pluginId: 'delay',
+      bypass: false,
+      params: { wet: 0.3 }
+    };
+
+    expect(insertConfigsEqual([], [])).toBe(true);
+    expect(insertConfigsEqual(chain, [])).toBe(false);
+    expect(insertConfigsEqual([...chain, second], [second, ...chain])).toBe(
+      false
+    );
+  });
+});

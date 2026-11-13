@@ -266,8 +266,10 @@ warp, waveform, slice y pitch/loop del clip.
 
 **Resultado:** la experiencia se siente confiable, rápida y accesible.
 
-**Estado:** performance mode implementado (spec 21). Pendiente: fullscreen, mobile,
-compatibilidad amplia y auditoría de accesibilidad completa.
+**Estado:** performance mode implementado (spec 21). Los cambios de escena ya no
+reconstruyen cadenas de inserts idénticas (spec 31). Pendiente: fullscreen, mobile,
+compatibilidad amplia, auditoría de accesibilidad completa y baseline formal de CPU
+y latencia.
 
 ### Alcance
 

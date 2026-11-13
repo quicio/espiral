@@ -61,6 +61,28 @@ export interface TrackConfig {
   readonly sends: readonly SendConfig[];
 }
 
+export function insertConfigsEqual(
+  current: readonly InsertConfig[],
+  next: readonly InsertConfig[]
+): boolean {
+  if (current.length !== next.length) return false;
+  return current.every((insert, index) => {
+    const other = next[index];
+    if (
+      !other ||
+      insert.id !== other.id ||
+      insert.pluginId !== other.pluginId ||
+      insert.bypass !== other.bypass ||
+      insert.latencySamples !== other.latencySamples
+    ) {
+      return false;
+    }
+    const keys = Object.keys(insert.params);
+    if (keys.length !== Object.keys(other.params).length) return false;
+    return keys.every(key => insert.params[key] === other.params[key]);
+  });
+}
+
 export interface BusConfig {
   readonly id: string;
   readonly name: string;

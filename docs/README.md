@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.7.0
+version: 1.8.0
 updated: 2026-11-13
 ---
 
@@ -56,6 +56,7 @@ el código y la spec se corrige.
 | [28](specs/28-device-chain-presets.md) | Presets de cadenas de dispositivos | implementada |
 | [29](specs/29-arrangement-loop.md) | Loop y locators del arrangement | implementada |
 | [30](specs/30-arrangement-performance-recording.md) | Grabación de performance a arrangement | implementada |
+| [31](specs/31-scene-change-audio-performance.md) | Evitar reconstrucción de cadenas en cambios de escena | implementada |
 
 ## ADR
 

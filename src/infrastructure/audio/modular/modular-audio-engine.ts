@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 import type { EffectKind, NoteDuration, SoundEvent } from '../../../domain/audio';
 import {
+  insertConfigsEqual,
   planLatency,
   validateGraph,
   type BusConfig,
@@ -434,13 +435,17 @@ export class ModularAudioEngine implements AudioEnginePort {
   }
 
   async setTrackInserts(trackId: string, inserts: readonly InsertConfig[]): Promise<void> {
+    const track = this.tracks.get(trackId);
+    if (!track || insertConfigsEqual(track.getInsertConfigs(), inserts)) return;
     await this.loadInsertPlugins(inserts);
-    await this.tracks.get(trackId)?.setInserts(inserts);
+    await track.setInserts(inserts);
   }
 
   async setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void> {
+    const bus = this.buses.get(busId);
+    if (!bus || insertConfigsEqual(bus.getInsertConfigs(), inserts)) return;
     await this.loadInsertPlugins(inserts);
-    await this.buses.get(busId)?.setInserts(inserts);
+    await bus.setInserts(inserts);
   }
 
   async addInsert(

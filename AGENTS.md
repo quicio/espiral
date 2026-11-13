@@ -17,7 +17,7 @@ npx playwright install chromium         # una sola vez, requerido por los checks
 
 npm run dev                             # Vite con HMR
 npm run typecheck                       # tsc --noEmit        (~3 s)
-npm test                                # vitest              206 tests, ~3 s
+npm test                                # vitest              208 tests, ~3 s
 npm run build                           # typecheck + bundle  (~5 s)
 
 npm run test:audio                      # render offline determinista (Playwright)
@@ -45,7 +45,7 @@ npm run test:integration                # app viva en Chromium (Playwright)
 ## Definición de terminado
 
 - [ ] `npm run typecheck` limpio.
-- [ ] `npm test` verde (206+ tests, sin `.skip` nuevos).
+- [ ] `npm test` verde (208+ tests, sin `.skip` nuevos).
 - [ ] Si tocó audio: `npm run test:audio` verde (requiere Chromium instalado).
 - [ ] Si tocó UI: `npm run test:integration` verde y captura revisada.
 - [ ] Spec actualizada (estado y decisiones) en el mismo commit.
