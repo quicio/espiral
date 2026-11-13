@@ -1367,6 +1367,60 @@ body[data-view="sound"] .generative {
   gap: 0.45rem;
 }
 
+.sound-bank-item {
+  position: relative;
+  display: flex;
+}
+
+.sound-bank-item .sound-bank-card {
+  flex: 1 1 auto;
+  padding-right: 2.1rem;
+}
+
+.sound-bank-favorite {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  border: 1px solid var(--umbral-rule-faint);
+  background: var(--umbral-bg);
+  color: var(--umbral-muted);
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sound-bank-favorite:hover,
+.sound-bank-favorite:focus-visible {
+  border-color: var(--umbral-trace);
+  color: var(--umbral-ink);
+}
+
+.sound-bank-favorite.is-active {
+  color: var(--umbral-trace);
+  border-color: var(--umbral-trace);
+}
+
+.sound-bank-clear {
+  margin-left: 0.6rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--umbral-muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sound-bank-clear:hover,
+.sound-bank-clear:focus-visible {
+  color: var(--umbral-ink);
+}
+
 .sound-bank-card {
   display: flex;
   flex-direction: column;

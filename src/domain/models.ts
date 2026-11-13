@@ -115,6 +115,8 @@ export interface InstrumentState {
   readonly clips: ClipCollection;
   readonly activeClips: ActiveClips;
   readonly clipQuantize: ClipQuantize;
+  readonly favorites: readonly string[];
+  readonly recentSounds: readonly string[];
   readonly history: readonly PatternSteps[];
   readonly clipboard: Pattern | null;
   readonly mutationCount: number;

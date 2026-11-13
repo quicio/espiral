@@ -133,6 +133,8 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     clips,
     activeClips: activeClipsForScene(clips, 'umbral'),
     clipQuantize: DEFAULT_CLIP_QUANTIZE,
+    favorites: [],
+    recentSounds: [],
     history: [],
     clipboard: null,
     mutationCount: 0,

@@ -4,6 +4,7 @@ import { PresetMapper } from './adapters/preset-mapper';
 import { SessionMapper } from './adapters/session-mapper';
 import { ArrangementService } from './application/arrangement';
 import { AutomationService } from './application/automation';
+import { BrowserService } from './application/browser';
 import { ClipService } from './application/clip';
 import { ExportService } from './application/export';
 import { HistoryService } from './application/history';
@@ -55,6 +56,7 @@ async function boot(): Promise<void> {
     initial.transport.lookAhead
   );
   const patterns = new PatternService(store, generative, status, runtime);
+  const browser = new BrowserService(store, status);
   const automation = new AutomationService(store, engine, status);
   const clips = new ClipService(store, runtime, status);
   const mix = new MixService(store, engine);
@@ -117,6 +119,7 @@ async function boot(): Promise<void> {
     catalog: createCatalog(generative),
     playback,
     patterns,
+    browser,
     clips,
     runtime,
     arrangement,

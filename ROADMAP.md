@@ -117,9 +117,9 @@ Pendiente: mover clips entre tracks y crear escenas vacías sin snapshot.
 **Resultado:** explorar el instrumento se siente como abrir el browser de Ableton:
 buscar, escuchar y arrastrar.
 
-**Estado:** primer corte implementado (spec 17). Búsqueda, drag/drop de sonidos y drawer
-compacto. Pendiente: preview/audition, favoritos, recientes y presets de cadenas de
-dispositivos.
+**Estado:** primer corte implementado (specs 17 y 25). Búsqueda, drag/drop de sonidos,
+drawer compacto, favoritos y recientes persistidos en sesión. Pendiente:
+preview/audition, presets de cadenas de dispositivos y drag/drop dentro del rack.
 
 ### Alcance
 

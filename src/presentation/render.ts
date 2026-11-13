@@ -938,6 +938,36 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
   const summary = q('#sound-bank-summary');
   if (summary) summary.textContent = status;
 
+  const favoriteIds = new Set(state.favorites);
+  const card = (preset: SoundPreset): string => {
+    const favorite = favoriteIds.has(preset.id);
+    return `<div class="sound-bank-item">
+      <button class="sound-bank-card${preset === active ? ' is-active' : ''}" type="button" draggable="true" data-sound-preset="${preset.id}" data-sound-category="${preset.category}" aria-pressed="${preset === active}"${canApply ? '' : ' disabled'}>
+        <span class="sound-bank-name">${preset.name}</span>
+        <span class="sound-bank-desc">${preset.description}</span>
+      </button>
+      <button class="sound-bank-favorite${favorite ? ' is-active' : ''}" type="button" data-sound-favorite="${preset.id}" aria-pressed="${favorite}" aria-label="${favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}: ${preset.name}">${favorite ? '★' : '☆'}</button>
+    </div>`;
+  };
+  const section = (
+    id: string,
+    label: string,
+    presets: readonly SoundPreset[],
+    action = ''
+  ): string =>
+    presets.length === 0
+      ? ''
+      : `<section class="sound-bank-category" data-sound-category="${id}">
+        <p class="sound-bank-category-label">${label}${action}</p>
+        <div class="sound-bank-grid">${presets.map(card).join('')}</div>
+      </section>`;
+  const recent = state.recentSounds
+    .map(id => SOUND_BANK.find(preset => preset.id === id))
+    .filter((preset): preset is SoundPreset => preset !== undefined);
+  const favorites = state.favorites
+    .map(id => SOUND_BANK.find(preset => preset.id === id))
+    .filter((preset): preset is SoundPreset => preset !== undefined);
+
   root.innerHTML = `<div class="sound-bank-head">
     <p id="sound-bank-status" class="section-meta">${status}</p>
     <label class="sound-bank-target">
@@ -948,37 +978,37 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
       </select>
     </label>
   </div>
-  <div class="sound-bank-categories">${SOUND_CATEGORIES.map(category => {
-    const entries = SOUND_BANK.filter(
-      preset => preset.category === category.id
-    );
-    return `<section class="sound-bank-category" data-sound-category="${category.id}">
-      <p class="sound-bank-category-label">${category.label}</p>
-      <div class="sound-bank-grid">${entries
-        .map(
-          preset => `<button class="sound-bank-card${preset === active ? ' is-active' : ''}" type="button" draggable="true" data-sound-preset="${preset.id}" data-sound-category="${category.id}" aria-pressed="${preset === active}"${canApply ? '' : ' disabled'}>
-            <span class="sound-bank-name">${preset.name}</span>
-            <span class="sound-bank-desc">${preset.description}</span>
-          </button>`
-        )
-        .join('')}</div>
-    </section>`;
-  }).join('')}</div>`;
+  <div class="sound-bank-categories">
+    ${section('favorites', 'Favoritos', favorites)}
+    ${section(
+      'recent',
+      'Recientes',
+      recent,
+      '<button class="sound-bank-clear" type="button" data-sound-clear-recent>Limpiar</button>'
+    )}
+    ${SOUND_CATEGORIES.map(category => {
+      const entries = SOUND_BANK.filter(
+        preset => preset.category === category.id
+      );
+      return section(category.id, category.label, entries);
+    }).join('')}
+  </div>`;
 
   filterSoundBank(root, q<HTMLInputElement>('#sound-bank-search')?.value ?? '');
 }
 
 export function filterSoundBank(root: HTMLElement, query: string): void {
   const normalized = query.trim().toLowerCase();
-  root.querySelectorAll<HTMLElement>('.sound-bank-card').forEach(card => {
-    const text = (card.textContent ?? '').toLowerCase();
-    card.hidden = normalized !== '' && !text.includes(normalized);
+  root.querySelectorAll<HTMLElement>('.sound-bank-item').forEach(item => {
+    const card = item.querySelector<HTMLElement>('.sound-bank-card');
+    const text = (card?.textContent ?? '').toLowerCase();
+    item.hidden = normalized !== '' && !text.includes(normalized);
   });
   root.querySelectorAll<HTMLElement>('.sound-bank-category').forEach(section => {
-    const cards = Array.from(
-      section.querySelectorAll<HTMLElement>('.sound-bank-card')
+    const items = Array.from(
+      section.querySelectorAll<HTMLElement>('.sound-bank-item')
     );
-    section.hidden = cards.length > 0 && cards.every(card => card.hidden);
+    section.hidden = items.length > 0 && items.every(item => item.hidden);
   });
 }
 

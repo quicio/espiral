@@ -17,6 +17,7 @@ import {
 } from '../domain/sound-kits';
 import type { AutomationService } from '../application/automation';
 import type { ArrangementService } from '../application/arrangement';
+import type { BrowserService } from '../application/browser';
 import type { ClipService } from '../application/clip';
 import type { ExportService } from '../application/export';
 import type { HistoryService } from '../application/history';
@@ -51,6 +52,7 @@ interface PresentationDependencies {
   readonly catalog: view.Catalog;
   readonly playback: PlaybackService;
   readonly patterns: PatternService;
+  readonly browser: BrowserService;
   readonly clips: ClipService;
   readonly runtime: PlaybackRuntime;
   readonly arrangement: ArrangementService;
@@ -254,7 +256,9 @@ export class EspiralApp {
       sound:
         previous.kit !== state.kit ||
         previous.masterVolume !== state.masterVolume ||
-        previous.selected !== state.selected,
+        previous.selected !== state.selected ||
+        previous.favorites !== state.favorites ||
+        previous.recentSounds !== state.recentSounds,
       runtime: this.deps.runtime
     });
   }
@@ -1009,8 +1013,20 @@ export class EspiralApp {
     });
 
     view.must('#sound-bank').addEventListener('click', event => {
+      const favorite = attr(event, 'data-sound-favorite');
+      if (favorite) {
+        this.deps.browser.toggleFavorite(favorite);
+        return;
+      }
+      if (attr(event, 'data-sound-clear-recent') !== null) {
+        this.deps.browser.clearRecent();
+        return;
+      }
       const presetId = attr(event, 'data-sound-preset');
-      if (presetId) tracks.applySoundPreset(presetId);
+      if (presetId) {
+        tracks.applySoundPreset(presetId);
+        this.deps.browser.recordPlayed(presetId);
+      }
     });
 
     view.must<HTMLInputElement>('#sound-bank-search').addEventListener('input', event => {
@@ -1066,6 +1082,7 @@ export class EspiralApp {
         return;
       }
       tracks.applySoundPreset(presetId, trackId);
+      this.deps.browser.recordPlayed(presetId);
     });
 
     view.must('#sound-bank').addEventListener('change', event => {
@@ -1893,6 +1910,8 @@ function sameNonTransport(a: InstrumentState, b: InstrumentState): boolean {
     a.clips === b.clips &&
     a.activeClips === b.activeClips &&
     a.clipQuantize === b.clipQuantize &&
+    a.favorites === b.favorites &&
+    a.recentSounds === b.recentSounds &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&
@@ -1920,7 +1939,9 @@ function isAutomationValueChange(a: InstrumentState, b: InstrumentState): boolea
     a.masterVolume === b.masterVolume &&
     a.clips === b.clips &&
     a.activeClips === b.activeClips &&
-    a.clipQuantize === b.clipQuantize
+    a.clipQuantize === b.clipQuantize &&
+    a.favorites === b.favorites &&
+    a.recentSounds === b.recentSounds
   );
 }
 
@@ -1949,6 +1970,8 @@ function isMixValueChange(a: InstrumentState, b: InstrumentState): boolean {
     a.clips === b.clips &&
     a.activeClips === b.activeClips &&
     a.clipQuantize === b.clipQuantize &&
+    a.favorites === b.favorites &&
+    a.recentSounds === b.recentSounds &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&
@@ -1975,6 +1998,8 @@ function isModulationChange(a: InstrumentState, b: InstrumentState): boolean {
     a.clips === b.clips &&
     a.activeClips === b.activeClips &&
     a.clipQuantize === b.clipQuantize &&
+    a.favorites === b.favorites &&
+    a.recentSounds === b.recentSounds &&
     a.history === b.history &&
     a.clipboard === b.clipboard &&
     a.mutationCount === b.mutationCount &&

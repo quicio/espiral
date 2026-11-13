@@ -360,6 +360,36 @@ describe('SessionMapper', () => {
     expect(restored.clips[clipId('caos', 'kick')]).toBeUndefined();
   });
 
+  it('round-trips browser favorites and recents', () => {
+    const { store, mapper } = setup();
+    store.update(state => ({
+      ...state,
+      favorites: ['warm-pad'],
+      recentSounds: ['acid-bass', 'warm-pad']
+    }));
+
+    const restored = mapper.fromDto(
+      JSON.parse(JSON.stringify(mapper.toDto(store.getState()))),
+      store.getState()
+    );
+
+    expect(restored.favorites).toEqual(['warm-pad']);
+    expect(restored.recentSounds).toEqual(['acid-bass', 'warm-pad']);
+  });
+
+  it('discards unknown browser ids when loading', () => {
+    const { store, mapper } = setup();
+    const dto = JSON.parse(JSON.stringify(mapper.toDto(store.getState())));
+
+    const restored = mapper.fromDto(
+      { ...dto, favorites: ['no-existe', 'warm-pad'], recentSounds: ['no-existe'] },
+      store.getState()
+    );
+
+    expect(restored.favorites).toEqual(['warm-pad']);
+    expect(restored.recentSounds).toEqual([]);
+  });
+
   it('round-trips the arrangement', () => {
     const { store, mapper } = setup();
     store.update(state => ({

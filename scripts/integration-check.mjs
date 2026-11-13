@@ -287,6 +287,26 @@ try {
   if (bankMachine !== 'analog-pad') {
     throw new Error(`El banco no aplicó Analog Pad: ${bankMachine}.`);
   }
+  const recentSounds = await page
+    .locator('section[data-sound-category="recent"] [data-sound-preset]')
+    .count();
+  if (recentSounds !== 1) {
+    throw new Error(`Recientes no registró Warm Pad: ${recentSounds}.`);
+  }
+  await page.locator('[data-sound-favorite="warm-pad"]').first().click();
+  await page.waitForTimeout(150);
+  const favoriteOn = await page
+    .locator('[data-sound-favorite="warm-pad"]')
+    .first()
+    .getAttribute('aria-pressed');
+  const favoriteSection = await page
+    .locator('section[data-sound-category="favorites"]')
+    .count();
+  if (favoriteOn !== 'true' || favoriteSection !== 1) {
+    throw new Error(
+      `Favoritos no se actualizó: pressed=${favoriteOn}, sección=${favoriteSection}.`
+    );
+  }
 
   await page.locator('#mix-preset').selectOption('dub');
   await page.waitForTimeout(700);

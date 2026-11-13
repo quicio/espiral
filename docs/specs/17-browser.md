@@ -35,6 +35,7 @@ Convertir el banco de sonidos en un browser más directo y arrastrable.
 ## Pendiente
 
 - Preview/audition sin modificar el track.
-- Favoritos y recientes.
 - Presets de cadenas de dispositivos.
 - Drag/drop de dispositivos dentro del rack.
+
+Favoritos y recientes se implementaron en `spec-25`.

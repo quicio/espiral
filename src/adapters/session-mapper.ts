@@ -37,6 +37,7 @@ import {
 } from '../domain/kit';
 import { captureScene } from '../application/scenes';
 import type { NoteSource } from '../domain/machines';
+import { soundPreset } from '../domain/sound-bank';
 import type {
   ArrangementState,
   GenerativeParams,
@@ -188,6 +189,8 @@ export interface SessionDto {
   readonly clips?: Record<string, SessionClipDto>;
   readonly activeClips?: Record<string, string | null>;
   readonly clipQuantize?: ClipQuantize;
+  readonly favorites?: readonly string[];
+  readonly recentSounds?: readonly string[];
   readonly arrangement?: ArrangementState;
   readonly modulation?: ModulationState;
 }
@@ -248,6 +251,8 @@ export class SessionMapper implements SessionCodec {
       clips: toClipsDto(clips),
       activeClips: { ...state.activeClips },
       clipQuantize: state.clipQuantize,
+      favorites: [...state.favorites],
+      recentSounds: [...state.recentSounds],
       arrangement: state.arrangement,
       modulation: state.modulation
     };
@@ -397,6 +402,8 @@ export class SessionMapper implements SessionCodec {
       clips,
       activeClips,
       clipQuantize: readClipQuantize(data.clipQuantize),
+      favorites: readSoundIds(data.favorites),
+      recentSounds: readSoundIds(data.recentSounds).slice(0, 8),
       arrangement: readArrangement(
         data.arrangement,
         current.arrangement,
@@ -1338,6 +1345,20 @@ function readClipQuantize(raw: unknown): ClipQuantize {
     raw === '2bar'
     ? raw
     : DEFAULT_CLIP_QUANTIZE;
+}
+
+function readSoundIds(raw: unknown): readonly string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  raw.forEach(value => {
+    if (typeof value !== 'string' || seen.has(value) || !soundPreset(value)) {
+      return;
+    }
+    seen.add(value);
+    ids.push(value);
+  });
+  return ids;
 }
 
 function isClipSceneId(value: unknown): value is SceneId {
