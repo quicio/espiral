@@ -49,6 +49,8 @@ type ViewId =
   | 'modulation';
 
 const METER_INTERVAL_MS = 1000 / 25;
+const METER_TRACK_BATCH = 8;
+const METER_BUS_BATCH = 4;
 
 interface MeterTarget {
   readonly id: string;
@@ -150,6 +152,8 @@ export class EspiralApp {
     const cpuMeter = new CpuMeter();
     let lastCpu = 0;
     let lastSample = 0;
+    let trackCursor = 0;
+    let busCursor = 0;
     let targets: { tracks: MeterTarget[]; buses: MeterTarget[] } | null = null;
     const clipButton = view.q<HTMLButtonElement>('#master-clip');
     const masterFill = view.q('#master-meter-fill');
@@ -239,12 +243,35 @@ export class EspiralApp {
           );
         }
 
-        targets.tracks.forEach(target =>
-          this.updateNodeMeter(target, this.deps.mix.getTrackLevel(target.id))
-        );
-        targets.buses.forEach(target =>
-          this.updateNodeMeter(target, this.deps.mix.getBusLevel(target.id))
-        );
+        const trackCount = targets.tracks.length;
+        if (trackCount > 0) {
+          const count = Math.min(METER_TRACK_BATCH, trackCount);
+          for (let index = 0; index < count; index += 1) {
+            const target = targets.tracks[(trackCursor + index) % trackCount];
+            if (target) {
+              this.updateNodeMeter(
+                target,
+                this.deps.mix.getTrackLevel(target.id)
+              );
+            }
+          }
+          trackCursor = (trackCursor + count) % trackCount;
+        }
+
+        const busCount = targets.buses.length;
+        if (busCount > 0) {
+          const count = Math.min(METER_BUS_BATCH, busCount);
+          for (let index = 0; index < count; index += 1) {
+            const target = targets.buses[(busCursor + index) % busCount];
+            if (target) {
+              this.updateNodeMeter(
+                target,
+                this.deps.mix.getBusLevel(target.id)
+              );
+            }
+          }
+          busCursor = (busCursor + count) % busCount;
+        }
       }
 
       this.meterFrame = requestAnimationFrame(tick);

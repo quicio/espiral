@@ -126,7 +126,7 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
       bpm: 120,
       swing: 0.12,
       humanize: 0.15,
-      lookAhead: 0.1,
+      lookAhead: 0.15,
       playing: false,
       preparing: false,
       currentStep: -1

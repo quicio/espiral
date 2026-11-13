@@ -24,7 +24,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 | build | ~5 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 527.56 kB (134.51 kB gzip) | salida de `npm run build` |
 | código | 109 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 34 en `docs/specs/` | `ls docs/specs` |
+| specs | 36 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio tras el commit de spec 24 | `git status` |
 

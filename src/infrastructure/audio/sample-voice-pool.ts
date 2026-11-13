@@ -1,27 +1,38 @@
 import * as Tone from 'tone';
 import type { NoteDuration } from '../../domain/audio';
+import type { SampleLibrary } from './sample-library';
 
 /**
- * Pool de voces para un sample. Evita reutilizar un Tone.Player mientras su
- * cola anterior sigue sonando: cambiar playbackRate sobre una voz activa
- * produce saltos de pitch y clicks.
+ * Pool de voces reutilizables. Comparte el ToneAudioBuffer entre tracks, pero
+ * mantiene voces persistentes para no crear un nodo por nota.
  */
 export class SampleVoicePool {
   private readonly voices: readonly Tone.Player[];
   private next = 0;
 
   constructor(
-    url: string,
+    private readonly url: string,
     voiceCount: number,
     fadeIn: number,
     fadeOut: number,
-    destination: Tone.ToneAudioNode
+    destination: Tone.ToneAudioNode,
+    private readonly library: SampleLibrary
   ) {
     const count = Math.max(1, Math.floor(voiceCount));
     this.voices = Array.from({ length: count }, () => {
-      const player = new Tone.Player({ url, fadeIn, fadeOut });
+      const player = new Tone.Player({ fadeIn, fadeOut });
       player.connect(destination);
       return player;
+    });
+    void this.prepare().catch(error => {
+      console.warn(`No se pudo preparar el sample ${url}:`, error);
+    });
+  }
+
+  async prepare(): Promise<void> {
+    const buffer = await this.library.load(this.url);
+    this.voices.forEach(player => {
+      player.buffer = buffer;
     });
   }
 

@@ -10,10 +10,12 @@ Chromium headless, 16 tracks, armado por defecto, 128 BPM.
 | escenario | antes | después |
 |---|---|---|
 | long tasks en 16 s de arrangement | 127 ms y 87 ms | **ninguna** |
-| long tasks de carga + armado + vistas | 262 / 131 / 97 ms | **129 / 62 ms** |
+| long tasks de carga + armado + vistas | 262 / 131 / 97 ms | **124 / 53 ms** |
+| long tasks con playback + cambio por 7 vistas | 56 / 59 / 88 ms | **ninguna** |
 | CPU meter al cambiar bloque | 45–71% | 0–9% |
 | perfil de 8 s: `querySelector*` | base | ~1/3 |
-| `test:audio` | PCM determinista | idéntico |
+| peticiones `.wav` en integración | 57 | 17 |
+| `test:audio` | PCM determinista | determinista |
 
 El CPU meter es una estimación de main thread + underruns del `AudioContext`; no
 mide el costo del AudioWorklet. Los long tasks son la señal más útil para
@@ -35,6 +37,13 @@ scheduler llega tarde.
 7. **Prewarm del motor** al terminar el armado del set (spec 33).
 8. **Debounce de `decay` en el reverb** para no regenerar el impulso en cada
    movimiento del slider.
+9. **Buffers de sample compartidos** por URL: la integración pasó de 57 respuestas
+   `.wav` a 17 peticiones únicas (spec 34).
+10. **Medidores por track/bus perezosos**: no se crean AnalyserNodes hasta que la
+    vista Sound/Routing los pide, y se reparten en batches por frame (spec 35).
+11. **`prepare()` idempotente** para que prewarm y primer play no dupliquen el
+    trabajo (spec 35).
+12. **Lookahead por defecto de 150 ms** (configurable) (spec 35).
 
 ## Palancas de tuning pendientes (bajo riesgo)
 
@@ -61,8 +70,8 @@ Impacto: bajo-medio. Riesgo: bajo.
 
 ### 3. Tuning del scheduler
 
-- Subir `lookAhead` de 100 ms a 150–200 ms para performance (no para MIDI en
-  vivo).
+- El `lookAhead` por defecto ya es 150 ms y es configurable. Probá 200–300 ms si
+  el equipo tiene picos de main thread que no se pueden eliminar.
 - Evaluar `latencyHint: 'balanced'` o `'playback'` en el `AudioContext` como
   “modo seguro”. Aumenta estabilidad y latencia. **No se puede cambiar en
   runtime**: hay que crear el `Tone.Context` antes de que Tone inicialice su
@@ -89,18 +98,19 @@ mover **síntesis, samples e inserts** a AudioWorklet/WASM.
 
 ### Opción A — Sampler propio en AudioWorklet (recomendada primero)
 
-Hoy cada track sampler crea N `Tone.Player`, cada uno con su buffer y nodos.
-Para 57 samples y 16 tracks eso suma memoria y objetos.
+Hoy cada track sampler crea N `Tone.Player`, pero ya comparte el
+`ToneAudioBuffer` por URL entre todos los tracks. Eso elimina decodificaciones
+duplicadas; el costo que queda es el grafo por voz y el scheduling de Tone.
 
-Un worklet sampler con:
+Un worklet sampler con buffers compartidos y voces por índice:
 
-- buffers compartidos (`AudioBuffer` transferido una vez);
-- voces por índice, sin nodos por voz;
-- velocidad, loop y fade en el worklet;
-- mensajes `postMessage` para disparar notas;
+- reduce todavía más memoria y objetos;
+- saca la reproducción de samples del hilo principal;
+- no obliga a reescribir synths ni inserts.
 
-reduce el costo por voz y libera el hilo principal. Es acotado al sampler y no
-obliga a reescribir synths ni inserts.
+Se intentó un pool nativo de `AudioBufferSourceNode` y se descartó: mezclar
+nodos nativos con el contexto estandarizado de Tone rompía las conexiones. El
+worklet es la vía correcta para ese salto.
 
 ### Opción B — Grafo completo en AudioWorklet
 

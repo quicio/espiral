@@ -17,7 +17,7 @@ export class Track {
   private readonly volume: Tone.Volume;
   private readonly panner: Tone.Panner;
   private readonly muteGain: Tone.Gain;
-  private readonly meter: Tone.Meter;
+  private meter: Tone.Meter | null = null;
   private readonly compensation: Tone.Delay | null;
   private readonly host: PluginHost;
   private readonly chainMix = new Tone.Gain(1);
@@ -40,7 +40,6 @@ export class Track {
     this.volume = new Tone.Volume(config.gainDb);
     this.panner = new Tone.Panner(config.pan);
     this.muteGain = new Tone.Gain(config.mute ? 0 : 1);
-    this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
 
     this.chain = new InsertChain(config.inserts, host);
     this.chainFade = new Tone.Gain(1);
@@ -59,7 +58,6 @@ export class Track {
     } else {
       this.output.connect(masterInput);
     }
-    this.muteGain.connect(this.meter);
 
     config.sends.forEach(send => {
       const busInput = resolveBus(send.busId);
@@ -192,6 +190,10 @@ export class Track {
   }
 
   getLevel(): number {
+    if (!this.meter) {
+      this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
+      this.muteGain.connect(this.meter);
+    }
     return readMeter(this.meter);
   }
 
@@ -211,7 +213,7 @@ export class Track {
     this.volume.dispose();
     this.panner.dispose();
     this.muteGain.dispose();
-    this.meter.dispose();
+    this.meter?.dispose();
     this.compensation?.dispose();
     this.output.dispose();
     this.input.dispose();

@@ -22,6 +22,7 @@ import type { InstrumentPluginInstance } from '../plugins/types';
 import type { PluginHost } from '../plugins/plugin-host';
 import { isOfflineContext } from '../context';
 import { SampleVoicePool } from '../sample-voice-pool';
+import { SampleLibrary } from '../sample-library';
 import { Bus } from './bus';
 import { MasterBus } from './master-bus';
 import { Track } from './track';
@@ -60,8 +61,10 @@ export class ModularAudioEngine implements AudioEnginePort {
     }
   >();
   private readonly latencyPlan: LatencyPlan;
+  private readonly samples = new SampleLibrary();
   private preview: { readonly track: Track; node: SourceNode } | null = null;
   private prepared = false;
+  private preparing: Promise<void> | null = null;
 
   constructor(
     config: GraphConfig,
@@ -174,8 +177,16 @@ export class ModularAudioEngine implements AudioEnginePort {
     });
   }
 
-  async prepare(): Promise<void> {
-    if (this.prepared) return;
+  prepare(): Promise<void> {
+    if (this.prepared) return Promise.resolve();
+    if (this.preparing) return this.preparing;
+    this.preparing = this.prepareInternal().finally(() => {
+      this.preparing = null;
+    });
+    return this.preparing;
+  }
+
+  private async prepareInternal(): Promise<void> {
     if (!isOfflineContext()) await Tone.start();
     await Promise.all([
       ...Array.from(this.tracks.values(), track => track.prepare()),
@@ -183,7 +194,9 @@ export class ModularAudioEngine implements AudioEnginePort {
       ...Array.from(this.sources.values()).flatMap(node =>
         node.source.kind === 'instrument' && node.source.instance.prepare
           ? [node.source.instance.prepare()]
-          : []
+          : node.source.kind === 'sampler'
+            ? node.source.pools.map(pool => pool.prepare())
+            : []
       )
     ]);
     await Tone.loaded();
@@ -258,7 +271,9 @@ export class ModularAudioEngine implements AudioEnginePort {
     void (async () => {
       try {
         if (!isOfflineContext()) await Tone.start();
-        if (node.source.kind === 'sampler') await Tone.loaded();
+        if (node.source.kind === 'sampler') {
+          await Promise.all(node.source.pools.map(pool => pool.prepare()));
+        }
         const time = Tone.now() + 0.03;
         switch (node.source.kind) {
           case 'membrane':
@@ -594,6 +609,7 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.tracks.clear();
     this.buses.forEach(bus => bus.dispose());
     this.buses.clear();
+    this.samples.dispose();
     this.master.dispose();
     this.prepared = false;
   }
@@ -743,7 +759,8 @@ export class ModularAudioEngine implements AudioEnginePort {
           machine.voices ?? 1,
           machine.fadeIn ?? 0.004,
           machine.fadeOut ?? 0.03,
-          input
+          input,
+          this.samples
         )
     );
     return { kind: 'sampler', pools };

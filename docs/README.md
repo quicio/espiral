@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.10.0
+version: 1.12.0
 updated: 2026-11-13
 ---
 
@@ -60,6 +60,8 @@ el código y la spec se corrige.
 | [31](specs/31-scene-change-audio-performance.md) | Evitar reconstrucción de cadenas en cambios de escena | implementada |
 | [32](specs/32-main-thread-tuning.md) | Tuning del hilo principal durante playback | implementada |
 | [33](specs/33-active-view-render.md) | Render por vista y coalescing de cambios | implementada |
+| [34](specs/34-shared-sample-buffers.md) | Buffers de sample compartidos entre tracks | implementada |
+| [35](specs/35-audio-startup-lazy-meters.md) | Arranque de audio y medidores perezosos | implementada |
 
 ## ADR
 

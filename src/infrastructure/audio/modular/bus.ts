@@ -10,7 +10,7 @@ export class Bus {
   readonly input = new Tone.Gain(1);
   readonly output = new Tone.Gain(1);
   private readonly volume: Tone.Volume;
-  private readonly meter: Tone.Meter;
+  private meter: Tone.Meter | null = null;
   private readonly host: PluginHost;
   private readonly chainMix = new Tone.Gain(1);
   private readonly sends = new Map<string, Tone.Gain>();
@@ -21,7 +21,6 @@ export class Bus {
     this.id = config.id;
     this.host = host;
     this.volume = new Tone.Volume(config.returnDb);
-    this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
 
     this.chain = new InsertChain(config.inserts, host);
     this.chainFade = new Tone.Gain(1);
@@ -31,7 +30,6 @@ export class Bus {
     this.chainMix.connect(this.volume);
     this.volume.connect(this.output);
     this.output.connect(masterInput);
-    this.volume.connect(this.meter);
   }
 
   setReturn(db: number): void {
@@ -132,6 +130,10 @@ export class Bus {
   }
 
   getLevel(): number {
+    if (!this.meter) {
+      this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
+      this.volume.connect(this.meter);
+    }
     return readMeter(this.meter);
   }
 
@@ -146,7 +148,7 @@ export class Bus {
     this.chainFade.dispose();
     this.chainMix.dispose();
     this.volume.dispose();
-    this.meter.dispose();
+    this.meter?.dispose();
     this.output.dispose();
     this.input.dispose();
   }
