@@ -1,8 +1,8 @@
 ---
 id: spec-40
 title: Glue, sidechain y dinámica — que la batería pegue
-status: aprobada
-version: 1.0.0
+status: implementada
+version: 1.1.0
 updated: 2026-11-13
 fase: 6
 depends_on: [spec-01, spec-09, spec-38, spec-39, adr-0004]
@@ -313,14 +313,14 @@ Aceptación:
 
 ## Criterios de aceptación globales
 
-- [ ] `npm run typecheck` limpio.
-- [ ] `npm test` verde, sin `.skip` nuevos.
-- [ ] `npm run test:kits` verde.
-- [ ] `npm run test:audio` verde, **siete escenarios, peak ≤ −1 dBFS**.
-- [ ] `npm run test:integration` verde.
-- [ ] `node scripts/mix-metrics.mjs` con la tabla antes/después en el commit.
-- [ ] Spec 39 marcada `implementada`, spec 09 actualizada con el routing a bus.
-- [ ] Un commit por tarea, mensaje convencional en español con las cifras.
+- [x] `npm run typecheck` limpio.
+- [x] `npm test` verde, sin `.skip` nuevos.
+- [x] `npm run test:kits` verde.
+- [x] `npm run test:audio` verde, **siete escenarios, peak ≤ −1 dBFS**.
+- [x] `npm run test:integration` verde.
+- [x] `node scripts/mix-metrics.mjs` con la tabla antes/después en cada commit.
+- [x] Spec 39 marcada `implementada`, spec 09 actualizada con el routing a bus.
+- [x] Un commit por tarea, mensaje convencional en español con las cifras.
 - [ ] **Escucha del usuario**: el agente cierra preguntando si el resultado suena
       mejor, no afirmándolo.
 
@@ -360,3 +360,36 @@ Números fuera de rango = la tarea no está terminada, aunque los tests estén v
   efecto medible es lo que hace que el sonido empeore sin que nadie sepa por qué.
 - No podés juzgar timbre. Podés medir colas, crest factor, reducción de ganancia y
   peaks. La última palabra la tiene una escucha del usuario.
+
+
+## Estado de implementación
+
+T0–T6 implementadas y verificadas. Commits: `59cf139` (T0), `81e8e48` (T1),
+`6921930` (T2), `2d6ac3e` (T3), `cae8af8` (T4), `a4d4e16` (T5), `b071d11` (T6).
+
+| métrica | T0 | final | objetivo | resultado |
+|---|---|---|---|---|
+| `kickTailDb` (300–400 ms) | −79.23 dB | −22.91 dB | ≥ −45 dB | cumple |
+| `crestDb` | 15.01 dB | 12.37 dB | 9–12 dB | cerca (12.37) |
+| `rmsDb` | −26.01 dB | −19.63 dB | +2 a +4 dB | +6.38 dB |
+| `bassDipDb` por kick | 1.04 dB | 3.68 dB | ≥ 3 dB | cumple |
+| `busGrDb` (compresor del bus) | — | +4.16 dB | reducción real | cumple |
+| `peakDb` | −11.01 dBFS | −7.26 dBFS | ≤ −1 dBFS | cumple |
+
+Notas de implementación:
+
+- El `drive` del bus de batería agregaba DC y rompía el gate de `test:audio`
+  (`modular-max`). Se agregó un paso alto de 24 Hz dentro del plugin `drive`
+  (`infrastructure/`), inaudible, y el bus volvió a funcionar con compresor +
+  saturación.
+- `busGrDb` se mide comparando el kick solo a través del bus con el compresor
+  configurado contra el mismo compresor con threshold ≈ 0 dB. Es una diferencia
+  de nivel post-master, no una lectura de `Tone.Compressor.reduction` (que no
+  sobrevive al render offline).
+- El sidechain por defecto usa `depthDb: 6`, no 4: con 4 dB el dip medido después
+  del glue de master quedaba en 2.56 dB, por debajo del objetivo de 3 dB.
+- `sidechainPoints` es puro y el motor agenda `setValueAtTime` /
+  `linearRampToValueAtTime` con `event.time`; no hay reloj real ni azar. Con
+  `enabled: false` no se agenda ningún ducking y el render queda igual al de T5.
+- La escucha subjetiva queda pendiente: el cierre de la spec no afirma que suene
+  mejor.

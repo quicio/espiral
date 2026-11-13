@@ -65,3 +65,12 @@ interface BusState {
 - [x] Crear/eliminar buses desde la UI.
 - [x] Persistencia en sesión y escenas.
 - [x] Tests de ciclos, routing y sesión.
+
+
+## Extensión: salida directa de un track a un bus (spec 40)
+
+`TrackConfig` y `TrackState` aceptan `outputBusId?: string`. Si existe, el track
+sale por la entrada de ese bus en vez del master; si no existe, el
+comportamiento sigue siendo el anterior. El caso de uso actual es el
+`drum-bus` del kit por defecto (compresor + drive), con `returnDb: 0` porque
+recibe tracks directos y no es un auxiliar.

@@ -19,16 +19,16 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **221 pasan / 32 archivos** en ~3 s | `npm test` |
-| guard de drum kits | 9 máquinas · 71 one-shots · 1.79 MB | `npm run test:kits` |
+| tests unitarios | **230 pasan / 33 archivos** en ~4 s | `npm test` |
+| guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 555.29 kB (141.60 kB gzip) | salida de `npm run build` |
-| samples de batería | 1.79 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
-| código | 119 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 39 en `docs/specs/` | `ls docs/specs` |
+| bundle principal | 561.05 kB (143.31 kB gzip) | salida de `npm run build` |
+| samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
+| código | 122 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| specs | 41 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 6 en `docs/adr/` | `ls docs/adr` |
-| git | árbol con cambios de spec 38 sin commitear | `git status` |
+| git | árbol limpio al cerrar spec 40 | `git status` |
 
 **Los checks de Playwright ya corren en esta máquina** (Chromium instalado el
 2026-11-12). Un clone fresco sigue necesitando `npx playwright install chromium`;
@@ -78,6 +78,26 @@ captura manual (`npx playwright screenshot` o el navegador) sigue siendo la
 prueba final de lo visual.
 
 Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opciones de AudioWorklet/WASM.
+
+## Mezcla y dinámica (spec 40)
+
+`node scripts/mix-metrics.mjs` mide el set por defecto (Techno/909, 128 BPM,
+4 compases) con renders offline deterministas y secuenciales:
+
+| métrica | T0 | final |
+|---|---|---|
+| `kickTailDb` | −79.23 dB | −22.91 dB |
+| `crestDb` | 15.01 dB | 12.37 dB |
+| `rmsDb` | −26.01 dB | −19.63 dB |
+| `bassDipDb` | 1.04 dB | 3.68 dB |
+| `busGrDb` | — | +4.16 dB |
+| `peakDb` | −11.01 dBFS | −7.26 dBFS |
+
+El bus de batería (`drum-bus`) usa compresor + drive; el plugin `drive` lleva un
+paso alto de 24 Hz para no romper el gate de DC. El sidechain (`kick` → `bass`)
+usa un `Tone.Gain` dedicado (`duckGain`) y `event.time`, nunca el fader. La
+escucha subjetiva sigue pendiente: los checks prueban que no está roto, no que
+suene mejor.
 
 ## Deuda y drift conocidos
 
