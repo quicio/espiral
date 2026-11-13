@@ -24,16 +24,18 @@ for (const kit of DRUM_KITS) {
     continue;
   }
   for (const sound of kit.sounds) {
-    const file = join(dir, sound.file);
-    const key = `${kit.id}/${sound.file}`;
-    declared.add(key);
-    if (!existsSync(file)) {
-      errors.push(`falta el wav ${key} (kit ${kit.code}, slot ${sound.slot})`);
-      continue;
+    for (const name of sound.files) {
+      const file = join(dir, name);
+      const key = `${kit.id}/${name}`;
+      declared.add(key);
+      if (!existsSync(file)) {
+        errors.push(`falta el wav ${key} (kit ${kit.code}, slot ${sound.slot})`);
+        continue;
+      }
+      const size = statSync(file).size;
+      if (size < 1024) errors.push(`${key} pesa ${size} bytes: sospechosamente vacío`);
+      bytes += size;
     }
-    const size = statSync(file).size;
-    if (size < 1024) errors.push(`${key} pesa ${size} bytes: sospechosamente vacío`);
-    bytes += size;
   }
 }
 

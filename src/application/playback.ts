@@ -300,7 +300,7 @@ export class PlaybackService {
           channel: 'perc',
           trackId: 'kick',
           time: at,
-          sampleIndex: 0,
+          sampleIndex: this.sampleIndexFor(state, 'kick', stepCount),
           playbackRate: 1,
           gainDb: velocityGainDb(velocity)
         });
@@ -327,7 +327,13 @@ export class PlaybackService {
       });
     });
 
-    const hihat = hihatVoice(state, this.generative, stepCount, 8);
+    const hihatVariants = sampleVariants(state, 'hihat');
+    const hihat = hihatVoice(
+      state,
+      this.generative,
+      stepCount,
+      hihatVariants
+    );
     this.eachPatternHit(state, 'hihat', stepCount, time, (at, velocity) => {
       this.engine.trigger({
         type: 'sample',
@@ -343,7 +349,8 @@ export class PlaybackService {
     if (quarter && drone && !drone.hasPattern) {
       this.runtime.droneStep += 1;
       if ((this.runtime.droneStep - 1) % 16 === 0) {
-        this.triggerGenerative(drone, time, {
+        this.triggerGenerative(state, drone, time, {
+          stepCount,
           notes: notesForTrack(
             state,
             this.generative,
@@ -366,7 +373,8 @@ export class PlaybackService {
       if ((this.runtime.padStep - 1) % 8 === 0) {
         const chord = padChord(state, this.generative, this.runtime.lastPadChord);
         this.runtime.currentChordDegree = this.runtime.lastPadChord;
-        this.triggerGenerative(pad, time, {
+        this.triggerGenerative(state, pad, time, {
+          stepCount,
           notes: chord.notes,
           duration: noteDuration('pad', state.harmony.sustain)
         });
@@ -379,7 +387,9 @@ export class PlaybackService {
       this.engine.trigger({
         type: 'sample',
         channel: 'perc',
+        trackId: 'perc',
         time: at,
+        sampleIndex: this.sampleIndexFor(state, 'perc', stepCount),
         playbackRate: percRate,
         gainDb: velocityGainDb(velocity)
       });
@@ -394,7 +404,7 @@ export class PlaybackService {
             channel: 'perc',
             trackId: track.id,
             time: at,
-            sampleIndex: 0,
+            sampleIndex: this.sampleIndexFor(state, track.id, stepCount),
             playbackRate: 1,
             gainDb: velocityGainDb(velocity)
           });
@@ -441,7 +451,8 @@ export class PlaybackService {
         this.runtime.currentChordDegree
       );
       if (note) {
-        this.triggerGenerative(lead, time, {
+        this.triggerGenerative(state, lead, time, {
+          stepCount,
           notes: note,
           duration: noteDuration('lead', state.harmony.sustain)
         });
@@ -449,10 +460,26 @@ export class PlaybackService {
     }
   }
 
+  private sampleIndexFor(
+    state: InstrumentState,
+    trackId: string,
+    stepCount: number
+  ): number {
+    return pickSampleIndex(
+      this.generative,
+      state.seed,
+      trackId,
+      stepCount,
+      sampleVariants(state, trackId)
+    );
+  }
+
   private triggerGenerative(
+    state: InstrumentState,
     track: TrackState,
     time: number,
     options: {
+      readonly stepCount?: number;
       readonly notes: string | readonly string[] | null;
       readonly duration: NoteDuration;
       readonly playbackRate?: number;
@@ -464,7 +491,11 @@ export class PlaybackService {
         channel: track.role === 'drone' ? 'drone' : 'perc',
         trackId: track.id,
         time,
-        sampleIndex: 0,
+        sampleIndex: this.sampleIndexFor(
+          state,
+          track.id,
+          options.stepCount ?? 0
+        ),
         playbackRate: options.playbackRate ?? 1
       });
       return;
@@ -605,4 +636,24 @@ interface AppliedLock {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+
+function sampleVariants(state: InstrumentState, trackId: string): number {
+  const machine = state.kit.tracks[trackId]?.machine;
+  return Math.max(1, machine?.samples?.length ?? 1);
+}
+
+export function pickSampleIndex(
+  generative: Pick<GenerativePort, 'hash01'>,
+  seed: number,
+  trackId: string,
+  stepCount: number,
+  variants: number
+): number {
+  if (variants <= 1) return 0;
+  const pick = Math.floor(
+    generative.hash01(seed, `${trackId}-rr`, stepCount, 17) * variants
+  );
+  return Math.max(0, Math.min(variants - 1, pick));
 }

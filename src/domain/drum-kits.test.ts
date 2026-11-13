@@ -46,9 +46,12 @@ describe('drum kits', () => {
   it('apunta siempre a un wav dentro del kit', () => {
     DRUM_KITS.forEach(kit => {
       kit.sounds.forEach(sound => {
-        const path = drumKitSamplePath(kit.id, sound.file);
-        expect(path).toBe(`${SAMPLE_KIT_PATH}${kit.id}/${sound.file}`);
-        expect(sound.file.endsWith('.wav')).toBe(true);
+        expect(sound.files.length).toBeGreaterThan(0);
+        sound.files.forEach(file => {
+          const path = drumKitSamplePath(kit.id, file);
+          expect(path).toBe(`${SAMPLE_KIT_PATH}${kit.id}/${file}`);
+          expect(file.endsWith('.wav')).toBe(true);
+        });
       });
     });
   });

@@ -2,40 +2,59 @@
   "909": {
     "source": "https://raw.githubusercontent.com/oramics/sampled/master/DM/TR-909/Detroit/samples",
     "license": "Public Domain",
-    "gainDb": -0.3,
+    "gainDb": -1.0,
     "slots": {
       "kick": {
-        "file": "kick.wav",
-        "peakDb": -0.8,
-        "kb": 42.5
+        "files": [
+          "kick.wav",
+          "kick-2.wav"
+        ],
+        "peakDb": -0.0,
+        "kb": 68.2
       },
       "snare": {
-        "file": "snare.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -9.5,
         "kb": 14.6
       },
       "clap": {
-        "file": "clap-1.wav",
+        "files": [
+          "clap.wav",
+          "clap-2.wav"
+        ],
         "peakDb": -0.7,
-        "kb": 42.9
+        "kb": 78.7
       },
       "hat-closed": {
-        "file": "hihat-closed.wav",
-        "peakDb": -15.9,
-        "kb": 9.5
+        "files": [
+          "hat-closed.wav",
+          "hat-closed-2.wav"
+        ],
+        "peakDb": -8.8,
+        "kb": 22.0
       },
       "hat-open": {
-        "file": "hihat-open-1.wav",
+        "files": [
+          "hat-open.wav",
+          "hat-open-2.wav"
+        ],
         "peakDb": -10.5,
-        "kb": 23.6
+        "kb": 44.5
       },
       "tom": {
-        "file": "tom-h.wav",
-        "peakDb": -11.8,
-        "kb": 33.6
+        "files": [
+          "tom.wav",
+          "tom-2.wav"
+        ],
+        "peakDb": -7.6,
+        "kb": 68.2
       },
       "perc": {
-        "file": "rim.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -6.5,
         "kb": 27.0
       }
@@ -47,37 +66,56 @@
     "gainDb": -1.0,
     "slots": {
       "kick": {
-        "file": "kick-short.wav",
+        "files": [
+          "kick.wav",
+          "kick-2.wav"
+        ],
         "peakDb": -0.0,
-        "kb": 25.6
+        "kb": 68.2
       },
       "snare": {
-        "file": "snare.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -9.5,
         "kb": 14.6
       },
       "clap": {
-        "file": "clap-2.wav",
-        "peakDb": -1.2,
-        "kb": 35.8
+        "files": [
+          "clap.wav",
+          "clap-2.wav"
+        ],
+        "peakDb": -0.7,
+        "kb": 78.7
       },
       "hat-closed": {
-        "file": "hihat-close.wav",
+        "files": [
+          "hat-closed.wav",
+          "hat-closed-2.wav"
+        ],
         "peakDb": -8.8,
-        "kb": 12.5
+        "kb": 22.0
       },
       "hat-open": {
-        "file": "hihat-open-2.wav",
-        "peakDb": -18.3,
-        "kb": 20.9
+        "files": [
+          "hat-open.wav",
+          "hat-open-2.wav"
+        ],
+        "peakDb": -10.5,
+        "kb": 44.5
       },
       "tom": {
-        "file": "tom-l.wav",
+        "files": [
+          "tom.wav",
+          "tom-2.wav"
+        ],
         "peakDb": -7.6,
-        "kb": 34.6
+        "kb": 68.2
       },
       "perc": {
-        "file": "rim.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -6.5,
         "kb": 27.0
       }
@@ -89,37 +127,58 @@
     "gainDb": -1.0,
     "slots": {
       "kick": {
-        "file": "kick-2.wav",
+        "files": [
+          "kick.wav",
+          "kick-2.wav"
+        ],
         "peakDb": -0.0,
-        "kb": 48.6
+        "kb": 103.6
       },
       "snare": {
-        "file": "snare.wav",
+        "files": [
+          "snare.wav",
+          "snare-2.wav"
+        ],
         "peakDb": -4.1,
-        "kb": 57.3
+        "kb": 72.7
       },
       "clap": {
-        "file": "clap2.wav",
+        "files": [
+          "clap.wav",
+          "clap-2.wav"
+        ],
         "peakDb": -0.0,
-        "kb": 24.0
+        "kb": 116.0
       },
       "hat-closed": {
-        "file": "hihat-closed-2.wav",
+        "files": [
+          "hat-closed.wav",
+          "hat-closed-2.wav"
+        ],
         "peakDb": -14.3,
-        "kb": 15.3
+        "kb": 32.8
       },
       "hat-open": {
-        "file": "hihat-open-2.wav",
-        "peakDb": -5.7,
-        "kb": 34.7
+        "files": [
+          "hat-open.wav",
+          "hat-open-2.wav"
+        ],
+        "peakDb": -5.1,
+        "kb": 100.1
       },
       "tom": {
-        "file": "tom-m.wav",
-        "peakDb": -2.7,
-        "kb": 42.1
+        "files": [
+          "tom.wav",
+          "tom-2.wav",
+          "tom-3.wav"
+        ],
+        "peakDb": -1.9,
+        "kb": 151.7
       },
       "perc": {
-        "file": "rim.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -3.1,
         "kb": 5.2
       }
@@ -131,49 +190,85 @@
     "gainDb": 0.1,
     "slots": {
       "kick": {
-        "file": "05.BD.808.wav",
+        "files": [
+          "kick.wav",
+          "kick-2.wav",
+          "kick-3.wav"
+        ],
         "peakDb": -3.3,
-        "kb": 138.3
+        "kb": 413.8
       },
       "snare": {
-        "file": "05.SD5.808.wav",
+        "files": [
+          "snare.wav",
+          "snare-2.wav",
+          "snare-3.wav"
+        ],
         "peakDb": -1.3,
-        "kb": 53.1
+        "kb": 155.7
       },
       "clap": {
-        "file": "05.CP.808.wav",
+        "files": [
+          "clap.wav",
+          "clap-2.wav",
+          "clap-3.wav"
+        ],
         "peakDb": -1.1,
-        "kb": 104.6
+        "kb": 311.4
       },
       "hat-closed": {
-        "file": "05.CH.808.wav",
-        "peakDb": -7.4,
-        "kb": 10.8
+        "files": [
+          "hat-closed.wav",
+          "hat-closed-2.wav",
+          "hat-closed-3.wav"
+        ],
+        "peakDb": -6.3,
+        "kb": 32.5
       },
       "hat-open": {
-        "file": "05.OH.808.wav",
-        "peakDb": -3.1,
-        "kb": 56.4
+        "files": [
+          "hat-open.wav",
+          "hat-open-2.wav",
+          "hat-open-3.wav"
+        ],
+        "peakDb": -1.1,
+        "kb": 169.1
       },
       "tom": {
-        "file": "05.MT.808.wav",
+        "files": [
+          "tom.wav",
+          "tom-2.wav",
+          "tom-3.wav"
+        ],
         "peakDb": -7.6,
-        "kb": 55.0
+        "kb": 161.4
       },
       "perc": {
-        "file": "05.CB.808.wav",
+        "files": [
+          "perc.wav",
+          "perc-2.wav",
+          "perc-3.wav"
+        ],
         "peakDb": -2.2,
-        "kb": 73.1
+        "kb": 219.1
       },
       "rim": {
-        "file": "05.RS.808.wav",
-        "peakDb": -4.5,
-        "kb": 3.6
+        "files": [
+          "rim.wav",
+          "rim-2.wav",
+          "rim-3.wav"
+        ],
+        "peakDb": -4.3,
+        "kb": 10.8
       },
       "shaker": {
-        "file": "05.MA.808.wav",
-        "peakDb": -3.2,
-        "kb": 3.2
+        "files": [
+          "shaker.wav",
+          "shaker-2.wav",
+          "shaker-3.wav"
+        ],
+        "peakDb": -2.4,
+        "kb": 9.6
       }
     }
   },
@@ -183,47 +278,65 @@
     "gainDb": 0.4,
     "slots": {
       "kick": {
-        "file": "tr505-kick.wav",
+        "files": [
+          "kick.wav"
+        ],
         "peakDb": -2.0,
         "kb": 11.8
       },
       "snare": {
-        "file": "tr505-snare.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -3.4,
         "kb": 14.4
       },
       "clap": {
-        "file": "tr505-clap.wav",
+        "files": [
+          "clap.wav"
+        ],
         "peakDb": -3.0,
         "kb": 21.2
       },
       "hat-closed": {
-        "file": "tr505-hihat-closed.wav",
+        "files": [
+          "hat-closed.wav"
+        ],
         "peakDb": -3.0,
         "kb": 10.3
       },
       "hat-open": {
-        "file": "tr505-hihat-open.wav",
+        "files": [
+          "hat-open.wav"
+        ],
         "peakDb": -9.5,
         "kb": 31.3
       },
       "tom": {
-        "file": "tr505-tom-m.wav",
+        "files": [
+          "tom.wav"
+        ],
         "peakDb": -1.4,
         "kb": 28.6
       },
       "perc": {
-        "file": "tr505-cowb-h.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -4.6,
         "kb": 22.0
       },
       "rim": {
-        "file": "tr505-rim.wav",
+        "files": [
+          "rim.wav"
+        ],
         "peakDb": -4.1,
         "kb": 6.8
       },
       "shaker": {
-        "file": "tr505-timbal.wav",
+        "files": [
+          "shaker.wav"
+        ],
         "peakDb": -2.9,
         "kb": 28.7
       }
@@ -235,42 +348,58 @@
     "gainDb": 0.1,
     "slots": {
       "kick": {
-        "file": "kick.wav",
+        "files": [
+          "kick.wav"
+        ],
         "peakDb": -6.1,
         "kb": 36.2
       },
       "snare": {
-        "file": "snare.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -6.1,
         "kb": 19.2
       },
       "hat-closed": {
-        "file": "hihat.wav",
+        "files": [
+          "hat-closed.wav"
+        ],
         "peakDb": -7.0,
         "kb": 3.3
       },
       "hat-open": {
-        "file": "hihat-metal.wav",
+        "files": [
+          "hat-open.wav"
+        ],
         "peakDb": -11.0,
         "kb": 13.1
       },
       "tom": {
-        "file": "conga-l.wav",
+        "files": [
+          "tom.wav"
+        ],
         "peakDb": -5.9,
         "kb": 36.4
       },
       "perc": {
-        "file": "bongo-l.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -4.4,
         "kb": 11.7
       },
       "rim": {
-        "file": "rim.wav",
+        "files": [
+          "rim.wav"
+        ],
         "peakDb": -1.1,
         "kb": 4.4
       },
       "shaker": {
-        "file": "tamb-short.wav",
+        "files": [
+          "shaker.wav"
+        ],
         "peakDb": -12.0,
         "kb": 25.1
       }
@@ -282,47 +411,65 @@
     "gainDb": -1.0,
     "slots": {
       "kick": {
-        "file": "kick.wav",
+        "files": [
+          "kick.wav"
+        ],
         "peakDb": -0.0,
         "kb": 17.6
       },
       "snare": {
-        "file": "snare-m.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -0.0,
         "kb": 12.2
       },
       "clap": {
-        "file": "clap.wav",
+        "files": [
+          "clap.wav"
+        ],
         "peakDb": -0.0,
         "kb": 16.6
       },
       "hat-closed": {
-        "file": "hihat-closed.wav",
+        "files": [
+          "hat-closed.wav"
+        ],
         "peakDb": -0.0,
         "kb": 10.0
       },
       "hat-open": {
-        "file": "hihat-open.wav",
+        "files": [
+          "hat-open.wav"
+        ],
         "peakDb": -0.0,
         "kb": 52.9
       },
       "tom": {
-        "file": "conga-m.wav",
+        "files": [
+          "tom.wav"
+        ],
         "peakDb": -0.0,
         "kb": 23.8
       },
       "perc": {
-        "file": "conga-hh.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -0.0,
         "kb": 9.6
       },
       "rim": {
-        "file": "conga-lll.wav",
+        "files": [
+          "rim.wav"
+        ],
         "peakDb": -0.0,
         "kb": 81.9
       },
       "shaker": {
-        "file": "cabasa.wav",
+        "files": [
+          "shaker.wav"
+        ],
         "peakDb": -0.0,
         "kb": 6.9
       }
@@ -334,42 +481,58 @@
     "gainDb": -0.9,
     "slots": {
       "kick": {
-        "file": "kick.wav",
+        "files": [
+          "kick.wav"
+        ],
         "peakDb": -0.1,
         "kb": 12.0
       },
       "snare": {
-        "file": "snare.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -0.1,
         "kb": 17.1
       },
       "hat-closed": {
-        "file": "hihat-closed.wav",
+        "files": [
+          "hat-closed.wav"
+        ],
         "peakDb": -0.1,
         "kb": 28.8
       },
       "hat-open": {
-        "file": "hihat-open.wav",
+        "files": [
+          "hat-open.wav"
+        ],
         "peakDb": -0.1,
         "kb": 128.4
       },
       "tom": {
-        "file": "tom.wav",
+        "files": [
+          "tom.wav"
+        ],
         "peakDb": -0.1,
         "kb": 14.9
       },
       "perc": {
-        "file": "bongo.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -0.1,
         "kb": 8.4
       },
       "rim": {
-        "file": "clave.wav",
+        "files": [
+          "rim.wav"
+        ],
         "peakDb": -0.1,
         "kb": 11.9
       },
       "shaker": {
-        "file": "block.wav",
+        "files": [
+          "shaker.wav"
+        ],
         "peakDb": -0.1,
         "kb": 11.5
       }
@@ -381,37 +544,51 @@
     "gainDb": -0.8,
     "slots": {
       "kick": {
-        "file": "kick-01.wav",
+        "files": [
+          "kick.wav"
+        ],
         "peakDb": -0.2,
         "kb": 32.5
       },
       "snare": {
-        "file": "snare-01.wav",
+        "files": [
+          "snare.wav"
+        ],
         "peakDb": -1.5,
         "kb": 42.0
       },
       "clap": {
-        "file": "snare-03.wav",
+        "files": [
+          "clap.wav"
+        ],
         "peakDb": -1.1,
         "kb": 32.0
       },
       "hat-closed": {
-        "file": "hihat-closed.wav",
+        "files": [
+          "hat-closed.wav"
+        ],
         "peakDb": -5.8,
         "kb": 32.4
       },
       "hat-open": {
-        "file": "hihat-open.wav",
+        "files": [
+          "hat-open.wav"
+        ],
         "peakDb": -7.7,
         "kb": 55.0
       },
       "tom": {
-        "file": "tom-01.wav",
+        "files": [
+          "tom.wav"
+        ],
         "peakDb": -2.9,
         "kb": 84.7
       },
       "perc": {
-        "file": "tom-02.wav",
+        "files": [
+          "perc.wav"
+        ],
         "peakDb": -3.0,
         "kb": 84.7
       }

@@ -33,96 +33,96 @@ OUT = os.path.join(ROOT, "public", "audio", "kits")
 STAGE = os.path.join(os.path.expanduser("~"), ".hermes", "cache", "scratch", "kits-raw")
 
 # kit -> (directorio en el repo fuente, {slot: archivo})
-KITS: dict[str, tuple[str, dict[str, str]]] = {
+KITS: dict[str, tuple[str, dict[str, list[str]]]] = {
     "909": ("DM/TR-909/Detroit/samples", {
-        "kick": "kick.wav",
-        "snare": "snare.wav",
-        "clap": "clap-1.wav",
-        "hat-closed": "hihat-closed.wav",
-        "hat-open": "hihat-open-1.wav",
-        "tom": "tom-h.wav",
-        "perc": "rim.wav",
+        "kick": ["kick.wav", "kick-short.wav"],
+        "snare": ["snare.wav"],
+        "clap": ["clap-1.wav", "clap-2.wav"],
+        "hat-closed": ["hihat-closed.wav", "hihat-close.wav"],
+        "hat-open": ["hihat-open-1.wav", "hihat-open-2.wav"],
+        "tom": ["tom-h.wav", "tom-l.wav"],
+        "perc": ["rim.wav"],
     }),
-    # Variante cerrada del mismo 909: otro kick, otros hats, otros toms.
+    # Variante cerrada del mismo 909: otro orden de tomas.
     "909t": ("DM/TR-909/Detroit/samples", {
-        "kick": "kick-short.wav",
-        "snare": "snare.wav",
-        "clap": "clap-2.wav",
-        "hat-closed": "hihat-close.wav",
-        "hat-open": "hihat-open-2.wav",
-        "tom": "tom-l.wav",
-        "perc": "rim.wav",
+        "kick": ["kick-short.wav", "kick.wav"],
+        "snare": ["snare.wav"],
+        "clap": ["clap-2.wav", "clap-1.wav"],
+        "hat-closed": ["hihat-close.wav", "hihat-closed.wav"],
+        "hat-open": ["hihat-open-2.wav", "hihat-open-1.wav"],
+        "tom": ["tom-l.wav", "tom-h.wav"],
+        "perc": ["rim.wav"],
     }),
     "909sp": ("DM/TR-909/SP/samples", {
-        "kick": "kick-2.wav",
-        "snare": "snare.wav",
-        "clap": "clap2.wav",
-        "hat-closed": "hihat-closed-2.wav",
-        "hat-open": "hihat-open-2.wav",
-        "tom": "tom-m.wav",
-        "perc": "rim.wav",
+        "kick": ["kick-2.wav", "kick.wav"],
+        "snare": ["snare.wav", "snare-short.wav"],
+        "clap": ["clap2.wav", "clap1.wav"],
+        "hat-closed": ["hihat-closed-2.wav", "hihat-closed-1.wav"],
+        "hat-open": ["hihat-open-2.wav", "hihat-open-1.wav"],
+        "tom": ["tom-m.wav", "tom-h.wav", "tom-l.wav"],
+        "perc": ["rim.wav"],
     }),
     "808": ("DM/TR-808/samples", {
-        "kick": "05.BD.808.wav",
-        "snare": "05.SD5.808.wav",
-        "clap": "05.CP.808.wav",
-        "hat-closed": "05.CH.808.wav",
-        "hat-open": "05.OH.808.wav",
-        "tom": "05.MT.808.wav",
-        "perc": "05.CB.808.wav",
-        "rim": "05.RS.808.wav",
-        "shaker": "05.MA.808.wav",
+        "kick": ["05.BD.808.wav", "06.BD.808.wav", "07.BD.808.wav"],
+        "snare": ["05.SD5.808.wav", "06.SD5.808.wav", "07.SD5.808.wav"],
+        "clap": ["05.CP.808.wav", "06.CP.808.wav", "07.CP.808.wav"],
+        "hat-closed": ["05.CH.808.wav", "06.CH.808.wav", "07.CH.808.wav"],
+        "hat-open": ["05.OH.808.wav", "06.OH.808.wav", "07.OH.808.wav"],
+        "tom": ["05.MT.808.wav", "06.MT.808.wav", "07.MT.808.wav"],
+        "perc": ["05.CB.808.wav", "06.CB.808.wav", "07.CB.808.wav"],
+        "rim": ["05.RS.808.wav", "06.RS.808.wav", "07.RS.808.wav"],
+        "shaker": ["05.MA.808.wav", "06.MA.808.wav", "07.MA.808.wav"],
     }),
     "505": ("DM/TR-505/samples", {
-        "kick": "tr505-kick.wav",
-        "snare": "tr505-snare.wav",
-        "clap": "tr505-clap.wav",
-        "hat-closed": "tr505-hihat-closed.wav",
-        "hat-open": "tr505-hihat-open.wav",
-        "tom": "tr505-tom-m.wav",
-        "perc": "tr505-cowb-h.wav",
-        "rim": "tr505-rim.wav",
-        "shaker": "tr505-timbal.wav",
+        "kick": ["tr505-kick.wav"],
+        "snare": ["tr505-snare.wav"],
+        "clap": ["tr505-clap.wav"],
+        "hat-closed": ["tr505-hihat-closed.wav"],
+        "hat-open": ["tr505-hihat-open.wav"],
+        "tom": ["tr505-tom-m.wav"],
+        "perc": ["tr505-cowb-h.wav"],
+        "rim": ["tr505-rim.wav"],
+        "shaker": ["tr505-timbal.wav"],
     }),
     "cr78": ("DM/CR-78/samples", {
-        "kick": "kick.wav",
-        "snare": "snare.wav",
-        "hat-closed": "hihat.wav",
-        "hat-open": "hihat-metal.wav",
-        "tom": "conga-l.wav",
-        "perc": "bongo-l.wav",
-        "rim": "rim.wav",
-        "shaker": "tamb-short.wav",
+        "kick": ["kick.wav"],
+        "snare": ["snare.wav"],
+        "hat-closed": ["hihat.wav"],
+        "hat-open": ["hihat-metal.wav"],
+        "tom": ["conga-l.wav"],
+        "perc": ["bongo-l.wav"],
+        "rim": ["rim.wav"],
+        "shaker": ["tamb-short.wav"],
     }),
     "linn": ("DM/LM-2/samples", {
-        "kick": "kick.wav",
-        "snare": "snare-m.wav",
-        "clap": "clap.wav",
-        "hat-closed": "hihat-closed.wav",
-        "hat-open": "hihat-open.wav",
-        "tom": "conga-m.wav",
-        "perc": "conga-hh.wav",
-        "rim": "conga-lll.wav",
-        "shaker": "cabasa.wav",
+        "kick": ["kick.wav"],
+        "snare": ["snare-m.wav"],
+        "clap": ["clap.wav"],
+        "hat-closed": ["hihat-closed.wav"],
+        "hat-open": ["hihat-open.wav"],
+        "tom": ["conga-m.wav"],
+        "perc": ["conga-hh.wav"],
+        "rim": ["conga-lll.wav"],
+        "shaker": ["cabasa.wav"],
     }),
     "mrk2": ("DM/MRK-2/samples", {
-        "kick": "kick.wav",
-        "snare": "snare.wav",
-        "hat-closed": "hihat-closed.wav",
-        "hat-open": "hihat-open.wav",
-        "tom": "tom.wav",
-        "perc": "bongo.wav",
-        "rim": "clave.wav",
-        "shaker": "block.wav",
+        "kick": ["kick.wav"],
+        "snare": ["snare.wav"],
+        "hat-closed": ["hihat-closed.wav"],
+        "hat-open": ["hihat-open.wav"],
+        "tom": ["tom.wav"],
+        "perc": ["bongo.wav"],
+        "rim": ["clave.wav"],
+        "shaker": ["block.wav"],
     }),
     "pearl": ("DRUMS/pearl-master-studio/samples", {
-        "kick": "kick-01.wav",
-        "snare": "snare-01.wav",
-        "clap": "snare-03.wav",
-        "hat-closed": "hihat-closed.wav",
-        "hat-open": "hihat-open.wav",
-        "tom": "tom-01.wav",
-        "perc": "tom-02.wav",
+        "kick": ["kick-01.wav"],
+        "snare": ["snare-01.wav"],
+        "clap": ["snare-03.wav"],
+        "hat-closed": ["hihat-closed.wav"],
+        "hat-open": ["hihat-open.wav"],
+        "tom": ["tom-01.wav"],
+        "perc": ["tom-02.wav"],
     }),
 }
 
@@ -164,28 +164,44 @@ def run(args: list[str]) -> None:
 def main() -> int:
     force = "--force" in sys.argv
     report: dict[str, object] = {}
-    for kit, (src_dir, files) in KITS.items():
+    for kit, (src_dir, slots) in KITS.items():
         raw_dir = os.path.join(STAGE, src_dir.replace("/", "_"))
-        staged = {}
-        for slot, name in files.items():
-            path = os.path.join(raw_dir, name)
-            fetch(f"{RAW}/{src_dir}/{urllib.parse.quote(name)}", path, force)
-            staged[slot] = path
+        staged: dict[str, list[str]] = {}
+        for slot, names in slots.items():
+            paths = []
+            for name in names:
+                path = os.path.join(raw_dir, name)
+                fetch(f"{RAW}/{src_dir}/{urllib.parse.quote(name)}", path, force)
+                paths.append(path)
+            staged[slot] = paths
 
-        trimmed = {}
-        for slot, path in staged.items():
-            dst = os.path.join(STAGE, f"{kit}-{slot}-trim.wav")
-            run(["-i", path, "-af", TRIM, "-ac", "1", "-ar", "44100", "-c:a", "pcm_s24le", dst])
-            trimmed[slot] = dst
+        trimmed: dict[str, list[str]] = {}
+        for slot, paths in staged.items():
+            outs = []
+            for index, path in enumerate(paths):
+                dst = os.path.join(STAGE, f"{kit}-{slot}-{index}-trim.wav")
+                run(["-i", path, "-af", TRIM, "-ac", "1", "-ar", "44100", "-c:a", "pcm_s24le", dst])
+                outs.append(dst)
+            trimmed[slot] = outs
 
-        peaks = {slot: peak_db(p) for slot, p in trimmed.items()}
+        peaks = {
+            (slot, index): peak_db(path)
+            for slot, paths in trimmed.items()
+            for index, path in enumerate(paths)
+        }
         gain = -1.0 - max(peaks.values())
         kit_dir = os.path.join(OUT, kit)
         os.makedirs(kit_dir, exist_ok=True)
-        for slot, path in trimmed.items():
-            dst = os.path.join(kit_dir, f"{slot}.wav")
-            run(["-i", path, "-af", f"volume={gain:.2f}dB", "-ac", "1", "-ar", "44100",
-                 "-c:a", "pcm_s16le", dst])
+        output_files: dict[str, list[str]] = {}
+        for slot, paths in trimmed.items():
+            names = []
+            for index, path in enumerate(paths):
+                name = f"{slot}.wav" if index == 0 else f"{slot}-{index + 1}.wav"
+                dst = os.path.join(kit_dir, name)
+                run(["-i", path, "-af", f"volume={gain:.2f}dB", "-ac", "1", "-ar", "44100",
+                     "-c:a", "pcm_s16le", dst])
+                names.append(name)
+            output_files[slot] = names
 
         report[kit] = {
             "source": f"{RAW}/{src_dir}",
@@ -193,26 +209,35 @@ def main() -> int:
             "gainDb": round(gain, 2),
             "slots": {
                 slot: {
-                    "file": files[slot],
-                    "peakDb": round(peaks[slot], 1),
-                    "kb": round(os.path.getsize(os.path.join(kit_dir, f"{slot}.wav")) / 1024, 1),
+                    "files": output_files[slot],
+                    "peakDb": round(max(peaks[(slot, index)] for index in range(len(output_files[slot]))), 1),
+                    "kb": round(
+                        sum(os.path.getsize(os.path.join(kit_dir, name)) for name in output_files[slot]) / 1024,
+                        1,
+                    ),
                 }
-                for slot in files
+                for slot in slots
             },
         }
         total = sum(v["kb"] for v in report[kit]["slots"].values())  # type: ignore[index,union-attr]
-        print(f"{kit:6s} gain={gain:+6.2f} dB  {len(files)} slots  {total:6.0f} KB")
+        print(f"{kit:6s} gain={gain:+6.2f} dB  {len(slots)} slots  {total:6.0f} KB")
 
     with open(os.path.join(OUT, "kits.json"), "w") as fh:
         json.dump(report, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
 
     total = sum(
-        os.path.getsize(os.path.join(OUT, kit, slot + ".wav"))
-        for kit, (_, files) in KITS.items()
-        for slot in files
+        os.path.getsize(os.path.join(OUT, kit, name))
+        for kit, data in report.items()
+        for slot in data["slots"].values()  # type: ignore[index,union-attr]
+        for name in slot["files"]
     )
-    print(f"total {total / 1024:.0f} KB en {sum(len(f) for _, f in KITS.values())} archivos")
+    files_count = sum(
+        len(slot["files"])
+        for data in report.values()
+        for slot in data["slots"].values()  # type: ignore[index,union-attr]
+    )
+    print(f"total {total / 1024:.0f} KB en {files_count} archivos")
     return 0
 
 

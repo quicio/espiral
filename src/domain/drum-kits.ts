@@ -61,7 +61,7 @@ export const SLOT_LABEL: Readonly<Record<DrumSlot, string>> = {
 
 export interface DrumKitSound {
   readonly slot: DrumSlot;
-  readonly file: string;
+  readonly files: readonly string[];
 }
 
 export type DrumKitFamily = 'analog' | 'digital' | 'acoustic' | 'hybrid';
@@ -96,13 +96,13 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/TR-909',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' }
+      { slot: 'kick', files: ['kick.wav', 'kick-2.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'clap', files: ['clap.wav', 'clap-2.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav', 'hat-closed-2.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav', 'hat-open-2.wav'] },
+      { slot: 'tom', files: ['tom.wav', 'tom-2.wav'] },
+      { slot: 'perc', files: ['perc.wav'] }
     ]
   },
   {
@@ -117,13 +117,13 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/TR-909',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' }
+      { slot: 'kick', files: ['kick.wav', 'kick-2.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'clap', files: ['clap.wav', 'clap-2.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav', 'hat-closed-2.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav', 'hat-open-2.wav'] },
+      { slot: 'tom', files: ['tom.wav', 'tom-2.wav'] },
+      { slot: 'perc', files: ['perc.wav'] }
     ]
   },
   {
@@ -138,13 +138,13 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/TR-909/SP',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' }
+      { slot: 'kick', files: ['kick.wav', 'kick-2.wav'] },
+      { slot: 'snare', files: ['snare.wav', 'snare-2.wav'] },
+      { slot: 'clap', files: ['clap.wav', 'clap-2.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav', 'hat-closed-2.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav', 'hat-open-2.wav'] },
+      { slot: 'tom', files: ['tom.wav', 'tom-2.wav', 'tom-3.wav'] },
+      { slot: 'perc', files: ['perc.wav'] }
     ]
   },
   {
@@ -159,15 +159,15 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/TR-808',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' },
-      { slot: 'rim', file: 'rim.wav' },
-      { slot: 'shaker', file: 'shaker.wav' }
+      { slot: 'kick', files: ['kick.wav', 'kick-2.wav', 'kick-3.wav'] },
+      { slot: 'snare', files: ['snare.wav', 'snare-2.wav', 'snare-3.wav'] },
+      { slot: 'clap', files: ['clap.wav', 'clap-2.wav', 'clap-3.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav', 'hat-closed-2.wav', 'hat-closed-3.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav', 'hat-open-2.wav', 'hat-open-3.wav'] },
+      { slot: 'tom', files: ['tom.wav', 'tom-2.wav', 'tom-3.wav'] },
+      { slot: 'perc', files: ['perc.wav', 'perc-2.wav', 'perc-3.wav'] },
+      { slot: 'rim', files: ['rim.wav', 'rim-2.wav', 'rim-3.wav'] },
+      { slot: 'shaker', files: ['shaker.wav', 'shaker-2.wav', 'shaker-3.wav'] }
     ]
   },
   {
@@ -182,15 +182,15 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/TR-505',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' },
-      { slot: 'rim', file: 'rim.wav' },
-      { slot: 'shaker', file: 'shaker.wav' }
+      { slot: 'kick', files: ['kick.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'clap', files: ['clap.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav'] },
+      { slot: 'tom', files: ['tom.wav'] },
+      { slot: 'perc', files: ['perc.wav'] },
+      { slot: 'rim', files: ['rim.wav'] },
+      { slot: 'shaker', files: ['shaker.wav'] }
     ]
   },
   {
@@ -205,14 +205,14 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/CR-78',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' },
-      { slot: 'rim', file: 'rim.wav' },
-      { slot: 'shaker', file: 'shaker.wav' }
+      { slot: 'kick', files: ['kick.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav'] },
+      { slot: 'tom', files: ['tom.wav'] },
+      { slot: 'perc', files: ['perc.wav'] },
+      { slot: 'rim', files: ['rim.wav'] },
+      { slot: 'shaker', files: ['shaker.wav'] }
     ]
   },
   {
@@ -227,15 +227,15 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/LM-2',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' },
-      { slot: 'rim', file: 'rim.wav' },
-      { slot: 'shaker', file: 'shaker.wav' }
+      { slot: 'kick', files: ['kick.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'clap', files: ['clap.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav'] },
+      { slot: 'tom', files: ['tom.wav'] },
+      { slot: 'perc', files: ['perc.wav'] },
+      { slot: 'rim', files: ['rim.wav'] },
+      { slot: 'shaker', files: ['shaker.wav'] }
     ]
   },
   {
@@ -250,14 +250,14 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DM/MRK-2',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' },
-      { slot: 'rim', file: 'rim.wav' },
-      { slot: 'shaker', file: 'shaker.wav' }
+      { slot: 'kick', files: ['kick.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav'] },
+      { slot: 'tom', files: ['tom.wav'] },
+      { slot: 'perc', files: ['perc.wav'] },
+      { slot: 'rim', files: ['rim.wav'] },
+      { slot: 'shaker', files: ['shaker.wav'] }
     ]
   },
   {
@@ -272,13 +272,13 @@ export const DRUM_KITS: readonly DrumKit[] = [
     license: 'Public Domain',
     source: 'https://github.com/oramics/sampled/tree/master/DRUMS/pearl-master-studio',
     sounds: [
-      { slot: 'kick', file: 'kick.wav' },
-      { slot: 'snare', file: 'snare.wav' },
-      { slot: 'clap', file: 'clap.wav' },
-      { slot: 'hat-closed', file: 'hat-closed.wav' },
-      { slot: 'hat-open', file: 'hat-open.wav' },
-      { slot: 'tom', file: 'tom.wav' },
-      { slot: 'perc', file: 'perc.wav' }
+      { slot: 'kick', files: ['kick.wav'] },
+      { slot: 'snare', files: ['snare.wav'] },
+      { slot: 'clap', files: ['clap.wav'] },
+      { slot: 'hat-closed', files: ['hat-closed.wav'] },
+      { slot: 'hat-open', files: ['hat-open.wav'] },
+      { slot: 'tom', files: ['tom.wav'] },
+      { slot: 'perc', files: ['perc.wav'] }
     ]
   }
 ];
@@ -317,7 +317,9 @@ export function drumSlotMachine(kitId: string, slot: DrumSlot): MachineConfig {
   const voice = SLOT_VOICE[slot];
   return {
     kind: 'sampler',
-    samples: entry ? [drumKitSamplePath(kitId, entry.file)] : [],
+    samples: entry
+      ? entry.files.map(file => drumKitSamplePath(kitId, file))
+      : [],
     voices: voice.voices,
     fadeIn: voice.fadeIn,
     fadeOut: voice.fadeOut

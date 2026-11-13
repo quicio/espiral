@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState } from '../application/initial-state';
 import { ClipService } from '../application/clip';
-import { PlaybackService } from '../application/playback';
+import { PlaybackService, pickSampleIndex } from '../application/playback';
 import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
 import { TrackService } from '../application/tracks';
@@ -38,6 +38,33 @@ function setup() {
   );
   return { store, runtime, clock, engine, status, automation, evolver, clips, playback };
 }
+
+describe('pickSampleIndex', () => {
+  const generative = new FakeGenerative();
+
+  it('is stable for the same seed, track and step', () => {
+    const first = pickSampleIndex(generative, 7, 'kick', 12, 3);
+    const second = pickSampleIndex(generative, 7, 'kick', 12, 3);
+    expect(second).toBe(first);
+  });
+
+  it('stays in range and covers all variants over 64 steps', () => {
+    const indexes = new Set<number>();
+    for (let step = 0; step < 64; step += 1) {
+      const index = pickSampleIndex(generative, 4821, '808-kick', step, 3);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(index).toBeLessThan(3);
+      indexes.add(index);
+    }
+    expect(indexes.size).toBe(3);
+  });
+
+  it('returns 0 when there is only one variant', () => {
+    for (let step = 0; step < 16; step += 1) {
+      expect(pickSampleIndex(generative, 4821, 'kick', step, 1)).toBe(0);
+    }
+  });
+});
 
 describe('PlaybackService', () => {
   it('prepares the engine and starts the clock', async () => {
