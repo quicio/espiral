@@ -21,7 +21,10 @@ import { InstrumentPluginHost } from '../plugins/instrument-host';
 import type { InstrumentPluginInstance } from '../plugins/types';
 import type { PluginHost } from '../plugins/plugin-host';
 import { isOfflineContext } from '../context';
-import { SampleVoicePool } from '../sample-voice-pool';
+import {
+  createSamplerSource,
+  type SamplerVoiceSource
+} from '../sampler-source';
 import { SampleLibrary } from '../sample-library';
 import { Bus } from './bus';
 import { MasterBus } from './master-bus';
@@ -33,7 +36,7 @@ type TrackSource =
   | { readonly kind: 'mono'; readonly synth: Tone.MonoSynth }
   | { readonly kind: 'pluck'; readonly synth: Tone.PluckSynth }
   | { readonly kind: 'instrument'; readonly instance: InstrumentPluginInstance }
-  | { readonly kind: 'sampler'; readonly pools: readonly SampleVoicePool[] };
+  | { readonly kind: 'sampler'; readonly source: SamplerVoiceSource };
 
 interface SourceNode {
   readonly source: TrackSource;
@@ -199,7 +202,7 @@ export class ModularAudioEngine implements AudioEnginePort {
         node.source.kind === 'instrument' && node.source.instance.prepare
           ? [node.source.instance.prepare()]
           : node.source.kind === 'sampler'
-            ? node.source.pools.map(pool => pool.prepare())
+            ? [node.source.source.prepare()]
             : []
       )
     ]);
@@ -254,10 +257,10 @@ export class ModularAudioEngine implements AudioEnginePort {
       }
       case 'sample': {
         const source = this.sources.get(event.trackId ?? event.channel)?.source;
-        if (source?.kind !== 'sampler' || source.pools.length === 0) return;
-        const index = clamp(event.sampleIndex ?? 0, 0, source.pools.length - 1);
-        source.pools[index]?.play(
+        if (source?.kind !== 'sampler') return;
+        source.source.play(
           event.time,
+          event.sampleIndex ?? 0,
           event.playbackRate ?? 1,
           event.duration,
           event.gainDb
@@ -276,7 +279,7 @@ export class ModularAudioEngine implements AudioEnginePort {
       try {
         if (!isOfflineContext()) await Tone.start();
         if (node.source.kind === 'sampler') {
-          await Promise.all(node.source.pools.map(pool => pool.prepare()));
+          await node.source.source.prepare();
         }
         const time = Tone.now() + 0.03;
         switch (node.source.kind) {
@@ -311,7 +314,7 @@ export class ModularAudioEngine implements AudioEnginePort {
             node.source.instance.trigger(notes, duration, time, 0.9);
             break;
           case 'sampler':
-            node.source.pools[0]?.play(time, 1);
+            node.source.source.play(time, 0, 1);
             break;
         }
       } catch (error) {
@@ -746,7 +749,17 @@ export class ModularAudioEngine implements AudioEnginePort {
 
     if (machine.kind === 'plugin') {
       if (!machine.pluginId) {
-        return { kind: 'sampler', pools: [] };
+        return {
+          kind: 'sampler',
+          source: createSamplerSource(
+            [],
+            1,
+            0,
+            0,
+            input,
+            this.samples
+          )
+        };
       }
       const instance = this.instrumentHost.create(
         machine.pluginId,
@@ -756,18 +769,15 @@ export class ModularAudioEngine implements AudioEnginePort {
       return { kind: 'instrument', instance };
     }
 
-    const pools = (machine.samples ?? []).map(
-      url =>
-        new SampleVoicePool(
-          url,
-          machine.voices ?? 1,
-          machine.fadeIn ?? 0.004,
-          machine.fadeOut ?? 0.03,
-          input,
-          this.samples
-        )
+    const source = createSamplerSource(
+      machine.samples ?? [],
+      machine.voices ?? 1,
+      machine.fadeIn ?? 0.004,
+      machine.fadeOut ?? 0.03,
+      input,
+      this.samples
     );
-    return { kind: 'sampler', pools };
+    return { kind: 'sampler', source };
   }
 }
 
@@ -782,16 +792,12 @@ function stopSource(source: TrackSource | undefined): void {
   else if (source.kind === 'mono') source.synth.triggerRelease();
   else if (source.kind === 'pluck') source.synth.triggerRelease();
   else if (source.kind === 'instrument') source.instance.release();
-  else source.pools.forEach(pool => pool.stop());
+  else source.source.stop();
 }
 
 function disposeSource(source: TrackSource | undefined): void {
   if (!source) return;
-  if (source.kind === 'sampler') source.pools.forEach(pool => pool.dispose());
+  if (source.kind === 'sampler') source.source.dispose();
   else if (source.kind === 'instrument') source.instance.dispose();
   else source.synth.dispose();
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
 }

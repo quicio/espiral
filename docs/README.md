@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.13.0
+version: 1.14.0
 updated: 2026-11-13
 ---
 
@@ -63,6 +63,7 @@ el código y la spec se corrige.
 | [34](specs/34-shared-sample-buffers.md) | Buffers de sample compartidos entre tracks | implementada |
 | [35](specs/35-audio-startup-prepared-meters.md) | Arranque de audio y medidores preparados | implementada |
 | [36](specs/36-clean-view-cache.md) | Cache de vistas limpias al cambiar de pestaña | implementada |
+| [37](specs/37-sampler-audioworklet.md) | Sampler en AudioWorklet con fallback | implementada |
 
 ## ADR
 

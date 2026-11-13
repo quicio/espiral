@@ -12,6 +12,7 @@ Chromium headless, 16 tracks, armado por defecto, 128 BPM.
 | long tasks en 16 s de arrangement | 127 ms y 87 ms | **ninguna** |
 | long tasks de carga + armado + vistas | 262 / 131 / 97 ms | **124 / 53 ms** |
 | long tasks con playback + cambio por 7 vistas | 56 / 59 / 88 ms | **ninguna** |
+| sampler en vivo | Tone.Player por voz | **AudioWorklet** |
 | CPU meter al cambiar bloque | 45–71% | 0–9% |
 | perfil de 8 s: `querySelector*` | base | ~1/3 |
 | peticiones `.wav` en integración | 57 | 17 |
@@ -47,6 +48,9 @@ scheduler llega tarde.
 12. **Lookahead por defecto de 150 ms** (configurable) (spec 35).
 13. **Cache de vistas limpias**: cambiar de pestaña sin cambios estructurales no
     reconstruye el DOM (spec 36).
+14. **Sampler en AudioWorklet** con fallback a `Tone.Player`: un nodo por máquina
+    sampler mezcla voces en el hilo de audio; el render offline sigue usando el
+    fallback (spec 37).
 
 ## Palancas de tuning pendientes (bajo riesgo)
 
@@ -99,21 +103,19 @@ Tone.js arma el grafo en el hilo principal y programa eventos; el DSP corre en e
 AudioWorklet nativo del navegador. El próximo salto no es “otra librería”, es
 mover **síntesis, samples e inserts** a AudioWorklet/WASM.
 
-### Opción A — Sampler propio en AudioWorklet (recomendada primero)
+### Opción A — Sampler propio en AudioWorklet (implementado)
 
-Hoy cada track sampler crea N `Tone.Player`, pero ya comparte el
-`ToneAudioBuffer` por URL entre todos los tracks. Eso elimina decodificaciones
-duplicadas; el costo que queda es el grafo por voz y el scheduling de Tone.
+El sampler ya usa un `AudioWorkletNode` por máquina sampler en vivo (spec 37):
 
-Un worklet sampler con buffers compartidos y voces por índice:
+- mezcla voces en el hilo de audio con interpolación y playbackRate;
+- evita el grafo de `Tone.Player` por voz;
+- comparte la decodificación entre tracks vía `SampleLibrary`;
+- cae a `Tone.Player` si el worklet no está disponible;
+- el render offline sigue usando el fallback para mantener determinismo.
 
-- reduce todavía más memoria y objetos;
-- saca la reproducción de samples del hilo principal;
-- no obliga a reescribir synths ni inserts.
-
-Se intentó un pool nativo de `AudioBufferSourceNode` y se descartó: mezclar
-nodos nativos con el contexto estandarizado de Tone rompía las conexiones. El
-worklet es la vía correcta para ese salto.
+Lo que queda de esta línea: buffers compartidos entre nodos con
+`SharedArrayBuffer` (requiere COOP/COEP), loop/warp/slice en el worklet y un test
+de calidad del DSP del worklet.
 
 ### Opción B — Grafo completo en AudioWorklet
 

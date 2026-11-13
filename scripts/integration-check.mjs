@@ -109,6 +109,10 @@ try {
   if (playing !== 'Reproduciendo') throw new Error(`Estado inesperado al reproducir: ${playing}.`);
   if (pulse === '00' || !pulse) throw new Error('El pulso no avanzó.');
   if (clip === 'true') throw new Error('El master activó el clip latch.');
+  const samplerMode = await page.evaluate(() => window.__espiralSamplerMode);
+  if (samplerMode !== 'worklet') {
+    throw new Error(`El sampler no usa AudioWorklet: ${samplerMode}.`);
+  }
 
   await page.locator('#transport-play').click();
   await page.waitForTimeout(300);
