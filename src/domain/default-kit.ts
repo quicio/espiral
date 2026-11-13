@@ -71,14 +71,18 @@ const MACHINES: Record<ChannelKey, MachineConfig> = {
   },
   pad: {
     kind: 'poly',
-    oscillator: 'sine',
+    oscillator: 'triangle',
     envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 },
+    filter: { frequency: 1400, q: 1.2 },
+    filterEnvelope: { octaves: 1.9, attack: 1.4, decay: 2.2, sustain: 0.6, release: 3 },
     maxPolyphony: 8
   },
   lead: {
     kind: 'poly',
     oscillator: 'triangle',
     envelope: { attack: 0.05, decay: 0.25, sustain: 0.35, release: 1.4 },
+    filter: { frequency: 1800, q: 2.6 },
+    filterEnvelope: { octaves: 3, attack: 0.02, decay: 0.4, sustain: 0.3, release: 0.9 },
     maxPolyphony: 12
   }
 };

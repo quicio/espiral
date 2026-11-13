@@ -166,11 +166,13 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
   'analog-pad': {
     id: 'analog-pad',
     name: 'Analog Pad',
-    description: 'Poli-sinte con sierra y envolvente larga',
+    description: 'Poli-sinte con sierra, filtro y envolvente larga',
     machine: {
       kind: 'poly',
       oscillator: 'sawtooth',
       envelope: { attack: 1.2, decay: 1.4, sustain: 0.8, release: 4 },
+      filter: { frequency: 1100, q: 1.4 },
+      filterEnvelope: { octaves: 2.2, attack: 0.9, decay: 2.2, sustain: 0.55, release: 3.2 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 },
@@ -179,17 +181,21 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
       envelopeParam('attack', 'Attack', 0.01, 5, 0.01),
       envelopeParam('decay', 'Decay', 0.02, 5, 0.01),
       envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
-      envelopeParam('release', 'Release', 0.05, 10, 0.05)
+      envelopeParam('release', 'Release', 0.05, 10, 0.05),
+      filterParam(),
+      resonanceParam()
     ]
   },
   'soft-pad': {
     id: 'soft-pad',
     name: 'Soft Pad',
-    description: 'Poli-sinte de seno con ataque lento',
+    description: 'Poli-sinte de triángulo con filtro dulce y ataque lento',
     machine: {
       kind: 'poly',
-      oscillator: 'sine',
+      oscillator: 'triangle',
       envelope: { attack: 2, decay: 1, sustain: 0.8, release: 3 },
+      filter: { frequency: 2400, q: 0.9 },
+      filterEnvelope: { octaves: 1.6, attack: 1.4, decay: 2.4, sustain: 0.6, release: 3 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 },
@@ -198,7 +204,9 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
       envelopeParam('attack', 'Attack', 0.01, 5, 0.01),
       envelopeParam('decay', 'Decay', 0.02, 5, 0.01),
       envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
-      envelopeParam('release', 'Release', 0.05, 10, 0.05)
+      envelopeParam('release', 'Release', 0.05, 10, 0.05),
+      filterParam(),
+      resonanceParam()
     ]
   },
   'drone-sampler': {
@@ -239,11 +247,13 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
   'lead-synth': {
     id: 'lead-synth',
     name: 'Lead Synth',
-    description: 'Poli-sinte brillante con envolvente media',
+    description: 'Poli-sinte brillante con filtro y envolvente media',
     machine: {
       kind: 'poly',
       oscillator: 'triangle',
       envelope: { attack: 0.05, decay: 0.25, sustain: 0.35, release: 1.4 },
+      filter: { frequency: 1800, q: 2.6 },
+      filterEnvelope: { octaves: 3, attack: 0.02, decay: 0.4, sustain: 0.3, release: 0.9 },
       maxPolyphony: 12
     },
     noteSource: { kind: 'scale-degree', degree: 4, octave: 4 },
@@ -252,7 +262,9 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
       envelopeParam('attack', 'Attack', 0.001, 2, 0.001),
       envelopeParam('decay', 'Decay', 0.01, 3, 0.01),
       envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
-      envelopeParam('release', 'Release', 0.01, 6, 0.01)
+      envelopeParam('release', 'Release', 0.01, 6, 0.01),
+      filterParam(),
+      resonanceParam()
     ]
   },
   pluck: {

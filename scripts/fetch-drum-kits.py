@@ -127,9 +127,13 @@ KITS: dict[str, tuple[str, dict[str, str]]] = {
 }
 
 TRIM = (
+    # Sólo el silencio previo al ataque: el ataque no se toca.
     "silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.001,"
+    # Cola: umbral muy bajo, para no comerse el decay. Un snare sin cola es un click.
     "areverse,"
-    "silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.01,"
+    "silenceremove=start_periods=1:start_threshold=-80dB:start_silence=0.03,"
+    # Fade de 8 ms en el extremo (al revertir queda al final) para evitar clicks.
+    "afade=t=in:d=0.008,"
     "areverse"
 )
 

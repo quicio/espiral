@@ -695,13 +695,29 @@ export class ModularAudioEngine implements AudioEnginePort {
     }
 
     if (machine.kind === 'poly') {
-      const synth = new Tone.PolySynth(Tone.Synth, {
+      // PolySynth sobre MonoSynth: cada voz lleva filtro propio y envolvente de
+      // filtro. Con `Tone.Synth` el pad era un oscilador con ADSR, sin movimiento.
+      const filterEnvelope = machine.filterEnvelope;
+      const synth = new Tone.PolySynth(Tone.MonoSynth, {
         oscillator: { type: machine.oscillator ?? 'sine' },
         envelope: machine.envelope ?? {
           attack: 0.05,
           decay: 0.25,
           sustain: 0.35,
           release: 1.4
+        },
+        filter: {
+          type: 'lowpass',
+          Q: machine.filter?.q ?? 1,
+          rolloff: -24
+        },
+        filterEnvelope: {
+          attack: filterEnvelope?.attack ?? 0.6,
+          decay: filterEnvelope?.decay ?? 1.6,
+          sustain: filterEnvelope?.sustain ?? 0.5,
+          release: filterEnvelope?.release ?? 2.4,
+          baseFrequency: machine.filter?.frequency ?? 1400,
+          octaves: filterEnvelope?.octaves ?? 2.5
         }
       });
       if (machine.maxPolyphony !== undefined) synth.maxPolyphony = machine.maxPolyphony;

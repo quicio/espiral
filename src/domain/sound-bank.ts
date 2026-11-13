@@ -148,13 +148,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
   {
     id: 'warm-pad',
     name: 'Warm Pad',
-    description: 'Triángulo largo, cuatro voces y mucha cola',
+    description: 'Triángulo con filtro que abre, cuatro voces y cola larga',
     category: 'keys',
     machineId: 'analog-pad',
     machine: {
       kind: 'poly',
       oscillator: 'triangle',
       envelope: { attack: 1.6, decay: 2, sustain: 0.78, release: 6 },
+      filter: { frequency: 1200, q: 1.3 },
+      filterEnvelope: { octaves: 2.1, attack: 1.2, decay: 2.6, sustain: 0.55, release: 4 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 }
@@ -162,13 +164,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
   {
     id: 'glass-pad',
     name: 'Glass Pad',
-    description: 'Seno cristalino con ataque lento',
+    description: 'Triángulo cristalino con filtro alto y ataque lento',
     category: 'keys',
     machineId: 'soft-pad',
     machine: {
       kind: 'poly',
-      oscillator: 'sine',
+      oscillator: 'triangle',
       envelope: { attack: 0.9, decay: 1.4, sustain: 0.65, release: 5.5 },
+      filter: { frequency: 3400, q: 1.2 },
+      filterEnvelope: { octaves: 1.8, attack: 0.7, decay: 1.8, sustain: 0.6, release: 3.5 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 4 }
@@ -176,13 +180,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
   {
     id: 'dust-keys',
     name: 'Dust Keys',
-    description: 'Cuadrada corta y polvorienta',
+    description: 'Cuadrada corta, filtrada y polvorienta',
     category: 'keys',
     machineId: 'analog-pad',
     machine: {
       kind: 'poly',
       oscillator: 'square',
       envelope: { attack: 0.08, decay: 0.8, sustain: 0.22, release: 2.4 },
+      filter: { frequency: 900, q: 3.2 },
+      filterEnvelope: { octaves: 3.6, attack: 0.02, decay: 0.5, sustain: 0.18, release: 1.2 },
       maxPolyphony: 6
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 3 }
@@ -321,13 +327,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
   {
     id: 'organ-keys',
     name: 'Organ Keys',
-    description: 'Órgano cuadrado con ataque rápido',
+    description: 'Órgano cuadrado con filtro medio y ataque rápido',
     category: 'keys',
     machineId: 'soft-pad',
     machine: {
       kind: 'poly',
       oscillator: 'square',
       envelope: { attack: 0.01, decay: 0.3, sustain: 0.5, release: 0.8 },
+      filter: { frequency: 2200, q: 0.9 },
+      filterEnvelope: { octaves: 1.2, attack: 0.01, decay: 0.35, sustain: 0.45, release: 0.6 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 3, size: 3 }
@@ -335,13 +343,15 @@ export const SOUND_BANK: readonly SoundPreset[] = [
   {
     id: 'bell-keys',
     name: 'Bell Keys',
-    description: 'Campana de seno con cola media',
+    description: 'Campana de triángulo con filtro alto y cola media',
     category: 'keys',
     machineId: 'soft-pad',
     machine: {
       kind: 'poly',
-      oscillator: 'sine',
+      oscillator: 'triangle',
       envelope: { attack: 0.01, decay: 1.2, sustain: 0.15, release: 3.5 },
+      filter: { frequency: 4200, q: 1.4 },
+      filterEnvelope: { octaves: 2.6, attack: 0.005, decay: 0.8, sustain: 0.2, release: 2.2 },
       maxPolyphony: 8
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 4, size: 3 }

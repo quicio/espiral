@@ -57,10 +57,25 @@ type NoteSource =
 - `ModularAudioEngine` crea:
   - `Tone.MonoSynth` para `mono`.
   - `Tone.PluckSynth` para `pluck`.
-  - `Tone.PolySynth` para `poly`.
+  - `Tone.PolySynth` sobre `Tone.MonoSynth` para `poly`.
   - `SampleVoicePool` para `sampler`.
 - `AudioEnginePort.setTrackMachine()` reemplaza la fuente de un track en caliente.
 - El motor legacy no soporta cambio de máquina y la UI lo deshabilita.
+
+### Voces poly
+
+`poly` usa `PolySynth(Tone.MonoSynth)`, no `PolySynth(Tone.Synth)`: cada voz lleva
+**filtro propio y envolvente de filtro** (`filterEnvelope`), además del ADSR de
+amplitud. Con `Tone.Synth` el pad era un oscilador pelado —sin armónicos que
+mover— y sonaba a juguete al lado del bajo, que sí tenía filtro.
+
+`MachineConfig.filter` y `MachineConfig.filterEnvelope` son opcionales; sin ellos
+el motor aplica un barrido por defecto (`baseFrequency` 1400, 2.5 octavas) para
+que ninguna voz quede plana.
+
+Un seno filtrado sigue siendo un seno: si el oscilador no tiene armónicos, el
+filtro no tiene qué morder. Por eso los presets de pad usan triángulo o sierra, y
+el seno queda como opción explícita del usuario.
 
 ## Reproducción
 

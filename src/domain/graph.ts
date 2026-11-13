@@ -24,6 +24,14 @@ export interface MachineConfig {
     readonly frequency: number;
     readonly q: number;
   };
+  /** Barrido de filtro por nota. Sin esto, un poly es un oscilador pelado. */
+  readonly filterEnvelope?: {
+    readonly octaves: number;
+    readonly attack: number;
+    readonly decay: number;
+    readonly sustain: number;
+    readonly release: number;
+  };
   readonly pluck?: {
     readonly attackNoise: number;
     readonly dampening: number;
