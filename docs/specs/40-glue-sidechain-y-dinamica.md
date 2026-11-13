@@ -121,6 +121,18 @@ Regla dura: el ducking **no** toca `track.gainDb`, `muted` ni `solo`. Va sobre u
 `Tone.Gain` propio en la cadena del target (nombre sugerido: `duckGain`), así el
 fader del usuario y la automatización no se pisan.
 
+## Reglas duras para quien implemente
+
+- `domain/` no importa Tone ni nada de otras capas; el motor vive en
+  `infrastructure/` y sólo recibe configuración.
+- Sin dependencias nuevas: `compressor` y `drive` ya existen como plugins
+  (`infrastructure/audio/plugins/builtins.ts`).
+- Determinismo: nada de `Math.random()` ni de reloj real en la programación de
+  eventos. Todo se agenda con `event.time`.
+- Un commit por tarea, en español, con las cifras de `mix-metrics` en el cuerpo.
+- Si una métrica objetivo no se mueve, **revertir la tarea** antes de empezar la
+  siguiente. No apilar cambios sin efecto medible.
+
 ## Tareas
 
 Cada tarea es un commit propio, con la spec actualizada si cambia el modelo.
