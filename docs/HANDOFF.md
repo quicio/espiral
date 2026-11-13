@@ -19,12 +19,12 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **208 pasan / 31 archivos** en ~3 s | `npm test` |
+| tests unitarios | **209 pasan / 31 archivos** en ~3 s | `npm test` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~5 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 527.56 kB (134.51 kB gzip) | salida de `npm run build` |
 | código | 109 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 32 en `docs/specs/` | `ls docs/specs` |
+| specs | 33 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 5 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio tras el commit de spec 24 | `git status` |
 
@@ -73,6 +73,8 @@ Para verificar audio sin escuchar: el script imprime métricas del render (pico,
 RMS, DC, silencio). Para UI, `test:integration` recorre la app en Chromium; una
 captura manual (`npx playwright screenshot` o el navegador) sigue siendo la
 prueba final de lo visual.
+
+Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opciones de AudioWorklet/WASM.
 
 ## Deuda y drift conocidos
 

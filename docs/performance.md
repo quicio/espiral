@@ -1,0 +1,162 @@
+# Rendimiento del motor
+
+Documento de trabajo. No es un ADR: describe el estado medido, las palancas de
+tuning y las alternativas de arquitectura con su costo.
+
+## Qué se midió
+
+Chromium headless, 16 tracks, armado por defecto, 128 BPM.
+
+| escenario | antes | después |
+|---|---|---|
+| long tasks en 16 s de arrangement | 127 ms y 87 ms | **ninguna** |
+| CPU meter al cambiar bloque | 45–71% | 0–9% |
+| perfil de 8 s: `querySelector*` | base | ~1/3 |
+| `test:audio` | PCM determinista | idéntico |
+
+El CPU meter es una estimación de main thread + underruns del `AudioContext`; no
+mide el costo del AudioWorklet. Los long tasks son la señal más útil para
+entrecortes: si el hilo principal se bloquea más que el buffer de audio, el
+scheduler llega tarde.
+
+## Lo que ya se hizo
+
+1. **No reconstruir cadenas idénticas** en cambios de escena (spec 31).
+2. **Medidores a 25 Hz** con nodos cacheados, en vez de `querySelector` por track
+   y bus a 60 Hz (spec 32).
+3. **Playhead quirúrgico**: en un paso sólo se mueve `is-current`, sin recorrer
+   todos los pasos y recalcular locks (spec 32).
+4. **Ticker de modulación** sólo cuando está habilitada y a 30 Hz para el camino
+   de control (spec 32).
+5. **Preview aislado** en un track fuera del estado (spec 26).
+
+## Palancas de tuning pendientes (bajo riesgo)
+
+### 1. Renderizar sólo la vista activa
+
+Hoy `renderAll` reconstruye Performance, Session, Arrange, Sequencer y, si
+corresponde, Sound en cada cambio estructural, aunque estén ocultas. En una
+máquina lenta eso son decenas de milisegundos.
+
+Propuesta: un `renderActiveView(state)` que renderice sólo la vista visible y
+deje el resto para `setView`. Las vistas ocultas ya se renderizan al entrar.
+Requiere auditar qué código depende de DOM oculto (meters, locks, atajos).
+
+Impacto esperado: alto en cambios de escena/preset. Riesgo: medio.
+
+### 2. Virtualizar Sound y el banco
+
+El mixer de 16 filas, el rack y las 23 tarjetas del browser se reconstruyen con
+`innerHTML` en cada cambio estructural. Se puede:
+
+- mantener nodos y actualizar sólo valores;
+- paginar/colapsar categorías del banco;
+- separar el render del mixer del render del detalle.
+
+Impacto: medio. Riesgo: medio.
+
+### 3. Medidores con CSS y menos lecturas de audio
+
+`Tone.Meter.getValue()` por track y bus sigue leyendo el analizador. Alternativas:
+
+- medidores con `AnalyserNode` compartido por bus/master;
+- actualizar a 10–15 Hz cuando no hay interacción;
+- apagar medidores de tracks ocultos.
+
+Impacto: bajo-medio. Riesgo: bajo.
+
+### 4. Tuning del scheduler
+
+- Subir `lookAhead` de 100 ms a 150–200 ms para performance (no para MIDI en
+  vivo).
+- Evaluar `latencyHint: 'balanced'` o `'playback'` en el `AudioContext` como
+  “modo seguro” con recarga. Aumenta estabilidad y latencia.
+- Evitar cambios de BPM con rampas largas durante transiciones pesadas.
+
+Impacto: alto contra underruns, a costa de latencia. Riesgo: bajo si es opt-in.
+
+### 5. Reverb y drive
+
+- `Tone.Reverb` es un convolver con impulso generado; cada insert de reverb es
+  un convolver propio y cambiar `decay` regenera el impulso. Preferir el bus de
+  reverb compartido o un reverb algorítmico.
+- `Tone.Distortion` usa `oversample: '2x'`; `'none'` o `'2x'` selectivo baja CPU.
+- Debounce de parámetros que regeneran buffers (reverb decay).
+
+Impacto: alto si hay muchos inserts. Riesgo: bajo-medio (cambia el sonido).
+
+## Cambio de paradigma: sacar DSP del hilo principal
+
+Tone.js arma el grafo en el hilo principal y programa eventos; el DSP corre en el
+AudioWorklet nativo del navegador. El próximo salto no es “otra librería”, es
+mover **síntesis, samples e inserts** a AudioWorklet/WASM.
+
+### Opción A — Sampler propio en AudioWorklet (recomendada primero)
+
+Hoy cada track sampler crea N `Tone.Player`, cada uno con su buffer y nodos.
+Para 57 samples y 16 tracks eso suma memoria y objetos.
+
+Un worklet sampler con:
+
+- buffers compartidos (`AudioBuffer` transferido una vez);
+- voces por índice, sin nodos por voz;
+- velocidad, loop y fade en el worklet;
+- mensajes `postMessage` para disparar notas;
+
+reduce el costo por voz y libera el hilo principal. Es acotado al sampler y no
+obliga a reescribir synths ni inserts.
+
+### Opción B — Grafo completo en AudioWorklet
+
+Librerías a evaluar:
+
+| opción | qué aporta | costo |
+|---|---|---|
+| **Elementary Audio** | grafo funcional declarativo que renderiza en AudioWorklet; buen fit para synths y samples | reescritura del motor, nueva dependencia, curvas de aprendizaje |
+| **SignalFlow** | grafo de audio en Worklet, orientado a procesamiento | madurez y mantenimiento a verificar |
+| **Faust + WASM/Worklet** | DSP de alta calidad compilado; ideal para insert/synths | toolchain aparte, integración con parámetros y presets |
+| **WAM 2.0** | formato de plugins de audio en Worklet | arquitectura de plugins, no acelera el motor actual por sí solo |
+| **AudioWorklet propio** | control total, sin dependencia | más código y mantenimiento |
+
+Recomendación: no reescribir Tone.js de una vez. Hacer A (sampler worklet) y,
+si hace falta, un insert pesado (reverb) en worklet. Medir cada corte con el
+mismo test de long tasks y `test:audio`.
+
+### Opción C — Web Worker para generación
+
+La generación de patrones y armonía podría calcularse en un Worker y enviar
+eventos ya resueltos al scheduler. Reduce trabajo del hilo principal, pero no
+resuelve el costo de nodos ni de inserts. Útil si el perfil muestra `generate*`
+o `patterns.*` alto.
+
+### Opción D — `SharedArrayBuffer`
+
+Permite comunicación sin copia entre Worker/Worklet. Requiere headers
+`Cross-Origin-Opener-Policy` y `Cross-Origin-Embedder-Policy`. En GitHub Pages no
+se pueden configurar; habría que mover el deploy a un host con headers. No es un
+requisito para el sampler worklet con `postMessage`.
+
+## Librerías y herramientas
+
+- **Perfilado**: Chrome DevTools Performance, `PerformanceObserver` de
+  `longtask`, `AudioContext.playbackStats` (ya usado por el CPU meter).
+- **Tone.js**: mantener para composición y grafo actual; evaluar upgrade sólo con
+  benchmark, no por versión.
+- **Extensiones del navegador**: no aceleran el motor. Las DevTools de Web Audio
+  sirven para inspeccionar el grafo, no para reducir CPU.
+- **Flags de Chrome**: útiles para medir (por ejemplo, desactivar throttling de
+  fondo), no para producción.
+- **WASM**: buena opción para DSP; no para scheduling ni DOM.
+
+## Cómo decidir el próximo paso
+
+1. Reproducir el entrecortado en la máquina afectada con DevTools Performance.
+2. Mirar si el long task viene de render/DOM o de audio.
+3. Si el long task es de `render*`/`querySelector`: atacar vistas y medidores.
+4. Si el AudioContext reporta underruns con main thread libre: subir
+   `latencyHint`/buffer o mover DSP a Worklet.
+5. Si el problema aparece con muchos inserts: reverb/drive y cadenas primero.
+6. Si aparece con muchos samples: sampler worklet.
+
+El criterio de aceptación de cualquier corte: mismo PCM en `test:audio`, cero
+long tasks evitables en 16 s de playback y `test:integration` verde.

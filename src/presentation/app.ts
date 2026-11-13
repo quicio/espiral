@@ -48,6 +48,14 @@ type ViewId =
   | 'routing'
   | 'modulation';
 
+const METER_INTERVAL_MS = 1000 / 25;
+
+interface MeterTarget {
+  readonly id: string;
+  readonly fill: HTMLElement | null;
+  readonly clip: HTMLElement | null;
+}
+
 interface PresentationDependencies {
   readonly store: Store;
   readonly catalog: view.Catalog;
@@ -79,6 +87,7 @@ export class EspiralApp {
   private lastState: InstrumentState | null = null;
   private unsubscribe: (() => void) | null = null;
   private meterFrame: number | null = null;
+  private meterTargetsDirty = true;
   private armRequired = true;
   private midiConnected = false;
   private armState: view.ArmWizardState = {
@@ -134,7 +143,14 @@ export class EspiralApp {
   private startMeter(): void {
     let clipping = false;
     const cpuMeter = new CpuMeter();
+    let lastCpu = 0;
+    let lastSample = 0;
+    let targets: { tracks: MeterTarget[]; buses: MeterTarget[] } | null = null;
     const clipButton = view.q<HTMLButtonElement>('#master-clip');
+    const masterFill = view.q('#master-meter-fill');
+    const cpuFill = view.q('#cpu-meter-fill');
+    const cpuValue = view.q('#cpu-value');
+    const cpuBar = view.q('.cpu-meter');
     const resetClip = (): void => {
       clipping = false;
       clipButton?.classList.remove('is-clip');
@@ -154,44 +170,77 @@ export class EspiralApp {
     view.q('#sound-channels')?.addEventListener('click', resetNodeClip);
     view.q('#routing-buses')?.addEventListener('click', resetNodeClip);
 
-    const tick = (): void => {
-      const db = this.deps.mix.getMasterLevel();
-      const level = Number.isFinite(db) ? Math.max(0, Math.min(1, (db + 60) / 60)) : 0;
-      const fill = view.q('#master-meter-fill');
-      if (fill) fill.style.setProperty('--level', level.toFixed(3));
+    const collect = (
+      selector: string,
+      attribute: string,
+      kind: 'track' | 'bus'
+    ): MeterTarget[] =>
+      view.qa<HTMLElement>(selector).flatMap(element => {
+        const id = element.getAttribute(attribute);
+        if (!id) return [];
+        return [
+          {
+            id,
+            fill: element.querySelector<HTMLElement>(
+              `[data-${kind}-meter-fill="${id}"]`
+            ),
+            clip: element.querySelector<HTMLElement>(
+              `[data-meter-reset="${kind}:${id}"]`
+            )
+          }
+        ];
+      });
 
-      if (db > -0.5 && !clipping) {
-        clipping = true;
-        clipButton?.classList.add('is-clip');
-        clipButton?.setAttribute('aria-pressed', 'true');
-      }
+    const collectTargets = (): {
+      tracks: MeterTarget[];
+      buses: MeterTarget[];
+    } => ({
+      tracks: collect('[data-track-meter]', 'data-track-meter', 'track'),
+      buses: collect('[data-bus-meter]', 'data-bus-meter', 'bus')
+    });
 
-      const cpu = cpuMeter.sample(performance.now(), this.deps.mix.getAudioStats());
-      const cpuFill = view.q('#cpu-meter-fill');
-      if (cpuFill) cpuFill.style.setProperty('--level', cpu.toFixed(3));
-      const cpuValue = view.q('#cpu-value');
-      if (cpuValue) cpuValue.textContent = `${Math.round(cpu * 100)}%`;
-      const cpuBar = view.q('.cpu-meter');
-      if (cpuBar) {
-        const severity = cpuSeverity(cpu);
-        cpuBar.classList.toggle('is-warning', severity === 'warning');
-        cpuBar.classList.toggle('is-critical', severity === 'critical');
-        cpuBar.setAttribute(
-          'aria-label',
-          `Carga de CPU estimada: ${Math.round(cpu * 100)}%`
+    const tick = (now: number): void => {
+      const cpu = cpuMeter.sample(now, this.deps.mix.getAudioStats());
+
+      if (!document.hidden && now - lastSample >= METER_INTERVAL_MS) {
+        lastSample = now;
+        if (!targets || this.meterTargetsDirty) {
+          targets = collectTargets();
+          this.meterTargetsDirty = false;
+        }
+
+        const db = this.deps.mix.getMasterLevel();
+        const level = Number.isFinite(db)
+          ? Math.max(0, Math.min(1, (db + 60) / 60))
+          : 0;
+        masterFill?.style.setProperty('--level', level.toFixed(3));
+
+        if (db > -0.5 && !clipping) {
+          clipping = true;
+          clipButton?.classList.add('is-clip');
+          clipButton?.setAttribute('aria-pressed', 'true');
+        }
+
+        lastCpu = cpu;
+        cpuFill?.style.setProperty('--level', lastCpu.toFixed(3));
+        if (cpuValue) cpuValue.textContent = `${Math.round(lastCpu * 100)}%`;
+        if (cpuBar) {
+          const severity = cpuSeverity(lastCpu);
+          cpuBar.classList.toggle('is-warning', severity === 'warning');
+          cpuBar.classList.toggle('is-critical', severity === 'critical');
+          cpuBar.setAttribute(
+            'aria-label',
+            `Carga de CPU estimada: ${Math.round(lastCpu * 100)}%`
+          );
+        }
+
+        targets.tracks.forEach(target =>
+          this.updateNodeMeter(target, this.deps.mix.getTrackLevel(target.id))
+        );
+        targets.buses.forEach(target =>
+          this.updateNodeMeter(target, this.deps.mix.getBusLevel(target.id))
         );
       }
-
-      view.qa('[data-track-meter]').forEach(element => {
-        const trackId = element.getAttribute('data-track-meter');
-        if (!trackId) return;
-        this.updateNodeMeter('track', trackId, this.deps.mix.getTrackLevel(trackId));
-      });
-      view.qa('[data-bus-meter]').forEach(element => {
-        const busId = element.getAttribute('data-bus-meter');
-        if (!busId) return;
-        this.updateNodeMeter('bus', busId, this.deps.mix.getBusLevel(busId));
-      });
 
       this.meterFrame = requestAnimationFrame(tick);
     };
@@ -199,17 +248,15 @@ export class EspiralApp {
     this.meterFrame = requestAnimationFrame(tick);
   }
 
-  private updateNodeMeter(kind: 'track' | 'bus', id: string, db: number): void {
+  private updateNodeMeter(target: MeterTarget, db: number): void {
     const level = Number.isFinite(db)
       ? Math.max(0, Math.min(1, (db + 60) / 60))
       : 0;
-    const fill = view.q(`[data-${kind}-meter-fill="${id}"]`);
-    if (fill) fill.style.setProperty('--level', level.toFixed(3));
+    target.fill?.style.setProperty('--level', level.toFixed(3));
 
     if (db > -0.5) {
-      const clip = view.q(`[data-meter-reset="${kind}:${id}"]`);
-      clip?.classList.add('is-clip');
-      clip?.setAttribute('aria-pressed', 'true');
+      target.clip?.classList.add('is-clip');
+      target.clip?.setAttribute('aria-pressed', 'true');
     }
   }
 
@@ -218,6 +265,7 @@ export class EspiralApp {
     this.lastState = state;
     this.syncHistoryButtons();
     if (!previous) {
+      this.meterTargetsDirty = true;
       view.renderAll(state, this.deps.catalog, this.deps.mix, {
         runtime: this.deps.runtime,
         chains: this.deps.deviceChains.list()
@@ -227,7 +275,7 @@ export class EspiralApp {
 
     if (sameNonTransport(previous, state)) {
       view.syncTransport(state);
-      view.updatePatternClasses(state, this.deps.catalog);
+      view.syncPlayhead(state);
       if (previous.transport.playing !== state.transport.playing) {
         view.renderSession(state, this.deps.runtime);
       }
@@ -256,6 +304,7 @@ export class EspiralApp {
       return;
     }
 
+    this.meterTargetsDirty = true;
     view.renderAll(state, this.deps.catalog, this.deps.mix, {
       sound:
         previous.kit !== state.kit ||
@@ -1922,6 +1971,7 @@ export class EspiralApp {
   }
 
   private refreshSound(): void {
+    this.meterTargetsDirty = true;
     view.renderSound(
       this.deps.store.getState(),
       this.deps.catalog,
@@ -1966,6 +2016,7 @@ export class EspiralApp {
       view.renderAutomation(state, this.deps.catalog);
     }
     if (id === 'sound') {
+      this.meterTargetsDirty = true;
       view.renderSound(
         state,
         this.deps.catalog,
@@ -1973,7 +2024,10 @@ export class EspiralApp {
         this.deps.deviceChains.list()
       );
     }
-    if (id === 'routing') view.renderRouting(state, this.deps.mix);
+    if (id === 'routing') {
+      this.meterTargetsDirty = true;
+      view.renderRouting(state, this.deps.mix);
+    }
     if (id === 'modulation') view.renderModulation(state, this.deps.mix);
     view.updatePatternClasses(state, this.deps.catalog);
 

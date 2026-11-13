@@ -1307,6 +1307,36 @@ export function syncPaste(state: InstrumentState): void {
   }
 }
 
+export function syncPlayhead(state: InstrumentState): void {
+  const current = state.transport.currentStep;
+
+  qa('.is-current[data-pattern-step], .is-current[data-pulse-step]').forEach(
+    element => element.classList.remove('is-current')
+  );
+  if (current >= 0) {
+    qa(`[data-pattern-step="${current}"], [data-pulse-step="${current}"]`).forEach(
+      element => element.classList.add('is-current')
+    );
+  }
+
+  const pulseStep = q('#pulse-step');
+  if (pulseStep) {
+    pulseStep.textContent =
+      current >= 0 ? String(current + 1).padStart(2, '0') : '00';
+  }
+  const pulseState = q('#pulse-state');
+  if (pulseState) {
+    pulseState.textContent = state.transport.playing ? 'en curso' : 'detenido';
+  }
+  const performanceReadout = q('#performance-readout');
+  if (performanceReadout) {
+    const auto = state.automation.enabled ? ' · auto' : '';
+    performanceReadout.textContent = state.transport.playing
+      ? `Paso ${current + 1} / ${PATTERN_LENGTH}${auto}`
+      : `Instrumento detenido${auto}`;
+  }
+}
+
 export function updatePatternClasses(state: InstrumentState, catalog: Catalog): void {
   const current = state.transport.currentStep;
 

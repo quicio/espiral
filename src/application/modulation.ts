@@ -9,7 +9,7 @@ import type { InstrumentState } from '../domain/models';
 import type { AudioEnginePort, TickerPort } from '../domain/ports';
 import type { Store } from './store';
 
-const CONTROL_RATE_MS = 1000 / 60;
+const CONTROL_RATE_MS = 1000 / 30;
 
 interface AppliedTarget {
   readonly target: ModulationTarget;
@@ -32,6 +32,7 @@ export class ModulationService {
 
   start(): void {
     if (this.cancel) return;
+    if (!this.store.getState().modulation.enabled) return;
     this.cancel = this.ticker.start(() => this.tick(), CONTROL_RATE_MS);
   }
 
@@ -47,10 +48,8 @@ export class ModulationService {
       ...state,
       modulation: { ...state.modulation, enabled }
     }));
-    if (!enabled) {
-      this.restore(this.store.getState());
-      this.clearAudioRoutes();
-    }
+    if (enabled) this.start();
+    else this.stop();
   }
 
   setMacro(sourceId: string, value: number): void {

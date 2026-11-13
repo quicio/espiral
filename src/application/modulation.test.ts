@@ -24,6 +24,29 @@ const cutoffTarget = {
 };
 
 describe('ModulationService', () => {
+  it('only runs the control-rate ticker while enabled', () => {
+    const { store, engine } = setup();
+    let starts = 0;
+    let stops = 0;
+    const modulation = new ModulationService(store, engine, {
+      start: () => {
+        starts += 1;
+        return () => {
+          stops += 1;
+        };
+      }
+    });
+
+    modulation.start();
+    expect(starts).toBe(0);
+
+    modulation.setEnabled(true);
+    expect(starts).toBe(1);
+
+    modulation.setEnabled(false);
+    expect(stops).toBe(1);
+  });
+
   it('applies an LFO to a plugin parameter', () => {
     const { engine, modulation } = setup();
     modulation.addRoute('lfo-1', cutoffTarget, 0.5, false);

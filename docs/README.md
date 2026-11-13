@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.8.0
+version: 1.9.0
 updated: 2026-11-13
 ---
 
@@ -15,6 +15,7 @@ Orden de lectura para un agente nuevo:
 | [`HANDOFF.md`](HANDOFF.md) | estado medido, invariantes, deuda, qué no hacer |
 | [`../ROADMAP.md`](../ROADMAP.md) | roadmap de producto vigente (M0–M6) |
 | [`architecture.md`](architecture.md) | capas, puertos, modelo de ejecución |
+| [`performance.md`](performance.md) | benchmarks, tuning y opciones de arquitectura de audio |
 | [`adr/`](adr/) | decisiones con contexto y alternativas |
 | [`specs/`](specs/) | especificaciones por fase |
 
@@ -57,6 +58,7 @@ el código y la spec se corrige.
 | [29](specs/29-arrangement-loop.md) | Loop y locators del arrangement | implementada |
 | [30](specs/30-arrangement-performance-recording.md) | Grabación de performance a arrangement | implementada |
 | [31](specs/31-scene-change-audio-performance.md) | Evitar reconstrucción de cadenas en cambios de escena | implementada |
+| [32](specs/32-main-thread-tuning.md) | Tuning del hilo principal durante playback | implementada |
 
 ## ADR
 
