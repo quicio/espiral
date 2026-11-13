@@ -113,6 +113,8 @@ export interface GlueConfig {
 export interface MasterConfig {
   readonly volumeDb: number;
   readonly limiterDb: number;
+  /** Trim posterior al glue y anterior al limiter. No cambia la compresión. */
+  readonly trimDb?: number;
   readonly glue: GlueConfig;
 }
 

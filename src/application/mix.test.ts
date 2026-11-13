@@ -62,6 +62,18 @@ describe('MixService', () => {
     expect(kitEffectiveMute(store.getState().kit, 'bass')).toBe(true);
   });
 
+  it('updates sidechain in the kit, scenes and engine', () => {
+    const { store, engine, mix } = setup();
+
+    mix.setSidechain({ depthDb: 9, enabled: false });
+
+    const state = store.getState();
+    expect(state.kit.sidechain?.depthDb).toBe(9);
+    expect(state.kit.sidechain?.enabled).toBe(false);
+    expect(state.scenes.caos.kit.sidechain?.depthDb).toBe(9);
+    expect(engine.sidechain).toMatchObject({ depthDb: 9, enabled: false });
+  });
+
   it('syncs the full mix to the engine', () => {
     const { engine, mix, store } = setup();
 

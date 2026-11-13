@@ -19,7 +19,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **232 pasan / 33 archivos** en ~4 s | `npm test` |
+| tests unitarios | **233 pasan / 33 archivos** en ~4 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
@@ -86,18 +86,24 @@ Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opc
 
 | métrica | T0 | final |
 |---|---|---|
-| `kickTailDb` | −79.23 dB | −22.91 dB |
-| `crestDb` | 15.01 dB | 12.37 dB |
-| `rmsDb` | −26.01 dB | −19.63 dB |
-| `bassDipDb` | 1.04 dB | 3.68 dB |
-| `busGrDb` | — | +4.16 dB |
-| `peakDb` | −11.01 dBFS | −7.26 dBFS |
+| `kickTailDb` | −79.23 dB | −26.22 dB |
+| `crestDb` | 15.01 dB | 11.87 dB |
+| `rmsDb` | −26.01 dB | −23.01 dB |
+| `bassDipDb` | 1.04 dB | 3.64 dB |
+| `busGrDb` | — | +4.22 dB |
+| `peakDb` | −11.01 dBFS | −11.13 dBFS |
 
 El bus de batería (`drum-bus`) usa compresor + drive; el plugin `drive` lleva un
-paso alto de 24 Hz para no romper el gate de DC. El sidechain (`kick` → `bass`)
-usa un `Tone.Gain` dedicado (`duckGain`) y `event.time`, nunca el fader. La
-escucha subjetiva sigue pendiente: los checks prueban que no está roto, no que
-suene mejor.
+paso alto de 24 Hz para no romper el gate de DC. El master usa glue 5:1 y un
+`trimDb` de −5.2 después del glue para cuadrar crest y RMS. El sidechain
+(`kick` → `bass`) usa un `Tone.Gain` dedicado (`duckGain`) y `event.time`, nunca
+el fader; se edita desde el detalle de Sound (on/off, depth, attack, release).
+La escucha subjetiva sigue pendiente: los checks prueban que no está roto, no
+que suene mejor.
+
+CPU: `#cpu-value` no se mueve en headless (queda en 0 %). Como proxy se comparó
+el render de los 7 escenarios de `test:audio`: **151.4 s en T3 → 139.9 s final
+(−7.6 %)**, una corrida por lado.
 
 ## Deuda y drift conocidos
 

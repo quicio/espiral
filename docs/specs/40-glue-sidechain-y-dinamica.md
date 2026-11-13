@@ -369,12 +369,12 @@ T0–T6 implementadas y verificadas. Commits: `59cf139` (T0), `81e8e48` (T1),
 
 | métrica | T0 | final | objetivo | resultado |
 |---|---|---|---|---|
-| `kickTailDb` (300–400 ms) | −79.23 dB | −22.91 dB | ≥ −45 dB | cumple |
-| `crestDb` | 15.01 dB | 12.37 dB | 9–12 dB | cerca (12.37) |
-| `rmsDb` | −26.01 dB | −19.63 dB | +2 a +4 dB | +6.38 dB |
-| `bassDipDb` por kick | 1.04 dB | 3.68 dB | ≥ 3 dB | cumple |
-| `busGrDb` (compresor del bus) | — | +4.16 dB | reducción real | cumple |
-| `peakDb` | −11.01 dBFS | −7.26 dBFS | ≤ −1 dBFS | cumple |
+| `kickTailDb` (300–400 ms) | −79.23 dB | −26.22 dB | ≥ −45 dB | cumple |
+| `crestDb` | 15.01 dB | 11.87 dB | 9–12 dB | cumple |
+| `rmsDb` | −26.01 dB | −23.01 dB | +2 a +4 dB | +3.00 dB |
+| `bassDipDb` por kick | 1.04 dB | 3.64 dB | ≥ 3 dB | cumple |
+| `busGrDb` (compresor del bus) | — | +4.22 dB | reducción real | cumple |
+| `peakDb` | −11.01 dBFS | −11.13 dBFS | ≤ −1 dBFS | cumple |
 
 Notas de implementación:
 
@@ -388,6 +388,12 @@ Notas de implementación:
   sobrevive al render offline).
 - El sidechain por defecto usa `depthDb: 6`, no 4: con 4 dB el dip medido después
   del glue de master quedaba en 2.56 dB, por debajo del objetivo de 3 dB.
+- El cierre de rangos agregó dos ajustes de master: `glue.ratio` final en **5**
+  (con 2.5 el crest quedaba en 12.41) y `trimDb: -5.2` después del glue y antes
+  del limiter. El trim baja el nivel integrado sin tocar la compresión; así el
+  RMS queda en +3.00 dB y el crest en 11.87, ambos dentro de la tabla.
+- El detalle de Sound expone el sidechain: on/off, depth, attack y release. Los
+  cambios se guardan en el kit y en todas las escenas.
 - `sidechainPoints` es puro y el motor agenda `setValueAtTime` /
   `linearRampToValueAtTime` con `event.time`; no hay reloj real ni azar. Con
   `enabled: false` no se agenda ningún ducking y el render queda igual al de T5.
@@ -397,3 +403,7 @@ Notas de implementación:
   que antes se quedaba con el kit actual en vez de restaurar el guardado.
 - La escucha subjetiva queda pendiente: el cierre de la spec no afirma que suene
   mejor.
+- CPU: `#cpu-value` quedó en 0 % en Chromium headless (el proxy de frame budget no
+  se mueve), así que se comparó el render de los 7 escenarios de `test:audio`:
+  151.4 s en T3 → 139.9 s final (−7.6 %). Una sola corrida por lado; el límite era
+  no superar +10 %.

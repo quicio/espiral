@@ -11,6 +11,7 @@ import {
 import type { MachineConfig, SendConfig } from './graph';
 import type { BusState, KitState, TrackState } from './kit';
 import { machinePreset, type MachinePreset, type NoteSource } from './machines';
+import { DEFAULT_SIDECHAIN } from './sidechain';
 
 export const SAMPLE_PATH = './audio/';
 
@@ -332,14 +333,7 @@ export function createDefaultKit(): KitState {
     name: 'Default',
     tracks: ordered,
     buses: createDefaultBuses(),
-    sidechain: {
-      enabled: true,
-      sourceTrackId: 'kick',
-      targetTrackId: 'bass',
-      depthDb: 6,
-      attack: 0.006,
-      release: 0.16
-    }
+    sidechain: DEFAULT_SIDECHAIN
   };
 }
 

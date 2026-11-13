@@ -40,6 +40,7 @@ import {
   type SoundKit
 } from '../domain/sound-kits';
 import { DRUM_KITS } from '../domain/drum-kits';
+import { DEFAULT_SIDECHAIN } from '../domain/sidechain';
 import type { MixService } from '../application/mix';
 import type { PlaybackRuntime } from '../application/runtime';
 import { formatPluginParam, renderPluginControls } from './plugin-controls';
@@ -840,6 +841,7 @@ export function renderSound(
   const plugins = mixService.listPlugins().filter(plugin => plugin.kind === 'effect');
   const tracks = kitTracks(state.kit);
   const anySolo = kitHasSolo(state.kit);
+  const sidechain = state.kit.sidechain ?? DEFAULT_SIDECHAIN;
   const selected = state.kit.tracks[state.selected] ?? tracks[0];
   if (!selected) {
     container.innerHTML = '';
@@ -942,6 +944,31 @@ export function renderSound(
           .join('')}</div>`
       : '';
 
+  const sidechainControls = mixService.supportsRouting
+    ? `<div class="sound-sidechain" aria-label="Sidechain kick a bajo">
+        <label class="sound-send">
+          <span>Sidechain</span>
+          <input type="checkbox" data-sidechain-enabled aria-label="Activar sidechain"${sidechain.enabled ? ' checked' : ''}>
+          <output data-sidechain-enabled-value>${sidechain.enabled ? 'on' : 'off'}</output>
+        </label>
+        <label class="sound-send">
+          <span>Depth</span>
+          <input type="range" min="0" max="12" step="0.5" value="${sidechain.depthDb}" data-sidechain-depth aria-label="Profundidad del sidechain">
+          <output data-sidechain-depth-value>${sidechain.depthDb.toFixed(1)} dB</output>
+        </label>
+        <label class="sound-send">
+          <span>Attack</span>
+          <input type="range" min="1" max="50" step="1" value="${Math.round(sidechain.attack * 1000)}" data-sidechain-attack aria-label="Ataque del sidechain">
+          <output data-sidechain-attack-value>${Math.round(sidechain.attack * 1000)} ms</output>
+        </label>
+        <label class="sound-send">
+          <span>Release</span>
+          <input type="range" min="30" max="400" step="10" value="${Math.round(sidechain.release * 1000)}" data-sidechain-release aria-label="Release del sidechain">
+          <output data-sidechain-release-value>${Math.round(sidechain.release * 1000)} ms</output>
+        </label>
+      </div>`
+    : '';
+
   const machineControl = canEditTrackSound(selected)
     ? `<select class="machine-select" data-machine="${selected.id}" aria-label="Máquina de ${selected.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
         mixService
@@ -987,6 +1014,7 @@ export function renderSound(
       </div>
       <div class="track-macros">${trackMacros}</div>
       ${sends}
+      ${sidechainControls}
     </div>
     <div class="machine-params" data-machine-params="${selected.id}">${machineParams}</div>
     <div class="sound-effects">

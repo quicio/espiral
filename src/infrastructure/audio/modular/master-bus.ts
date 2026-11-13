@@ -9,6 +9,7 @@ export class MasterBus {
   private readonly volume: Tone.Volume;
   private readonly hpf: Tone.Filter;
   private readonly glue: Tone.Compressor;
+  private readonly trim: Tone.Gain;
   private readonly limiter: Tone.Limiter;
   private readonly clipper: Tone.WaveShaper;
   private readonly meter: Tone.Meter;
@@ -18,6 +19,7 @@ export class MasterBus {
     this.volume = new Tone.Volume(config.volumeDb);
     this.hpf = new Tone.Filter({ type: 'highpass', frequency: 25, rolloff: -12 });
     this.glue = new Tone.Compressor(config.glue);
+    this.trim = new Tone.Gain(Math.pow(10, (config.trimDb ?? 0) / 20));
     this.limiter = new Tone.Limiter(config.limiterDb);
     this.clipper = createSafetyClipper();
     this.meter = new Tone.Meter({ normalRange: false, smoothing: 0.8 });
@@ -27,6 +29,7 @@ export class MasterBus {
       this.volume,
       this.hpf,
       this.glue,
+      this.trim,
       this.limiter,
       this.clipper,
       Tone.getDestination()
@@ -64,6 +67,7 @@ export class MasterBus {
     this.volume.dispose();
     this.hpf.dispose();
     this.glue.dispose();
+    this.trim.dispose();
     this.limiter.dispose();
     this.clipper.dispose();
     this.meter.dispose();

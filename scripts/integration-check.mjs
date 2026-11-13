@@ -328,6 +328,34 @@ try {
   if (detailTrack !== 'Bass') {
     throw new Error(`El detalle de Sound no siguió la selección: ${detailTrack}.`);
   }
+  const sidechainDepth = page.locator('[data-sidechain-depth]');
+  if ((await sidechainDepth.count()) !== 1) {
+    throw new Error('Faltan los controles de sidechain en el detalle.');
+  }
+  await sidechainDepth.fill('8');
+  await page.waitForTimeout(120);
+  const depthLabel = (
+    await page.locator('[data-sidechain-depth-value]').textContent()
+  )?.trim();
+  if (depthLabel !== '8.0 dB') {
+    throw new Error(`El depth de sidechain no se actualizó: ${depthLabel}.`);
+  }
+  const sidechainEnabled = page.locator('[data-sidechain-enabled]');
+  const enabledBefore = await sidechainEnabled.isChecked();
+  await sidechainEnabled.click();
+  await page.waitForTimeout(120);
+  const enabledAfter = await sidechainEnabled.isChecked();
+  const enabledLabel = (
+    await page.locator('[data-sidechain-enabled-value]').textContent()
+  )?.trim();
+  if (
+    enabledBefore === enabledAfter ||
+    enabledLabel !== (enabledAfter ? 'on' : 'off')
+  ) {
+    throw new Error(
+      `El toggle de sidechain no respondió: ${enabledBefore}→${enabledAfter}, ${enabledLabel}.`
+    );
+  }
   await page.locator('[data-add-insert="bass"]').selectOption('filter');
   await page.waitForTimeout(150);
   await page.locator('[data-add-insert="bass"]').selectOption('delay');

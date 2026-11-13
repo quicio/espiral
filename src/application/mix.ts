@@ -14,6 +14,10 @@ import {
   type PluginDefinition
 } from '../domain/plugin';
 import type { AudioEnginePort } from '../domain/ports';
+import {
+  DEFAULT_SIDECHAIN,
+  type SidechainConfig
+} from '../domain/sidechain';
 import type { Store } from './store';
 
 export class MixService {
@@ -215,6 +219,25 @@ export class MixService {
     readonly totalDuration: number;
   } | null {
     return this.engine.getAudioStats();
+  }
+
+  setSidechain(patch: Partial<SidechainConfig>): void {
+    const state = this.store.getState();
+    const current = state.kit.sidechain ?? DEFAULT_SIDECHAIN;
+    const sidechain: SidechainConfig = { ...current, ...patch };
+    const scenes = Object.fromEntries(
+      Object.entries(state.scenes).map(([id, scene]) => [
+        id,
+        { ...scene, kit: { ...scene.kit, sidechain } }
+      ])
+    ) as typeof state.scenes;
+
+    this.store.update(next => ({
+      ...next,
+      kit: { ...next.kit, sidechain },
+      scenes
+    }));
+    this.engine.setSidechain(sidechain);
   }
 
   setMasterVolume(db: number): void {

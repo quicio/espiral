@@ -14,6 +14,15 @@ export interface SidechainConfig {
   readonly release: number;
 }
 
+export const DEFAULT_SIDECHAIN: SidechainConfig = {
+  enabled: true,
+  sourceTrackId: 'kick',
+  targetTrackId: 'bass',
+  depthDb: 6,
+  attack: 0.006,
+  release: 0.16
+};
+
 export interface SidechainPoint {
   readonly time: number;
   readonly gain: number;

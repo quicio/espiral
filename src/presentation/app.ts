@@ -980,6 +980,9 @@ export class EspiralApp {
       const fader = attr(event, 'data-sound-fader');
       const pan = attr(event, 'data-sound-pan');
       const send = attr(event, 'data-sound-send');
+      const sidechainDepth = attr(event, 'data-sidechain-depth');
+      const sidechainAttack = attr(event, 'data-sidechain-attack');
+      const sidechainRelease = attr(event, 'data-sidechain-release');
       const machineParam = attr(event, 'data-machine-param');
       const machineTrack = attr(event, 'data-machine-track');
       const trackMacro = attr(event, 'data-track-macro');
@@ -1041,10 +1044,43 @@ export class EspiralApp {
         this.deps.routing.setSend(target.trackId, target.busId, amount);
         const output = view.q(`[data-sound-send-value="${send}"]`);
         if (output) output.textContent = `${Math.round(amount * 100)}%`;
+        return;
+      }
+
+      if (sidechainDepth !== null && value !== null) {
+        const depthDb = Number(value);
+        mix.setSidechain({ depthDb });
+        const output = view.q('[data-sidechain-depth-value]');
+        if (output) output.textContent = `${depthDb.toFixed(1)} dB`;
+        return;
+      }
+
+      if (sidechainAttack !== null && value !== null) {
+        const attack = Number(value) / 1000;
+        mix.setSidechain({ attack });
+        const output = view.q('[data-sidechain-attack-value]');
+        if (output) output.textContent = `${Math.round(attack * 1000)} ms`;
+        return;
+      }
+
+      if (sidechainRelease !== null && value !== null) {
+        const release = Number(value) / 1000;
+        mix.setSidechain({ release });
+        const output = view.q('[data-sidechain-release-value]');
+        if (output) output.textContent = `${Math.round(release * 1000)} ms`;
       }
     });
 
     view.must('#sound-channels').addEventListener('change', event => {
+      const sidechainEnabled = attr(event, 'data-sidechain-enabled');
+      if (sidechainEnabled !== null && event.target instanceof HTMLInputElement) {
+        const enabled = event.target.checked;
+        mix.setSidechain({ enabled });
+        const output = view.q('[data-sidechain-enabled-value]');
+        if (output) output.textContent = enabled ? 'on' : 'off';
+        return;
+      }
+
       const renameTrack = attr(event, 'data-track-name');
       if (renameTrack && event.target instanceof HTMLInputElement) {
         tracks.renameTrack(renameTrack, event.target.value);
