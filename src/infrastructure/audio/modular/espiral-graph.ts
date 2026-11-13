@@ -8,7 +8,7 @@ export function createEspiralGraph(kit: KitState, masterVolumeDb: number): Graph
     master: {
       volumeDb: masterVolumeDb,
       limiterDb: -2,
-      glue: { threshold: -14, ratio: 1.5, attack: 0.02, release: 0.3, knee: 6 }
+      glue: { threshold: -18, ratio: 2.5, attack: 0.02, release: 0.18, knee: 8 }
     }
   };
 }
