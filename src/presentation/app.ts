@@ -1013,6 +1013,11 @@ export class EspiralApp {
     });
 
     view.must('#sound-bank').addEventListener('click', event => {
+      const preview = attr(event, 'data-sound-preview');
+      if (preview) {
+        this.deps.browser.preview(preview);
+        return;
+      }
       const favorite = attr(event, 'data-sound-favorite');
       if (favorite) {
         this.deps.browser.toggleFavorite(favorite);

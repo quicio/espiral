@@ -1,4 +1,4 @@
-import type { EffectKind, SoundEvent } from './audio';
+import type { EffectKind, NoteDuration, SoundEvent } from './audio';
 import type {
   PatternChannel
 } from './channels';
@@ -41,6 +41,11 @@ export interface AudioEnginePort {
   removeBus(busId: string): void;
   syncBuses(buses: readonly BusConfig[]): void;
   trigger(event: SoundEvent): void;
+  previewMachine(
+    machine: MachineConfig,
+    notes: readonly string[],
+    duration?: NoteDuration
+  ): void;
   setChannelVolume(trackId: string, db: number, time?: number): void;
   setChannelPan(trackId: string, pan: number, time?: number): void;
   setChannelMute(trackId: string, muted: boolean): void;

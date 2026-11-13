@@ -1374,13 +1374,13 @@ body[data-view="sound"] .generative {
 
 .sound-bank-item .sound-bank-card {
   flex: 1 1 auto;
-  padding-right: 2.1rem;
+  padding-right: 3.6rem;
 }
 
-.sound-bank-favorite {
+.sound-bank-favorite,
+.sound-bank-preview {
   position: absolute;
   top: 0.35rem;
-  right: 0.35rem;
   width: 1.45rem;
   height: 1.45rem;
   padding: 0;
@@ -1392,8 +1392,18 @@ body[data-view="sound"] .generative {
   cursor: pointer;
 }
 
+.sound-bank-preview {
+  right: 0.35rem;
+}
+
+.sound-bank-favorite {
+  right: 1.95rem;
+}
+
 .sound-bank-favorite:hover,
-.sound-bank-favorite:focus-visible {
+.sound-bank-favorite:focus-visible,
+.sound-bank-preview:hover,
+.sound-bank-preview:focus-visible {
   border-color: var(--umbral-trace);
   color: var(--umbral-ink);
 }

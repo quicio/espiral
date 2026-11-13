@@ -1,4 +1,4 @@
-import type { EffectKind, SoundEvent } from '../domain/audio';
+import type { EffectKind, NoteDuration, SoundEvent } from '../domain/audio';
 import type {
   ChannelKey,
   PatternChannel
@@ -183,6 +183,11 @@ export class FakeAudioEngine implements AudioEnginePort {
   stopped = 0;
   disposed = 0;
   readonly events: SoundEvent[] = [];
+  readonly previews: {
+    machine: MachineConfig;
+    notes: readonly string[];
+    duration?: NoteDuration;
+  }[] = [];
   readonly added: TrackConfig[] = [];
   readonly removed: string[] = [];
   readonly machines: { trackId: string; machine: MachineConfig }[] = [];
@@ -355,6 +360,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   trigger(event: SoundEvent): void {
     this.events.push(event);
+  }
+
+  previewMachine(
+    machine: MachineConfig,
+    notes: readonly string[],
+    duration?: NoteDuration
+  ): void {
+    this.previews.push({ machine, notes, duration });
   }
 
   setChannelVolume(channel: ChannelKey, db: number): void {

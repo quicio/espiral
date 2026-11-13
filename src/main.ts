@@ -56,7 +56,7 @@ async function boot(): Promise<void> {
     initial.transport.lookAhead
   );
   const patterns = new PatternService(store, generative, status, runtime);
-  const browser = new BrowserService(store, status);
+  const browser = new BrowserService(store, engine, generative, status);
   const automation = new AutomationService(store, engine, status);
   const clips = new ClipService(store, runtime, status);
   const mix = new MixService(store, engine);

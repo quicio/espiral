@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import type { EffectKind, SoundEvent } from '../../../domain/audio';
+import type { EffectKind, NoteDuration, SoundEvent } from '../../../domain/audio';
 import {
   planLatency,
   validateGraph,
@@ -59,6 +59,7 @@ export class ModularAudioEngine implements AudioEnginePort {
     }
   >();
   private readonly latencyPlan: LatencyPlan;
+  private preview: { readonly track: Track; node: SourceNode } | null = null;
   private prepared = false;
 
   constructor(
@@ -190,6 +191,7 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   stop(): void {
     this.sources.forEach(node => stopSource(node.source));
+    stopSource(this.preview?.node.source);
   }
 
   trigger(event: SoundEvent): void {
@@ -244,6 +246,58 @@ export class ModularAudioEngine implements AudioEnginePort {
         );
       }
     }
+  }
+
+  previewMachine(
+    machine: MachineConfig,
+    notes: readonly string[],
+    duration: NoteDuration = '8n'
+  ): void {
+    const node = this.ensurePreview(machine);
+    void (async () => {
+      try {
+        if (!isOfflineContext()) await Tone.start();
+        if (node.source.kind === 'sampler') await Tone.loaded();
+        const time = Tone.now() + 0.03;
+        switch (node.source.kind) {
+          case 'membrane':
+            node.source.synth.triggerAttackRelease(
+              notes[0] ?? 'C1',
+              duration,
+              time,
+              0.9
+            );
+            break;
+          case 'poly':
+            node.source.synth.triggerAttackRelease(
+              [...notes],
+              duration,
+              time,
+              0.9
+            );
+            break;
+          case 'mono':
+            node.source.synth.triggerAttackRelease(
+              notes[0] ?? 'C3',
+              duration,
+              time,
+              0.9
+            );
+            break;
+          case 'pluck':
+            node.source.synth.triggerAttack(notes[0] ?? 'C4', time);
+            break;
+          case 'instrument':
+            node.source.instance.trigger(notes, duration, time, 0.9);
+            break;
+          case 'sampler':
+            node.source.pools[0]?.play(time, 1);
+            break;
+        }
+      } catch (error) {
+        console.warn('No se pudo reproducir el preview:', error);
+      }
+    })();
   }
 
   listPlugins(): readonly PluginDefinition[] {
@@ -525,12 +579,61 @@ export class ModularAudioEngine implements AudioEnginePort {
       node.gain.dispose();
     });
     this.sources.clear();
+    if (this.preview) {
+      disposeSource(this.preview.node.source);
+      this.preview.node.gain.dispose();
+      this.preview.track.dispose();
+      this.preview = null;
+    }
     this.tracks.forEach(track => track.dispose());
     this.tracks.clear();
     this.buses.forEach(bus => bus.dispose());
     this.buses.clear();
     this.master.dispose();
     this.prepared = false;
+  }
+
+  private ensurePreview(machine: MachineConfig): SourceNode {
+    if (!this.preview) {
+      const track = new Track(
+        {
+          id: 'preview',
+          name: 'Preview',
+          machine,
+          gainDb: -6,
+          pan: 0,
+          mute: false,
+          solo: false,
+          inserts: [],
+          sends: []
+        },
+        this.pluginHost,
+        this.master.input,
+        () => undefined,
+        0,
+        () => 0
+      );
+      this.preview = {
+        track,
+        node: this.createSourceNode(machine, track.input)
+      };
+      return this.preview.node;
+    }
+
+    if (this.preview.node.machineKey === machineKey(machine)) {
+      return this.preview.node;
+    }
+
+    const previous = this.preview.node;
+    const node = this.createSourceNode(machine, this.preview.track.input);
+    this.preview.node = node;
+    previous.gain.gain.rampTo(0, 0.02, Tone.now());
+    globalThis.setTimeout(() => {
+      stopSource(previous.source);
+      disposeSource(previous.source);
+      previous.gain.dispose();
+    }, 60);
+    return node;
   }
 
   private createSourceNode(

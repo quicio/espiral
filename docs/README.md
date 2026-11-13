@@ -1,7 +1,7 @@
 ---
 id: docs-index
 status: vigente
-version: 1.2.0
+version: 1.3.0
 updated: 2026-11-12
 ---
 
@@ -51,6 +51,7 @@ el código y la spec se corrige.
 | [23](specs/23-dynamic-tracks-and-presets.md) | Tracks dinámicos, presets y catálogo | implementada |
 | [24](specs/24-dynamic-scenes-and-clip-moves.md) | Escenas dinámicas y movimiento de clips | implementada |
 | [25](specs/25-browser-favorites-and-recents.md) | Favoritos y recientes del browser | implementada |
+| [26](specs/26-browser-preview.md) | Preview de sonidos del browser | implementada |
 
 ## ADR
 

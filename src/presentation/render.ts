@@ -947,6 +947,7 @@ function renderSoundBank(state: InstrumentState, mixService: MixService): void {
         <span class="sound-bank-desc">${preset.description}</span>
       </button>
       <button class="sound-bank-favorite${favorite ? ' is-active' : ''}" type="button" data-sound-favorite="${preset.id}" aria-pressed="${favorite}" aria-label="${favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}: ${preset.name}">${favorite ? '★' : '☆'}</button>
+      <button class="sound-bank-preview" type="button" data-sound-preview="${preset.id}" aria-label="Escuchar ${preset.name}" title="Escuchar">▶</button>
     </div>`;
   };
   const section = (

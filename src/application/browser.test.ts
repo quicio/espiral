@@ -2,17 +2,40 @@ import { describe, expect, it } from 'vitest';
 import { BrowserService, MAX_RECENT_SOUNDS } from './browser';
 import { createInitialState } from './initial-state';
 import { Store } from './store';
-import { SOUND_BANK } from '../domain/sound-bank';
-import { FakeGenerative, FakeStatus } from '../test/fakes';
+import { SOUND_BANK, soundPreset } from '../domain/sound-bank';
+import { FakeAudioEngine, FakeGenerative, FakeStatus } from '../test/fakes';
 
 function setup() {
-  const store = new Store(createInitialState(new FakeGenerative()));
+  const generative = new FakeGenerative();
+  const store = new Store(createInitialState(generative));
+  const engine = new FakeAudioEngine();
   const status = new FakeStatus();
-  const browser = new BrowserService(store, status);
-  return { store, status, browser };
+  const browser = new BrowserService(store, engine, generative, status);
+  return { store, status, browser, engine, generative };
 }
 
 describe('BrowserService', () => {
+  it('previews a preset without changing the track or session', () => {
+    const { store, browser, engine } = setup();
+    const preset = soundPreset('warm-pad')!;
+    const before = store.getState();
+
+    browser.preview('warm-pad');
+
+    expect(engine.previews).toHaveLength(1);
+    expect(engine.previews[0]?.machine).toEqual(preset.machine);
+    expect(engine.previews[0]?.notes.length).toBe(4);
+    expect(store.getState()).toBe(before);
+  });
+
+  it('resolves fixed notes from the preset', () => {
+    const { browser, engine } = setup();
+
+    browser.preview('shaker-air');
+
+    expect(engine.previews[0]?.notes).toEqual(['C4']);
+  });
+
   it('toggles favorites on and off', () => {
     const { store, browser } = setup();
 

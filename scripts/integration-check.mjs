@@ -277,6 +277,19 @@ try {
   if (filteredSounds !== 1) {
     throw new Error(`La búsqueda de sonidos devolvió ${filteredSounds} tarjetas.`);
   }
+  const machineBeforePreview = await page
+    .locator('[data-machine="track-08"]')
+    .inputValue();
+  await page.locator('[data-sound-preview="warm-pad"]').first().click();
+  await page.waitForTimeout(250);
+  const machineAfterPreview = await page
+    .locator('[data-machine="track-08"]')
+    .inputValue();
+  if (machineAfterPreview !== machineBeforePreview) {
+    throw new Error(
+      `El preview modificó el track: ${machineBeforePreview} → ${machineAfterPreview}.`
+    );
+  }
   await page.locator('[data-sound-preset="warm-pad"]').click();
   await page.waitForTimeout(400);
   const bankStatus = (await page.locator('#sound-bank-status').textContent())?.trim();
