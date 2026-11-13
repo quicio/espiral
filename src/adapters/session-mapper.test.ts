@@ -226,6 +226,52 @@ describe('SessionMapper', () => {
     expect(() => mapper.fromDto({ version: 4 }, store.getState())).toThrow('Sesión inválida');
   });
 
+  it('restores kit changes for v3 sessions', () => {
+    const { store, mapper } = setup();
+    const original = store.getState();
+    const moved = {
+      ...original,
+      kit: {
+        ...original.kit,
+        tracks: {
+          ...original.kit.tracks,
+          kick: { ...original.kit.tracks.kick!, gainDb: -17 }
+        }
+      }
+    };
+    const dto = JSON.parse(JSON.stringify(mapper.toDto(moved)));
+
+    const restored = mapper.fromDto(dto, original);
+
+    expect(restored.kit.tracks.kick?.gainDb).toBe(-17);
+  });
+
+  it('keeps old sessions without bus routing or sidechain', () => {
+    const { store, mapper } = setup();
+    const dto = JSON.parse(
+      JSON.stringify(mapper.toDto(store.getState()))
+    ) as {
+      version: number;
+      kit: {
+        sidechain?: unknown;
+        tracks: Record<string, { outputBusId?: string }>;
+      };
+    };
+    dto.version = 2;
+    delete dto.kit.sidechain;
+    Object.values(dto.kit.tracks).forEach(track => {
+      delete track.outputBusId;
+    });
+
+    const restored = mapper.fromDto(
+      dto as unknown as ReturnType<typeof mapper.toDto>,
+      store.getState()
+    );
+
+    expect(restored.kit.sidechain).toBeUndefined();
+    expect(restored.kit.tracks.kick?.outputBusId).toBeUndefined();
+  });
+
   it('loads legacy sessions without inserts', () => {
     const { store, mapper } = setup();
     const current = store.getState();

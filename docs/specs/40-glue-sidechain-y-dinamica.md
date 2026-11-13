@@ -391,5 +391,9 @@ Notas de implementación:
 - `sidechainPoints` es puro y el motor agenda `setValueAtTime` /
   `linearRampToValueAtTime` con `event.time`; no hay reloj real ni azar. Con
   `enabled: false` no se agenda ningún ducking y el render queda igual al de T5.
+- Las sesiones viejas sin `outputBusId` ni `sidechain` cargan sin routing al
+  drum-bus y sin ducking: ambos campos son opcionales y ausentes significa
+  comportamiento previo. Se corrigió además la lectura del kit en sesiones v3,
+  que antes se quedaba con el kit actual en vez de restaurar el guardado.
 - La escucha subjetiva queda pendiente: el cierre de la spec no afirma que suene
   mejor.

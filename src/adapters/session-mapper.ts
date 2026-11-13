@@ -316,9 +316,9 @@ export class SessionMapper implements SessionCodec {
     const patterns = { ...current.pattern.steps };
 
     const kit =
-      version === 2
-        ? readKit(data.kit, current.kit)
-        : migrateV1Channels(data.channels, current.kit, patterns);
+      version === 1
+        ? migrateV1Channels(data.channels, current.kit, patterns)
+        : readKit(data.kit, current.kit);
 
     if (version === 2) {
       const rawPatterns = asRecord(data.patterns);
@@ -659,9 +659,7 @@ function readKit(raw: unknown, current: KitState): KitState {
           : (currentTrack?.solo ?? false),
       ...(typeof trackData.outputBusId === 'string'
         ? { outputBusId: trackData.outputBusId }
-        : currentTrack?.outputBusId
-          ? { outputBusId: currentTrack.outputBusId }
-          : {}),
+        : {}),
       inserts: readInserts(trackData.inserts) ?? currentTrack?.inserts ?? [],
       sends: readSends(trackData.sends) ?? currentTrack?.sends ?? []
     };
@@ -669,36 +667,32 @@ function readKit(raw: unknown, current: KitState): KitState {
 
   if (Object.keys(tracks).length === 0) return cloneKit(current);
 
+  const sidechain = readSidechain(data.sidechain);
   return {
     id: typeof data.id === 'string' ? data.id : current.id,
     name: typeof data.name === 'string' ? data.name : current.name,
     tracks,
     buses: readBuses(data.buses, current.buses),
-    ...(readSidechain(data.sidechain, current.sidechain)
-      ? { sidechain: readSidechain(data.sidechain, current.sidechain) }
-      : {})
+    ...(sidechain ? { sidechain } : {})
   };
 }
 
-function readSidechain(
-  raw: unknown,
-  fallback: SidechainConfig | undefined
-): SidechainConfig | undefined {
+function readSidechain(raw: unknown): SidechainConfig | undefined {
   const data = asRecord(raw);
-  if (!data) return fallback;
+  if (!data) return undefined;
   if (
     typeof data.sourceTrackId !== 'string' ||
     typeof data.targetTrackId !== 'string'
   ) {
-    return fallback;
+    return undefined;
   }
   return {
     enabled: data.enabled !== false,
     sourceTrackId: data.sourceTrackId,
     targetTrackId: data.targetTrackId,
-    depthDb: clamp(numberOr(data.depthDb, fallback?.depthDb ?? 4), 0, 24),
-    attack: clamp(numberOr(data.attack, fallback?.attack ?? 0.006), 0, 2),
-    release: clamp(numberOr(data.release, fallback?.release ?? 0.16), 0, 4)
+    depthDb: clamp(numberOr(data.depthDb, 4), 0, 24),
+    attack: clamp(numberOr(data.attack, 0.006), 0, 2),
+    release: clamp(numberOr(data.release, 0.16), 0, 4)
   };
 }
 
