@@ -67,6 +67,7 @@ el código y la spec se corrige.
 | [38](specs/38-drum-kits.md) | Drum kits: máquinas con samples de dominio público | implementada |
 | [39](specs/39-drum-kit-worklet-fixes.md) | Fixes de integración entre drum kits y sampler Worklet | implementada |
 | [40](specs/40-glue-sidechain-y-dinamica.md) | Glue, sidechain y dinámica: que la batería pegue | implementada |
+| [41](specs/41-acid-303.md) | Acid 303: voz mono con acento y slide | implementada |
 
 ## ADR
 

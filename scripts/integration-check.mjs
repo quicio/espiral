@@ -134,6 +134,19 @@ try {
     await page.waitForTimeout(80);
   }
 
+  await page.locator('#tab-sequencer').click();
+  await page.locator('#dyn-step').selectOption('1');
+  await page.locator('#dyn-accent').check();
+  await page.locator('#dyn-slide').check();
+  await page.waitForTimeout(120);
+  const accentLabel = (await page.locator('#dyn-accent-value').textContent())?.trim();
+  const slideLabel = (await page.locator('#dyn-slide-value').textContent())?.trim();
+  if (accentLabel !== 'on' || slideLabel !== 'on') {
+    throw new Error(`Accent/Slide no respondieron: ${accentLabel}/${slideLabel}.`);
+  }
+  await page.locator('#dyn-accent').uncheck();
+  await page.locator('#dyn-slide').uncheck();
+
   await page.locator('#tab-session').click();
   const clipRows = await page.locator('.session-row').count();
   const clipCells = await page.locator('[data-clip-launch]').count();
@@ -328,6 +341,13 @@ try {
   if (detailTrack !== 'Bass') {
     throw new Error(`El detalle de Sound no siguió la selección: ${detailTrack}.`);
   }
+  const bassMachine = page.locator('[data-machine="bass"]');
+  if ((await bassMachine.count()) !== 1) {
+    throw new Error('El bajo no expone el selector de máquina.');
+  }
+  if ((await bassMachine.locator('option[value="acid-303"]').count()) !== 1) {
+    throw new Error('El selector del bajo no ofrece Acid 303.');
+  }
   const sidechainDepth = page.locator('[data-sidechain-depth]');
   if ((await sidechainDepth.count()) !== 1) {
     throw new Error('Faltan los controles de sidechain en el detalle.');
@@ -431,7 +451,7 @@ try {
   await page.waitForTimeout(120);
   const filteredSounds = await page.locator('.sound-bank-card:visible').count();
   await page.locator('#sound-bank-search').fill('');
-  if (filteredSounds !== 1) {
+  if (filteredSounds !== 2) {
     throw new Error(`La búsqueda de sonidos devolvió ${filteredSounds} tarjetas.`);
   }
   const machineBeforePreview = await page

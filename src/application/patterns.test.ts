@@ -100,10 +100,14 @@ describe('PatternService', () => {
     patterns.setStepVelocity('kick', 2, 0.4);
     patterns.setStepProbability('kick', 2, 0.25);
     patterns.setStepRatchets('kick', 2, 3);
+    patterns.setStepAccent('kick', 2, true);
+    patterns.setStepSlide('kick', 2, true);
 
     const state = store.getState();
     expect(state.pattern.velocity.kick?.[2]).toBe(0.4);
     expect(state.pattern.probability.kick?.[2]).toBe(0.25);
     expect(state.pattern.ratchets.kick?.[2]).toBe(3);
+    expect(state.pattern.accents.kick?.[2]).toBe(1);
+    expect(state.pattern.slides.kick?.[2]).toBe(1);
   });
 });

@@ -1781,21 +1781,29 @@ export function syncDynamics(state: InstrumentState): void {
   const values = {
     velocity: state.pattern.velocity[trackId]?.[step],
     probability: state.pattern.probability[trackId]?.[step],
-    ratchets: state.pattern.ratchets[trackId]?.[step]
+    ratchets: state.pattern.ratchets[trackId]?.[step],
+    accents: state.pattern.accents[trackId]?.[step],
+    slides: state.pattern.slides[trackId]?.[step]
   };
   const supported =
     track !== undefined &&
     values.velocity !== undefined &&
     values.probability !== undefined &&
-    values.ratchets !== undefined;
+    values.ratchets !== undefined &&
+    values.accents !== undefined &&
+    values.slides !== undefined;
 
   const velocity = values.velocity ?? 1;
   const probability = values.probability ?? 1;
   const ratchets = values.ratchets ?? 1;
+  const accent = (values.accents ?? 0) > 0;
+  const slide = (values.slides ?? 0) > 0;
 
   const velocityInput = q<HTMLInputElement>('#dyn-velocity');
   const probabilityInput = q<HTMLInputElement>('#dyn-probability');
   const ratchetsInput = q<HTMLInputElement>('#dyn-ratchets');
+  const accentInput = q<HTMLInputElement>('#dyn-accent');
+  const slideInput = q<HTMLInputElement>('#dyn-slide');
   if (velocityInput) {
     velocityInput.disabled = !supported;
     velocityInput.value = String(Math.round(velocity * 100));
@@ -1808,18 +1816,30 @@ export function syncDynamics(state: InstrumentState): void {
     ratchetsInput.disabled = !supported;
     ratchetsInput.value = String(ratchets);
   }
+  if (accentInput) {
+    accentInput.disabled = !supported;
+    accentInput.checked = accent;
+  }
+  if (slideInput) {
+    slideInput.disabled = !supported;
+    slideInput.checked = slide;
+  }
 
   const velocityOut = q('#dyn-velocity-value');
   const probabilityOut = q('#dyn-probability-value');
   const ratchetsOut = q('#dyn-ratchets-value');
+  const accentOut = q('#dyn-accent-value');
+  const slideOut = q('#dyn-slide-value');
   if (velocityOut) velocityOut.textContent = `${Math.round(velocity * 100)}%`;
   if (probabilityOut) probabilityOut.textContent = `${Math.round(probability * 100)}%`;
   if (ratchetsOut) ratchetsOut.textContent = String(ratchets);
+  if (accentOut) accentOut.textContent = accent ? 'on' : 'off';
+  if (slideOut) slideOut.textContent = slide ? 'on' : 'off';
 
   const readout = q('#dyn-readout');
   if (readout) {
     readout.textContent = supported
-      ? `Paso ${String(step + 1).padStart(2, '0')} · ${track.name} · V ${Math.round(velocity * 100)} · P ${Math.round(probability * 100)} · R ${ratchets}`
+      ? `Paso ${String(step + 1).padStart(2, '0')} · ${track.name} · V ${Math.round(velocity * 100)} · P ${Math.round(probability * 100)} · R ${ratchets} · A ${accent ? 'on' : 'off'} · S ${slide ? 'on' : 'off'}`
       : 'Seleccioná un track con patrón';
   }
 }

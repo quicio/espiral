@@ -309,23 +309,51 @@ export class PlaybackService {
       this.engine.trigger({ type: 'kick', time: at, velocity });
     });
 
-    const bass = bassVoice(
-      state,
-      this.generative,
-      stepCount,
-      this.runtime.currentChordDegree
-    );
-    this.eachPatternHit(state, 'bass', stepCount, time, (at, velocity) => {
-      this.engine.trigger({
-        type: 'sample',
-        channel: 'bass',
-        time: at,
-        sampleIndex: bass.sampleIndex,
-        playbackRate: bass.playbackRate,
-        gainDb: velocityGainDb(velocity),
-        duration: noteDuration('bass', state.harmony.sustain)
+    const bassTrack = tracks.bass;
+    if (bassTrack && isSynthMachineKind(bassTrack.machine.kind)) {
+      const notes = notesForTrack(
+        state,
+        this.generative,
+        bassTrack,
+        this.runtime.currentChordDegree
+      );
+      if (notes) {
+        const duration = machineNoteDuration(
+          bassTrack.machine.kind,
+          state.harmony.sustain
+        );
+        this.eachPatternHit(state, 'bass', stepCount, time, (at, velocity) => {
+          this.engine.trigger({
+            type: 'synth',
+            channel: 'lead',
+            trackId: 'bass',
+            time: at,
+            notes,
+            duration,
+            velocity,
+            ...articulationAt(state, 'bass', stepCount)
+          });
+        });
+      }
+    } else {
+      const bass = bassVoice(
+        state,
+        this.generative,
+        stepCount,
+        this.runtime.currentChordDegree
+      );
+      this.eachPatternHit(state, 'bass', stepCount, time, (at, velocity) => {
+        this.engine.trigger({
+          type: 'sample',
+          channel: 'bass',
+          time: at,
+          sampleIndex: bass.sampleIndex,
+          playbackRate: bass.playbackRate,
+          gainDb: velocityGainDb(velocity),
+          duration: noteDuration('bass', state.harmony.sustain)
+        });
       });
-    });
+    }
 
     const hihatVariants = sampleVariants(state, 'hihat');
     const hihat = hihatVoice(
@@ -443,7 +471,8 @@ export class PlaybackService {
           time: at,
           notes,
           duration,
-          velocity
+          velocity,
+          ...articulationAt(state, track.id, stepCount)
         });
       });
     });
@@ -618,6 +647,18 @@ function machineNoteDuration(
   if (kind === 'pluck') return '8n';
   if (kind === 'plugin') return noteDuration('lead', sustain);
   return noteDuration('pad', sustain);
+}
+
+function articulationAt(
+  state: InstrumentState,
+  trackId: string,
+  stepCount: number
+): { readonly accent: boolean; readonly slide: boolean } {
+  const step = normalizeStep(stepCount);
+  return {
+    accent: (state.pattern.accents[trackId]?.[step] ?? 0) > 0,
+    slide: (state.pattern.slides[trackId]?.[step] ?? 0) > 0
+  };
 }
 
 function isSynthMachineKind(

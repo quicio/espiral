@@ -132,6 +132,28 @@ export const SOUND_BANK: readonly SoundPreset[] = [
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 }
   },
   {
+    id: 'acid-303',
+    name: 'Acid 303',
+    description: '303: sierra, filtro resonante, env de filtro y glide',
+    category: 'bass',
+    machineId: 'acid-303',
+    machine: {
+      kind: 'mono',
+      oscillator: 'sawtooth',
+      envelope: { attack: 0.003, decay: 0.18, sustain: 0.05, release: 0.09 },
+      filter: { frequency: 420, q: 14 },
+      filterEnvelope: {
+        octaves: 3.2,
+        attack: 0.002,
+        decay: 0.22,
+        sustain: 0.05,
+        release: 0.12
+      },
+      glide: 0.06
+    },
+    noteSource: { kind: 'scale-degree', degree: 0, octave: 2 }
+  },
+  {
     id: 'rubber-bass',
     name: 'Rubber Bass',
     description: 'Cuadrada redonda con filtro medio',

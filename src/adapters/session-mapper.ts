@@ -118,6 +118,8 @@ export interface SessionPatternDto {
   readonly velocity?: Record<string, readonly number[]>;
   readonly probability?: Record<string, readonly number[]>;
   readonly ratchets?: Record<string, readonly number[]>;
+  readonly accents?: Record<string, readonly number[]>;
+  readonly slides?: Record<string, readonly number[]>;
 }
 
 export interface SessionSceneDto {
@@ -144,6 +146,8 @@ export interface SessionClipPatternDto {
   readonly velocity?: readonly number[];
   readonly probability?: readonly number[];
   readonly ratchets?: readonly number[];
+  readonly accents?: readonly number[];
+  readonly slides?: readonly number[];
 }
 
 export interface SessionClipDto {
@@ -178,6 +182,8 @@ export interface SessionDto {
   readonly velocity?: SessionPatternDto['velocity'];
   readonly probability?: SessionPatternDto['probability'];
   readonly ratchets?: SessionPatternDto['ratchets'];
+  readonly accents?: SessionPatternDto['accents'];
+  readonly slides?: SessionPatternDto['slides'];
   readonly selected: string;
   readonly bpm: number;
   readonly master: number;
@@ -240,6 +246,8 @@ export class SessionMapper implements SessionCodec {
       velocity: cloneValuesDto(state.pattern.velocity),
       probability: cloneValuesDto(state.pattern.probability),
       ratchets: cloneValuesDto(state.pattern.ratchets),
+      accents: cloneValuesDto(state.pattern.accents),
+      slides: cloneValuesDto(state.pattern.slides),
       selected: state.selected,
       bpm: state.transport.bpm,
       master: state.masterVolume,
@@ -313,6 +321,22 @@ export class SessionMapper implements SessionCodec {
       4,
       true
     );
+    const accents = readStepValues(
+      data.accents,
+      current.pattern.accents,
+      0,
+      0,
+      1,
+      true
+    );
+    const slides = readStepValues(
+      data.slides,
+      current.pattern.slides,
+      0,
+      0,
+      1,
+      true
+    );
     const patterns = { ...current.pattern.steps };
 
     const kit =
@@ -330,7 +354,17 @@ export class SessionMapper implements SessionCodec {
     }
 
     const patternState = alignPatternToKit(
-      { steps: patterns, pulses, frozen, locks, velocity, probability, ratchets },
+      {
+        steps: patterns,
+        pulses,
+        frozen,
+        locks,
+        velocity,
+        probability,
+        ratchets,
+        accents,
+        slides
+      },
       kit
     );
     const selected =
@@ -351,7 +385,9 @@ export class SessionMapper implements SessionCodec {
         locks: patternState.locks,
         velocity: patternState.velocity,
         probability: patternState.probability,
-        ratchets: patternState.ratchets
+        ratchets: patternState.ratchets,
+        accents: patternState.accents,
+        slides: patternState.slides
       },
       automation,
       modulation,
@@ -592,7 +628,9 @@ function readPatternState(raw: unknown, fallback: PatternState): PatternState {
     locks: readLocks(data.locks, fallback.locks),
     velocity: readStepValues(data.velocity, fallback.velocity, 1, 0, 1),
     probability: readStepValues(data.probability, fallback.probability, 1, 0, 1),
-    ratchets: readStepValues(data.ratchets, fallback.ratchets, 1, 1, 4, true)
+    ratchets: readStepValues(data.ratchets, fallback.ratchets, 1, 1, 4, true),
+    accents: readStepValues(data.accents, fallback.accents, 0, 0, 1, true),
+    slides: readStepValues(data.slides, fallback.slides, 0, 0, 1, true)
   };
 }
 
@@ -847,6 +885,7 @@ function readMachine(raw: unknown): MachineConfig | null {
   }
 
   const filter = asRecord(data.filter);
+  const filterEnvelope = asRecord(data.filterEnvelope);
   const pluck = asRecord(data.pluck);
   const pluginParams = asRecord(data.params);
   const machine: MachineConfig = {
@@ -873,7 +912,13 @@ function readMachine(raw: unknown): MachineConfig | null {
       : {}),
     ...(typeof data.fadeIn === 'number' ? { fadeIn: Math.max(0, data.fadeIn) } : {}),
     ...(typeof data.fadeOut === 'number' ? { fadeOut: Math.max(0, data.fadeOut) } : {}),
+    ...(typeof data.glide === 'number'
+      ? { glide: clamp(data.glide, 0, 1) }
+      : {}),
     ...(readEnvelope(data.envelope) ? { envelope: readEnvelope(data.envelope)! } : {}),
+    ...(filterEnvelope
+      ? { filterEnvelope: readFilterEnvelope(filterEnvelope) }
+      : {}),
     ...(filter
       ? {
           filter: {
@@ -894,6 +939,17 @@ function readMachine(raw: unknown): MachineConfig | null {
       : {})
   };
   return machine;
+}
+
+function readFilterEnvelope(raw: unknown): MachineConfig['filterEnvelope'] {
+  const data = asRecord(raw);
+  return {
+    octaves: clamp(numberOr(data?.octaves, 2.5), 0, 8),
+    attack: clamp(numberOr(data?.attack, 0.01), 0, 5),
+    decay: clamp(numberOr(data?.decay, 0.2), 0, 5),
+    sustain: clamp(numberOr(data?.sustain, 0.2), 0, 1),
+    release: clamp(numberOr(data?.release, 0.4), 0, 8)
+  };
 }
 
 function readEnvelope(raw: unknown): MachineConfig['envelope'] | null {
@@ -1214,6 +1270,8 @@ function alignPatternToKit(pattern: PatternState, kit: KitState): PatternState {
   const velocity: Record<string, StepValues> = {};
   const probability: Record<string, StepValues> = {};
   const ratchets: Record<string, StepValues> = {};
+  const accents: Record<string, StepValues> = {};
+  const slides: Record<string, StepValues> = {};
   ids.forEach(id => {
     steps[id] = pattern.steps[id] ?? emptyPattern();
     pulses[id] = pattern.pulses[id] ?? 4;
@@ -1222,8 +1280,10 @@ function alignPatternToKit(pattern: PatternState, kit: KitState): PatternState {
     velocity[id] = pattern.velocity[id] ?? emptyStepValues(1);
     probability[id] = pattern.probability[id] ?? emptyStepValues(1);
     ratchets[id] = pattern.ratchets[id] ?? emptyStepValues(1);
+    accents[id] = pattern.accents[id] ?? emptyStepValues(0);
+    slides[id] = pattern.slides[id] ?? emptyStepValues(0);
   });
-  return { steps, pulses, frozen, locks, velocity, probability, ratchets };
+  return { steps, pulses, frozen, locks, velocity, probability, ratchets, accents, slides };
 }
 
 function toClipsDto(clips: ClipCollection): Record<string, SessionClipDto> {
@@ -1354,7 +1414,9 @@ function readClipPattern(
       locks: { clip: data.locks },
       velocity: { clip: data.velocity },
       probability: { clip: data.probability },
-      ratchets: { clip: data.ratchets }
+      ratchets: { clip: data.ratchets },
+      accents: { clip: data.accents },
+      slides: { clip: data.slides }
     },
     {
       steps: { clip: fallback.steps },
@@ -1363,7 +1425,9 @@ function readClipPattern(
       locks: { clip: fallback.locks },
       velocity: { clip: fallback.velocity },
       probability: { clip: fallback.probability },
-      ratchets: { clip: fallback.ratchets }
+      ratchets: { clip: fallback.ratchets },
+      accents: { clip: fallback.accents },
+      slides: { clip: fallback.slides }
     }
   );
   return trackPatternData(pattern, 'clip') ?? fallback;

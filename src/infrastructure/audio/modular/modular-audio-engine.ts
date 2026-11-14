@@ -37,7 +37,13 @@ import { Track } from './track';
 type TrackSource =
   | { readonly kind: 'membrane'; readonly synth: Tone.MembraneSynth }
   | { readonly kind: 'poly'; readonly synth: Tone.PolySynth }
-  | { readonly kind: 'mono'; readonly synth: Tone.MonoSynth }
+  | {
+      readonly kind: 'mono';
+      readonly synth: Tone.MonoSynth;
+      readonly glide: number;
+      /** Énfasis de filtro por nota para el acento 303. */
+      readonly accentFilter: Tone.Filter;
+    }
   | { readonly kind: 'pluck'; readonly synth: Tone.PluckSynth }
   | { readonly kind: 'instrument'; readonly instance: InstrumentPluginInstance }
   | { readonly kind: 'sampler'; readonly source: SamplerVoiceSource };
@@ -254,7 +260,9 @@ export class ModularAudioEngine implements AudioEnginePort {
         const source = this.sources.get(event.trackId ?? event.channel)?.source;
         if (!source) return;
         const notes = typeof event.notes === 'string' ? [event.notes] : [...event.notes];
-        const velocity = event.velocity ?? 1;
+        const velocity = event.accent
+          ? Math.min(1, (event.velocity ?? 1) * 1.35)
+          : event.velocity ?? 1;
         if (source.kind === 'poly') {
           source.synth.triggerAttackRelease(
             notes,
@@ -263,6 +271,19 @@ export class ModularAudioEngine implements AudioEnginePort {
             velocity
           );
         } else if (source.kind === 'mono') {
+          // El glide y el acento son por nota: se fijan justo antes del
+          // trigger, nunca con reloj real.
+          source.synth.portamento = event.slide ? source.glide : 0;
+          source.accentFilter.gain.setValueAtTime(
+            event.accent ? 8 : 0,
+            event.time
+          );
+          if (event.accent) {
+            source.accentFilter.gain.linearRampToValueAtTime(
+              0,
+              event.time + 0.12
+            );
+          }
           source.synth.triggerAttackRelease(
             notes[0] ?? 'C3',
             event.duration,
@@ -790,8 +811,20 @@ export class ModularAudioEngine implements AudioEnginePort {
           octaves: 2.5
         }
       });
-      synth.connect(input);
-      return { kind: 'mono', synth };
+      const accentFilter = new Tone.Filter({
+        type: 'peaking',
+        frequency: 900,
+        Q: 1,
+        gain: 0
+      });
+      synth.connect(accentFilter);
+      accentFilter.connect(input);
+      return {
+        kind: 'mono',
+        synth,
+        glide: machine.glide ?? 0,
+        accentFilter
+      };
     }
 
     if (machine.kind === 'pluck') {
@@ -857,5 +890,8 @@ function disposeSource(source: TrackSource | undefined): void {
   if (!source) return;
   if (source.kind === 'sampler') source.source.dispose();
   else if (source.kind === 'instrument') source.instance.dispose();
-  else source.synth.dispose();
+  else {
+    if (source.kind === 'mono') source.accentFilter.dispose();
+    source.synth.dispose();
+  }
 }

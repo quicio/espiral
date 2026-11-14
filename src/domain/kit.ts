@@ -25,7 +25,11 @@ export function isDrumRole(role: TrackRole): boolean {
 }
 
 export function canEditTrackSound(track: TrackState): boolean {
-  return track.role === 'user' || isGenerativeRole(track.role);
+  return (
+    track.role === 'user' ||
+    track.role === 'bass' ||
+    isGenerativeRole(track.role)
+  );
 }
 
 export interface TrackState {

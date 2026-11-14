@@ -68,6 +68,18 @@ describe('SessionMapper', () => {
           kick: state.pattern.ratchets.kick!.map((value, index) =>
             index === 2 ? 3 : value
           )
+        },
+        accents: {
+          ...state.pattern.accents,
+          bass: state.pattern.accents.bass!.map((value, index) =>
+            index === 0 ? 1 : value
+          )
+        },
+        slides: {
+          ...state.pattern.slides,
+          bass: state.pattern.slides.bass!.map((value, index) =>
+            index === 6 ? 1 : value
+          )
         }
       },
       selected: 'track-08',
@@ -101,6 +113,14 @@ describe('SessionMapper', () => {
               kind: 'poly',
               oscillator: 'sawtooth',
               envelope: { attack: 1, decay: 1, sustain: 0.8, release: 3 },
+              filterEnvelope: {
+                octaves: 3.2,
+                attack: 0.002,
+                decay: 0.22,
+                sustain: 0.05,
+                release: 0.12
+              },
+              glide: 0.06,
               maxPolyphony: 8
             },
             noteSource: { kind: 'fixed', note: 'A3' },
@@ -187,6 +207,10 @@ describe('SessionMapper', () => {
     expect(restored.pattern.velocity.kick?.[2]).toBe(0.4);
     expect(restored.pattern.probability.kick?.[2]).toBe(0.3);
     expect(restored.pattern.ratchets.kick?.[2]).toBe(3);
+    expect(restored.pattern.accents.bass?.[0]).toBe(1);
+    expect(restored.pattern.slides.bass?.[6]).toBe(1);
+    expect(restored.kit.tracks['track-08']?.machine.filterEnvelope?.octaves).toBe(3.2);
+    expect(restored.kit.tracks['track-08']?.machine.glide).toBe(0.06);
     expect(restored.kit.tracks['track-08']?.gainDb).toBe(-13);
     expect(restored.kit.tracks['track-08']?.machineId).toBe('analog-pad');
     expect(restored.kit.tracks['track-08']?.machine.kind).toBe('poly');

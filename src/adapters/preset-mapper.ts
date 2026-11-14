@@ -358,6 +358,8 @@ function applyPatterns(
   const velocity: PatternState['velocity'] = {};
   const probability: PatternState['probability'] = {};
   const ratchets: PatternState['ratchets'] = {};
+  const accents: PatternState['accents'] = {};
+  const slides: PatternState['slides'] = {};
 
   kitTracks(kit)
     .filter(track => track.hasPattern)
@@ -374,6 +376,8 @@ function applyPatterns(
         velocity[track.id] = emptyStepValues(1);
         probability[track.id] = emptyStepValues(1);
         ratchets[track.id] = emptyStepValues(1);
+        accents[track.id] = emptyStepValues(0);
+        slides[track.id] = emptyStepValues(0);
         return;
       }
 
@@ -384,9 +388,11 @@ function applyPatterns(
       velocity[track.id] = base.velocity[track.id] ?? emptyStepValues(1);
       probability[track.id] = base.probability[track.id] ?? emptyStepValues(1);
       ratchets[track.id] = base.ratchets[track.id] ?? emptyStepValues(1);
+      accents[track.id] = base.accents[track.id] ?? emptyStepValues(0);
+      slides[track.id] = base.slides[track.id] ?? emptyStepValues(0);
     });
 
-  return { steps, pulses, frozen, locks, velocity, probability, ratchets };
+  return { steps, pulses, frozen, locks, velocity, probability, ratchets, accents, slides };
 }
 
 function readPattern(value: unknown): Pattern | null {

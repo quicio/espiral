@@ -86,7 +86,9 @@ export class TrackService {
           ...state.pattern.probability,
           [track.id]: emptyStepValues(1)
         },
-        ratchets: { ...state.pattern.ratchets, [track.id]: emptyStepValues(1) }
+        ratchets: { ...state.pattern.ratchets, [track.id]: emptyStepValues(1) },
+        accents: { ...state.pattern.accents, [track.id]: emptyStepValues(0) },
+        slides: { ...state.pattern.slides, [track.id]: emptyStepValues(0) }
       },
       scenes,
       clips,
@@ -595,7 +597,9 @@ function addTrackToScene(
         ...scene.pattern.probability,
         [track.id]: emptyStepValues(1)
       },
-      ratchets: { ...scene.pattern.ratchets, [track.id]: emptyStepValues(1) }
+      ratchets: { ...scene.pattern.ratchets, [track.id]: emptyStepValues(1) },
+      accents: { ...scene.pattern.accents, [track.id]: emptyStepValues(0) },
+      slides: { ...scene.pattern.slides, [track.id]: emptyStepValues(0) }
     }
   };
 }
@@ -626,7 +630,9 @@ function removeTrackFromPattern(
     locks: omit(pattern.locks, trackId),
     velocity: omit(pattern.velocity, trackId),
     probability: omit(pattern.probability, trackId),
-    ratchets: omit(pattern.ratchets, trackId)
+    ratchets: omit(pattern.ratchets, trackId),
+    accents: omit(pattern.accents, trackId),
+    slides: omit(pattern.slides, trackId)
   };
 }
 
@@ -704,7 +710,9 @@ function withPattern(
       ...pattern.probability,
       [trackId]: emptyStepValues(1)
     },
-    ratchets: { ...pattern.ratchets, [trackId]: emptyStepValues(1) }
+    ratchets: { ...pattern.ratchets, [trackId]: emptyStepValues(1) },
+    accents: { ...pattern.accents, [trackId]: emptyStepValues(0) },
+    slides: { ...pattern.slides, [trackId]: emptyStepValues(0) }
   };
 }
 

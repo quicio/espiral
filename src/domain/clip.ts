@@ -79,6 +79,8 @@ export interface TrackPatternData {
   readonly velocity: StepValues;
   readonly probability: StepValues;
   readonly ratchets: StepValues;
+  readonly accents: StepValues;
+  readonly slides: StepValues;
 }
 
 export interface ClipMaterializeState {
@@ -216,7 +218,9 @@ export function trackPatternData(
     locks: pattern.locks[trackId] ?? emptyTrackLocks(),
     velocity: pattern.velocity[trackId] ?? emptyStepValues(1),
     probability: pattern.probability[trackId] ?? emptyStepValues(1),
-    ratchets: pattern.ratchets[trackId] ?? emptyStepValues(1)
+    ratchets: pattern.ratchets[trackId] ?? emptyStepValues(1),
+    accents: pattern.accents[trackId] ?? emptyStepValues(0),
+    slides: pattern.slides[trackId] ?? emptyStepValues(0)
   };
 }
 
@@ -228,7 +232,9 @@ export function emptyClipPattern(): TrackPatternData {
     locks: emptyTrackLocks(),
     velocity: emptyStepValues(1),
     probability: emptyStepValues(1),
-    ratchets: emptyStepValues(1)
+    ratchets: emptyStepValues(1),
+    accents: emptyStepValues(0),
+    slides: emptyStepValues(0)
   };
 }
 
@@ -242,7 +248,9 @@ export function cloneTrackPatternData(
     locks: data.locks.map(step => step.map(lock => ({ ...lock }))),
     velocity: [...data.velocity],
     probability: [...data.probability],
-    ratchets: [...data.ratchets]
+    ratchets: [...data.ratchets],
+    accents: [...data.accents],
+    slides: [...data.slides]
   };
 }
 
@@ -258,7 +266,9 @@ export function applyTrackPatternData(
     locks: { ...pattern.locks, [trackId]: data.locks },
     velocity: { ...pattern.velocity, [trackId]: data.velocity },
     probability: { ...pattern.probability, [trackId]: data.probability },
-    ratchets: { ...pattern.ratchets, [trackId]: data.ratchets }
+    ratchets: { ...pattern.ratchets, [trackId]: data.ratchets },
+    accents: { ...pattern.accents, [trackId]: data.accents },
+    slides: { ...pattern.slides, [trackId]: data.slides }
   };
 }
 

@@ -31,6 +31,10 @@ export interface PatternState {
   readonly velocity: Record<string, StepValues>;
   readonly probability: Record<string, StepValues>;
   readonly ratchets: Record<string, StepValues>;
+  /** 0/1 por paso: acento de la voz (más filtro y nivel). */
+  readonly accents: Record<string, StepValues>;
+  /** 0/1 por paso: la nota entra deslizando desde la anterior. */
+  readonly slides: Record<string, StepValues>;
 }
 
 export function emptyTrackLocks(): TrackLocks {
@@ -56,7 +60,9 @@ export function clonePatternState(state: PatternState): PatternState {
     ),
     velocity: cloneValues(state.velocity),
     probability: cloneValues(state.probability),
-    ratchets: cloneValues(state.ratchets)
+    ratchets: cloneValues(state.ratchets),
+    accents: cloneValues(state.accents),
+    slides: cloneValues(state.slides)
   };
 }
 

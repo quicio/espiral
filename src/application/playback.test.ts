@@ -6,6 +6,7 @@ import { PlaybackRuntime } from '../application/runtime';
 import { Store } from '../application/store';
 import { TrackService } from '../application/tracks';
 import { clipId } from '../domain/clip';
+import { machinePreset } from '../domain/machines';
 import {
   FakeAudioEngine,
   FakeAutomation,
@@ -144,6 +145,69 @@ describe('PlaybackService', () => {
     expect(
       engine.events.some(event => event.type === 'sample' && event.channel === 'bass')
     ).toBe(true);
+  });
+
+  it('triggers the acid bass through the mono synth with accent and slide', async () => {
+    const { playback, clock, engine, store } = setup();
+    const preset = machinePreset('acid-303');
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          bass: {
+            ...state.kit.tracks.bass!,
+            machineId: 'acid-303',
+            machine: preset.machine,
+            noteSource: preset.noteSource
+          }
+        }
+      },
+      pattern: {
+        ...state.pattern,
+        steps: {
+          ...state.pattern.steps,
+          bass: state.pattern.steps.bass!.map((value, index) =>
+            index === 0 ? 1 : value
+          )
+        },
+        accents: {
+          ...state.pattern.accents,
+          bass: state.pattern.accents.bass!.map((value, index) =>
+            index === 0 ? 1 : value
+          )
+        },
+        slides: {
+          ...state.pattern.slides,
+          bass: state.pattern.slides.bass!.map((value, index) =>
+            index === 0 ? 1 : value
+          )
+        }
+      }
+    }));
+    await playback.start();
+    engine.events.length = 0;
+
+    clock.fire(1, 0);
+
+    const event = engine.events.find(
+      entry => entry.type === 'synth' && entry.trackId === 'bass'
+    );
+    expect(event).toEqual(
+      expect.objectContaining({
+        type: 'synth',
+        channel: 'lead',
+        trackId: 'bass',
+        accent: true,
+        slide: true
+      })
+    );
+    expect(
+      engine.events.some(
+        entry => entry.type === 'sample' && entry.channel === 'bass'
+      )
+    ).toBe(false);
   });
 
   it('applies a quantized clip launch at the bar boundary', async () => {

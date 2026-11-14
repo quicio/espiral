@@ -830,6 +830,24 @@ export class EspiralApp {
       const output = view.q('#dyn-ratchets-value');
       if (output) output.textContent = String(Math.round(value));
     });
+
+    view.must<HTMLInputElement>('#dyn-accent').addEventListener('change', event => {
+      const state = this.deps.store.getState();
+      const step = Number(stepSelect.value) - 1;
+      const value = event.target instanceof HTMLInputElement && event.target.checked;
+      patterns.setStepAccent(state.selected, step, value);
+      const output = view.q('#dyn-accent-value');
+      if (output) output.textContent = value ? 'on' : 'off';
+    });
+
+    view.must<HTMLInputElement>('#dyn-slide').addEventListener('change', event => {
+      const state = this.deps.store.getState();
+      const step = Number(stepSelect.value) - 1;
+      const value = event.target instanceof HTMLInputElement && event.target.checked;
+      patterns.setStepSlide(state.selected, step, value);
+      const output = view.q('#dyn-slide-value');
+      if (output) output.textContent = value ? 'on' : 'off';
+    });
   }
 
   private bindAutomationLane(): void {

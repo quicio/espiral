@@ -54,6 +54,25 @@ describe('clip helpers', () => {
     expect(initial.pattern.pulses.kick).not.toBe(7);
   });
 
+  it('round-trips accent and slide flags per step', () => {
+    const initial = state();
+    const data = trackPatternData(initial.pattern, 'bass')!;
+    const accents = [...data.accents];
+    const slides = [...data.slides];
+    accents[0] = 1;
+    slides[3] = 1;
+
+    const changed = applyTrackPatternData(initial.pattern, 'bass', {
+      ...data,
+      accents,
+      slides
+    });
+
+    expect(changed.accents.bass?.[0]).toBe(1);
+    expect(changed.slides.bass?.[3]).toBe(1);
+    expect(initial.pattern.accents.bass?.[0]).toBe(0);
+  });
+
   it('materializes active clips into their source scenes', () => {
     const base = state();
     const initial = {

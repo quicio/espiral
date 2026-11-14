@@ -14,6 +14,7 @@ import { cloneKit, kitTracks } from '../domain/kit';
 import { createDefaultModulation } from '../domain/modulation';
 import {
   countSteps,
+  emptyStepValues,
   emptyTrackLocks,
   type Pattern,
   type PatternLocks,
@@ -80,7 +81,9 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
             ) as PatternLocks,
             velocity: stepValues(patternTracks, defaultVelocity),
             probability: stepValues(patternTracks, defaultProbability),
-            ratchets: stepValues(patternTracks, defaultRatchets)
+            ratchets: stepValues(patternTracks, defaultRatchets),
+            accents: stepValues(patternTracks, () => emptyStepValues(0)),
+            slides: stepValues(patternTracks, () => emptyStepValues(0))
           },
           harmony: { ...scene.harmony },
           seed: INITIAL_SEED,

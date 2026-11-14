@@ -308,8 +308,16 @@ export class PatternService implements PatternEvolver {
     );
   }
 
+  setStepAccent(trackId: string, step: number, value: boolean): void {
+    this.setStepValue('accents', trackId, step, value ? 1 : 0);
+  }
+
+  setStepSlide(trackId: string, step: number, value: boolean): void {
+    this.setStepValue('slides', trackId, step, value ? 1 : 0);
+  }
+
   private setStepValue(
-    field: 'velocity' | 'probability' | 'ratchets',
+    field: 'velocity' | 'probability' | 'ratchets' | 'accents' | 'slides',
     trackId: string,
     step: number,
     value: number

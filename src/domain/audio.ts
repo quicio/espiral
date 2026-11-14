@@ -14,6 +14,10 @@ export type SoundEvent =
       readonly notes: string | readonly string[];
       readonly duration: NoteDuration;
       readonly velocity?: number;
+      /** Acento 303: más nivel y más apertura de filtro. */
+      readonly accent?: boolean;
+      /** Slide 303: la nota entra con glide desde la anterior. */
+      readonly slide?: boolean;
     }
   | {
       readonly type: 'sample';

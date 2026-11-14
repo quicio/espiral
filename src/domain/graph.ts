@@ -21,6 +21,8 @@ export interface MachineConfig {
   readonly maxPolyphony?: number;
   readonly fadeIn?: number;
   readonly fadeOut?: number;
+  /** Glide entre notas para voces mono. 0 = sin glide. */
+  readonly glide?: number;
   readonly filter?: {
     readonly frequency: number;
     readonly q: number;

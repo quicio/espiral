@@ -148,6 +148,67 @@ function resonanceParam(): MachineParam {
   };
 }
 
+function filterEnvelopeValue(
+  machine: MachineConfig,
+  key: 'octaves' | 'attack' | 'decay' | 'sustain' | 'release'
+): number {
+  return machine.filterEnvelope?.[key] ?? 2.5;
+}
+
+function withFilterEnvelope(
+  machine: MachineConfig,
+  key: 'octaves' | 'attack' | 'decay' | 'sustain' | 'release',
+  value: number
+): MachineConfig {
+  return {
+    ...machine,
+    filterEnvelope: {
+      octaves: 2.5,
+      attack: 0.01,
+      decay: 0.2,
+      sustain: 0.2,
+      release: 0.4,
+      ...machine.filterEnvelope,
+      [key]: value
+    }
+  };
+}
+
+function filterEnvelopeParam(
+  key: 'octaves' | 'attack' | 'decay' | 'sustain' | 'release',
+  label: string,
+  min: number,
+  max: number,
+  step: number,
+  unit?: MachineParam['unit']
+): MachineParam {
+  return {
+    id: `filterEnv-${key}`,
+    label,
+    kind: 'range',
+    min,
+    max,
+    step,
+    ...(unit ? { unit } : {}),
+    get: machine => filterEnvelopeValue(machine, key),
+    set: (machine, value) => withFilterEnvelope(machine, key, Number(value))
+  };
+}
+
+function glideParam(): MachineParam {
+  return {
+    id: 'glide',
+    label: 'Glide',
+    kind: 'range',
+    min: 0,
+    max: 0.3,
+    step: 0.005,
+    unit: 's',
+    get: machine => machine.glide ?? 0,
+    set: (machine, value) => ({ ...machine, glide: Number(value) })
+  };
+}
+
 export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
   sampler: {
     id: 'sampler',
@@ -222,6 +283,39 @@ export const MACHINE_PRESETS: Readonly<Record<string, MachinePreset>> = {
     },
     noteSource: { kind: 'chord', degreeOffset: 0, octave: 2, size: 1 },
     params: []
+  },
+  'acid-303': {
+    id: 'acid-303',
+    name: 'Acid 303',
+    description: 'Mono ácido: sierra, filtro resonante, env de filtro y glide',
+    machine: {
+      kind: 'mono',
+      oscillator: 'sawtooth',
+      envelope: { attack: 0.003, decay: 0.18, sustain: 0.05, release: 0.09 },
+      filter: { frequency: 420, q: 14 },
+      filterEnvelope: {
+        octaves: 3.2,
+        attack: 0.002,
+        decay: 0.22,
+        sustain: 0.05,
+        release: 0.12
+      },
+      glide: 0.06
+    },
+    noteSource: { kind: 'scale-degree', degree: 0, octave: 2 },
+    params: [
+      oscillatorParam(),
+      envelopeParam('attack', 'Attack', 0.001, 1, 0.001),
+      envelopeParam('decay', 'Decay', 0.02, 1.5, 0.01),
+      envelopeParam('sustain', 'Sustain', 0, 1, 0.01),
+      envelopeParam('release', 'Release', 0.01, 1.5, 0.01),
+      filterParam(),
+      resonanceParam(),
+      filterEnvelopeParam('octaves', 'Env', 0, 6, 0.1),
+      filterEnvelopeParam('decay', 'F.Decay', 0.01, 1.5, 0.01, 's'),
+      filterEnvelopeParam('sustain', 'F.Sus', 0, 1, 0.01, '%'),
+      glideParam()
+    ]
   },
   'bass-synth': {
     id: 'bass-synth',
@@ -399,6 +493,7 @@ export const USER_MACHINE_IDS = [
   'drone-sampler',
   'analog-pad',
   'soft-pad',
+  'acid-303',
   'bass-synth',
   'lead-synth',
   'pluck'

@@ -19,14 +19,14 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **233 pasan / 33 archivos** en ~4 s | `npm test` |
+| tests unitarios | **238 pasan / 34 archivos** en ~4 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 561.05 kB (143.31 kB gzip) | salida de `npm run build` |
+| bundle principal | 568.62 kB (144.96 kB gzip) | salida de `npm run build` |
 | samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
-| código | 122 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 41 en `docs/specs/` | `ls docs/specs` |
+| código | 123 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| specs | 42 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 6 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio al cerrar spec 40 | `git status` |
 
@@ -100,6 +100,14 @@ paso alto de 24 Hz para no romper el gate de DC. El master usa glue 5:1 y un
 el fader; se edita desde el detalle de Sound (on/off, depth, attack, release).
 La escucha subjetiva sigue pendiente: los checks prueban que no está roto, no
 que suene mejor.
+
+## Acid 303 (spec 41)
+
+El preset `acid-303` (sierra, filtro Q14, envolvente de filtro y glide 60 ms)
+está disponible en el selector de máquina y en el banco de sonidos. El patrón
+guarda `accents` y `slides` por paso; el secuenciador los expone en Dinámica y
+el motor los aplica con `event.time` (sin reloj real). No es una emulación
+circuito a circuito del TB-303.
 
 CPU: `#cpu-value` no se mueve en headless (queda en 0 %). Como proxy se comparó
 el render de los 7 escenarios de `test:audio`: **151.4 s en T3 → 139.9 s final
