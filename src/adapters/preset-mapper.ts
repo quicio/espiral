@@ -1,7 +1,7 @@
 import { delayInsert, findInsertByPlugin, reverbInsert } from '../domain/channels';
 import { createUserTrack } from '../domain/default-kit';
 import type { InsertConfig } from '../domain/graph';
-import { cloneKit, kitTracks, type KitState } from '../domain/kit';
+import { canEditTrackSound, cloneKit, kitTracks, type KitState } from '../domain/kit';
 import { MACHINE_PRESETS, type NoteSource } from '../domain/machines';
 import type {
   GenerativeParams,
@@ -41,6 +41,8 @@ export class PresetMapper implements PresetCodec {
     const channels = asRecord(data.channels);
     const topMachines = asRecord(data.machines);
     const topPatterns = asRecord(data.patterns);
+    const topAccents = asRecord(data.accents);
+    const topSlides = asRecord(data.slides);
     const topHarmony = readHarmony(data.harmony, current.harmony, this.generative);
     const topParams = readParams(data.params, current.params);
     const topSeed = numberOr(data.seed, current.seed);
@@ -66,7 +68,11 @@ export class PresetMapper implements PresetCodec {
         snapshot.pattern,
         kit,
         topPatterns,
-        asRecord(sceneData?.patterns)
+        asRecord(sceneData?.patterns),
+        topAccents,
+        asRecord(sceneData?.accents),
+        topSlides,
+        asRecord(sceneData?.slides)
       );
       const harmony = readHarmony(
         sceneData?.harmony,
@@ -132,7 +138,7 @@ function applyMachines(
 
     const existing = tracks[trackId];
     if (existing) {
-      if (existing.role !== 'user') return;
+      if (!canEditTrackSound(existing)) return;
       tracks[trackId] = {
         ...existing,
         machineId: preset.id,
@@ -349,7 +355,11 @@ function applyPatterns(
   base: PatternState,
   kit: KitState,
   topPatterns: Record<string, unknown> | null,
-  scenePatterns: Record<string, unknown> | null
+  scenePatterns: Record<string, unknown> | null,
+  topAccents: Record<string, unknown> | null,
+  sceneAccents: Record<string, unknown> | null,
+  topSlides: Record<string, unknown> | null,
+  sceneSlides: Record<string, unknown> | null
 ): PatternState {
   const steps: PatternSteps = {};
   const pulses: Record<string, number> = {};
@@ -376,8 +386,14 @@ function applyPatterns(
         velocity[track.id] = emptyStepValues(1);
         probability[track.id] = emptyStepValues(1);
         ratchets[track.id] = emptyStepValues(1);
-        accents[track.id] = emptyStepValues(0);
-        slides[track.id] = emptyStepValues(0);
+        accents[track.id] =
+          readStepFlags(sceneAccents?.[track.id]) ??
+          readStepFlags(topAccents?.[track.id]) ??
+          emptyStepValues(0);
+        slides[track.id] =
+          readStepFlags(sceneSlides?.[track.id]) ??
+          readStepFlags(topSlides?.[track.id]) ??
+          emptyStepValues(0);
         return;
       }
 
@@ -388,11 +404,32 @@ function applyPatterns(
       velocity[track.id] = base.velocity[track.id] ?? emptyStepValues(1);
       probability[track.id] = base.probability[track.id] ?? emptyStepValues(1);
       ratchets[track.id] = base.ratchets[track.id] ?? emptyStepValues(1);
-      accents[track.id] = base.accents[track.id] ?? emptyStepValues(0);
-      slides[track.id] = base.slides[track.id] ?? emptyStepValues(0);
+      accents[track.id] =
+        readStepFlags(sceneAccents?.[track.id]) ??
+        readStepFlags(topAccents?.[track.id]) ??
+        base.accents[track.id] ??
+        emptyStepValues(0);
+      slides[track.id] =
+        readStepFlags(sceneSlides?.[track.id]) ??
+        readStepFlags(topSlides?.[track.id]) ??
+        base.slides[track.id] ??
+        emptyStepValues(0);
     });
 
   return { steps, pulses, frozen, locks, velocity, probability, ratchets, accents, slides };
+}
+
+function readStepFlags(value: unknown): readonly number[] | null {
+  if (typeof value === 'string') {
+    return Array.from({ length: 16 }, (_, index) => {
+      const char = value[index] ?? '.';
+      return char === 'x' || char === 'X' || char === '1' ? 1 : 0;
+    });
+  }
+  if (Array.isArray(value)) {
+    return Array.from({ length: 16 }, (_, index) => (value[index] ? 1 : 0));
+  }
+  return null;
 }
 
 function readPattern(value: unknown): Pattern | null {

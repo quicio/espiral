@@ -42,8 +42,8 @@ try {
     { timeout: 6000 }
   );
   const armPresets = await page.locator('[data-arm-preset]').count();
-  if (armPresets !== 8) {
-    throw new Error(`Se esperaban 8 presets de armado, hay ${armPresets}.`);
+  if (armPresets !== 9) {
+    throw new Error(`Se esperaban 9 presets de armado, hay ${armPresets}.`);
   }
   const padDefault = await page
     .locator('[data-arm-element="pad"]')
@@ -508,6 +508,13 @@ try {
   const tripHopBpm = (await page.locator('#bpm-value').textContent())?.trim();
   if (tripHopBpm !== '86') {
     throw new Error(`El preset Trip-Hop no aplicó BPM 86: ${tripHopBpm}.`);
+  }
+
+  await page.locator('#mix-preset').selectOption('acid303-stress');
+  await page.waitForTimeout(700);
+  const acidBpm = (await page.locator('#bpm-value').textContent())?.trim();
+  if (acidBpm !== '132') {
+    throw new Error(`El preset Acid 303 Stress no aplicó BPM 132: ${acidBpm}.`);
   }
 
   const failedSamples = samples.filter(sample => sample.status !== 200);

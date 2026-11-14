@@ -19,7 +19,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **242 pasan / 35 archivos** en ~4 s | `npm test` |
+| tests unitarios | **243 pasan / 35 archivos** en ~4 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |

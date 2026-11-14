@@ -62,7 +62,7 @@ Cada uno incluye mezcla, patrones, escenas y armonía. El wizard los lista en Ba
   en los primeros 8 tracks.
 - Mover un track cambia el orden en kit y escenas.
 - Renombrar actualiza el track y sus clips por defecto.
-- El wizard lista 8 bases.
+- El wizard lista 8 bases + el preset de prueba Acid 303 Stress.
 - Trip-Hop carga a 86 BPM desde el preset.
 - `npm test`, `npm run test:audio` y `npm run test:integration` pasan.
 

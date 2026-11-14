@@ -103,7 +103,9 @@ worklet sí tiene sentido para:
 - reducir cantidad de nodos cuando hay muchas voces;
 - sacar trabajo del hilo principal en escenarios grandes.
 
-El prototipo queda como benchmark, no como voz por defecto. Archivos:
+Preset de prueba cargable: `public/presets/acid303-stress.json` (cuatro voces
+303 con acentos y slides). El prototipo queda como benchmark, no como voz por
+defecto. Archivos:
 `src/infrastructure/audio/worklets/acid303.worklet.js`,
 `src/audio-check/acid303-bench.ts` y `scripts/acid303-bench.mjs`.
 

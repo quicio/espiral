@@ -1,0 +1,142 @@
+{
+  "name": "Acid 303 Stress",
+  "description": "Cuatro voces 303 con acentos y slides para probar performance y escucha",
+  "scene": "umbral",
+  "bpm": 132,
+  "masterVolume": -4,
+  "harmony": {
+    "root": 0,
+    "scale": "minor",
+    "progression": "pedal",
+    "sustain": 0.24
+  },
+  "params": {
+    "density": 0.62,
+    "complexity": 0.48,
+    "variation": 0.2,
+    "stability": 0.78,
+    "randomness": 0.18
+  },
+  "channels": {
+    "kick": {
+      "volume": -4,
+      "pan": 0
+    },
+    "bass": {
+      "volume": -6,
+      "pan": 0
+    },
+    "hihat": {
+      "volume": -11,
+      "pan": 0.16
+    },
+    "perc": {
+      "volume": -10,
+      "pan": -0.2
+    },
+    "snare": {
+      "volume": -12,
+      "pan": 0.1
+    },
+    "clap": {
+      "volume": -14,
+      "pan": -0.1
+    },
+    "tom": {
+      "volume": -18,
+      "pan": 0.28
+    },
+    "drone": {
+      "volume": -24,
+      "muted": true,
+      "pan": 0
+    },
+    "pad": {
+      "volume": -22,
+      "muted": true,
+      "pan": -0.12
+    },
+    "lead": {
+      "volume": -20,
+      "muted": true,
+      "pan": 0.22
+    },
+    "track-13": {
+      "volume": -12,
+      "pan": 0.32
+    },
+    "track-14": {
+      "volume": -14,
+      "pan": -0.3
+    },
+    "track-15": {
+      "volume": -16,
+      "pan": 0.42
+    }
+  },
+  "machines": {
+    "bass": "acid-303",
+    "track-13": "acid-303",
+    "track-14": "acid-303",
+    "track-15": "acid-303"
+  },
+  "patterns": {
+    "kick": "x...x...x...x...",
+    "bass": "x.xx.xxx.x.xx.xx",
+    "hihat": ".x.x.x.x.x.x.x.x",
+    "perc": "....x...x...x...",
+    "snare": "....x.......x...",
+    "clap": "..x.......x.....",
+    "tom": "........x.......",
+    "track-13": "..x..x..x..x..x.",
+    "track-14": "x...x...x...x...",
+    "track-15": "....x..x....x..x"
+  },
+  "accents": {
+    "bass": "x...x...x...x...",
+    "track-13": "..x...x...x...x.",
+    "track-14": "x.......x.......",
+    "track-15": "....x.......x..."
+  },
+  "slides": {
+    "bass": "...x...x...x...x",
+    "track-13": "....x...x...x...",
+    "track-14": "...x...x...x...x",
+    "track-15": ".......x.......x"
+  },
+  "scenes": {
+    "umbral": {
+      "seed": 9301
+    },
+    "deriva": {
+      "seed": 9302,
+      "patterns": {
+        "bass": "xx.x.xxx.x.xx.x.",
+        "track-13": "...x..x...x..x.."
+      },
+      "accents": {
+        "bass": "x.......x......."
+      },
+      "slides": {
+        "bass": "..x...x...x...x."
+      }
+    },
+    "pulso": {
+      "seed": 9303,
+      "patterns": {
+        "bass": "x.xx.xx.x.xx.xx.",
+        "track-14": "..x...x...x...x."
+      }
+    },
+    "caos": {
+      "seed": 9304,
+      "patterns": {
+        "bass": "x.xxx.x.x.xxx.x.",
+        "track-15": "..x.x..x..x.x..x"
+      },
+      "accents": {
+        "bass": "x...x...x...x..."
+      }
+    }
+  }
+}

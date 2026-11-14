@@ -112,6 +112,33 @@ describe('PresetMapper', () => {
     expect(config.scenes?.umbral.pattern.steps['track-17']?.[2]).toBe(1);
   });
 
+  it('maps the acid machine and accent/slide flags', () => {
+    const { store, mapper } = setup();
+    const current = store.getState();
+
+    const config = mapper.fromDto(
+      {
+        machines: { bass: 'acid-303' },
+        patterns: { bass: 'x.xx.xxx.x.xx.xx' },
+        accents: { bass: 'x...x...x...x...' },
+        slides: { bass: '...x...x...x...x' },
+        scenes: {
+          deriva: {
+            accents: { bass: '..x...x...x...x.' }
+          }
+        }
+      },
+      current
+    );
+
+    expect(config.kit.tracks.bass?.machine.kind).toBe('mono');
+    expect(config.kit.tracks.bass?.machine.filter?.q).toBeGreaterThan(10);
+    expect(config.pattern!.accents.bass?.[0]).toBe(1);
+    expect(config.pattern!.accents.bass?.[1]).toBe(0);
+    expect(config.pattern!.slides.bass?.[3]).toBe(1);
+    expect(config.scenes!.deriva.pattern.accents.bass?.[2]).toBe(1);
+  });
+
   it('maps a full musical preset with scenes, patterns, pan and sends', () => {
     const { store, mapper } = setup();
     const current = store.getState();
