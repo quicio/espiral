@@ -81,6 +81,32 @@ Lo que **no** va a la cola: triggers de nota, automatización, faders, pan y mut
 Esos son baratos y necesitan aplicarse ya; encolarlos agregaría latencia
 musical.
 
+## Prototipo Acid303Worklet (2026-11-14)
+
+Para responder si Tone.js “queda chico” se midió una voz 303 en AudioWorklet
+contra `Tone.MonoSynth` con el mismo patrón (128 notas, 8 compases, 48 kHz):
+
+| motor | runs (ms) | promedio | peak | RMS |
+|---|---|---:|---:|---:|
+| `Tone.MonoSynth` | 249 / 236 / 230 | **238 ms** | +11.82 dBFS | −8.87 dB |
+| `Acid303Worklet` | 227 / 234 / 231 | **231 ms** | −11.24 dBFS | −27.86 dB |
+
+El worklet es ~3 % más rápido en bruto, no un salto. Parte del costo de Tone es
+construcción de nodos; parte del worklet es DSP en JavaScript (el filtro ladder
+aproximado y los envelopes se calculan por muestra). Los nodos nativos de Web
+Audio están muy optimizados.
+
+**Conclusión:** para una sola voz, reemplazar Tone no paga por performance. El
+worklet sí tiene sentido para:
+
+- DSP que Tone no puede hacer (ladder real, acento sobre resonancia);
+- reducir cantidad de nodos cuando hay muchas voces;
+- sacar trabajo del hilo principal en escenarios grandes.
+
+El prototipo queda como benchmark, no como voz por defecto. Archivos:
+`src/infrastructure/audio/worklets/acid303.worklet.js`,
+`src/audio-check/acid303-bench.ts` y `scripts/acid303-bench.mjs`.
+
 ## Palancas de tuning pendientes (bajo riesgo)
 
 ### 1. Virtualizar Sound y el banco

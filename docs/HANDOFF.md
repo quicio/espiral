@@ -25,7 +25,7 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
 | bundle principal | 570.63 kB (145.48 kB gzip) | salida de `npm run build` |
 | samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
-| código | 125 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| código | 126 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 42 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 6 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio al cerrar spec 40 | `git status` |
