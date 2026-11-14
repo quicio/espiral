@@ -3,6 +3,7 @@ import { PresetMapper } from '../adapters/preset-mapper';
 import { createInitialState } from '../application/initial-state';
 import { Store } from '../application/store';
 import { findInsertByPlugin } from '../domain/channels';
+import { createDefaultKit } from '../domain/default-kit';
 import { FakeGenerative } from '../test/fakes';
 
 function setup() {
@@ -13,6 +14,34 @@ function setup() {
 }
 
 describe('PresetMapper', () => {
+  it('does not inherit machines or patterns from a previous preset', () => {
+    const { store, mapper } = setup();
+    const current = store.getState();
+    const acid = mapper.fromDto(
+      {
+        machines: { bass: 'acid-303', 'track-13': 'acid-303' },
+        patterns: { bass: 'x.xx.xxx.x.xx.xx' }
+      },
+      current
+    );
+    const afterAcid = {
+      ...current,
+      kit: acid.kit,
+      scenes: acid.scenes ?? current.scenes,
+      pattern: acid.pattern ?? current.pattern,
+      scene: acid.scene ?? current.scene
+    };
+
+    const next = mapper.fromDto({}, afterAcid);
+    const defaults = createDefaultKit();
+
+    expect(next.kit.tracks.bass?.machineId).toBe(defaults.tracks.bass?.machineId);
+    expect(next.kit.tracks.bass?.machine.kind).toBe(defaults.tracks.bass?.machine.kind);
+    expect(next.kit.tracks['track-13']?.machineId).toBe(
+      defaults.tracks['track-13']?.machineId
+    );
+  });
+
   it('does not inherit mutes or solos from the previous session', () => {
     const { store, mapper } = setup();
     store.update(state => ({

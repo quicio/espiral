@@ -64,6 +64,7 @@ Cada uno incluye mezcla, patrones, escenas y armonía. El wizard los lista en Ba
 - Renombrar actualiza el track y sus clips por defecto.
 - El wizard lista 8 bases + el preset de prueba Acid 303 Stress.
 - Al cargar un preset se limpian mutes y solos heredados; el preset puede volver a fijarlos por canal.
+- También se resetean las máquinas y los patrones de los tracks base a su estado default antes de aplicar el preset. Así Trance no hereda las voces Acid 303 de un preset anterior.
 - Trip-Hop carga a 86 BPM desde el preset.
 - `npm test`, `npm run test:audio` y `npm run test:integration` pasan.
 

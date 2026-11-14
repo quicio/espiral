@@ -1,5 +1,6 @@
 import { delayInsert, findInsertByPlugin, reverbInsert } from '../domain/channels';
-import { createUserTrack } from '../domain/default-kit';
+import { defaultGroovePattern, defaultProbability, defaultRatchets, defaultVelocity } from '../domain/default-groove';
+import { createDefaultKit, createUserTrack } from '../domain/default-kit';
 import type { InsertConfig } from '../domain/graph';
 import { canEditTrackSound, cloneKit, kitTracks, type KitState } from '../domain/kit';
 import { MACHINE_PRESETS, type NoteSource } from '../domain/machines';
@@ -57,7 +58,8 @@ export class PresetMapper implements PresetCodec {
     const scenes: SceneCollection = { ...current.scenes };
     Object.entries(current.scenes).forEach(([id, snapshot]) => {
       const sceneData = asRecord(sceneDtos?.[id]);
-      const withTopMachines = applyMachines(snapshot.kit, topMachines, true);
+      const baseKit = resetMachines(snapshot.kit);
+      const withTopMachines = applyMachines(baseKit, topMachines, true);
       const withMachines = applyMachines(
         withTopMachines,
         asRecord(sceneData?.machines),
@@ -67,8 +69,8 @@ export class PresetMapper implements PresetCodec {
       // de la sesión anterior. Los canales del preset pueden volver a fijarlos.
       const kit = applyMix(resetMixState(withMachines), channels);
       const pattern = applyPatterns(
-        snapshot.pattern,
         kit,
+        id as SceneId,
         topPatterns,
         asRecord(sceneData?.patterns),
         topAccents,
@@ -122,6 +124,28 @@ export class PresetMapper implements PresetCodec {
       selected
     };
   }
+}
+
+function resetMachines(kit: KitState): KitState {
+  const defaults = createDefaultKit().tracks;
+  return {
+    ...kit,
+    tracks: Object.fromEntries(
+      kitTracks(kit).map(track => {
+        const base = defaults[track.id];
+        if (!base) return [track.id, track];
+        return [
+          track.id,
+          {
+            ...track,
+            machineId: base.machineId,
+            machine: { ...base.machine },
+            noteSource: base.noteSource
+          }
+        ];
+      })
+    )
+  };
 }
 
 function resetMixState(kit: KitState): KitState {
@@ -366,8 +390,8 @@ function readSend(
 }
 
 function applyPatterns(
-  base: PatternState,
   kit: KitState,
+  sceneId: SceneId,
   topPatterns: Record<string, unknown> | null,
   scenePatterns: Record<string, unknown> | null,
   topAccents: Record<string, unknown> | null,
@@ -411,22 +435,21 @@ function applyPatterns(
         return;
       }
 
-      steps[track.id] = base.steps[track.id] ?? emptyPattern();
-      pulses[track.id] = base.pulses[track.id] ?? 4;
-      frozen[track.id] = base.frozen[track.id] ?? false;
-      locks[track.id] = base.locks[track.id] ?? emptyTrackLocks();
-      velocity[track.id] = base.velocity[track.id] ?? emptyStepValues(1);
-      probability[track.id] = base.probability[track.id] ?? emptyStepValues(1);
-      ratchets[track.id] = base.ratchets[track.id] ?? emptyStepValues(1);
+      const fallback = defaultGroovePattern(sceneId, track.id) ?? emptyPattern();
+      steps[track.id] = fallback;
+      pulses[track.id] = clamp(countSteps(fallback), 1, 16);
+      frozen[track.id] = false;
+      locks[track.id] = emptyTrackLocks();
+      velocity[track.id] = defaultVelocity(track.id);
+      probability[track.id] = defaultProbability(track.id);
+      ratchets[track.id] = defaultRatchets(track.id);
       accents[track.id] =
         readStepFlags(sceneAccents?.[track.id]) ??
         readStepFlags(topAccents?.[track.id]) ??
-        base.accents[track.id] ??
         emptyStepValues(0);
       slides[track.id] =
         readStepFlags(sceneSlides?.[track.id]) ??
         readStepFlags(topSlides?.[track.id]) ??
-        base.slides[track.id] ??
         emptyStepValues(0);
     });
 
