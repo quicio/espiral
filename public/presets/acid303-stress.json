@@ -19,12 +19,16 @@
   },
   "channels": {
     "kick": {
-      "volume": -4,
-      "pan": 0
+      "volume": -2,
+      "pan": 0,
+      "muted": false,
+      "solo": false
     },
     "bass": {
-      "volume": -6,
-      "pan": 0
+      "volume": -8,
+      "pan": 0,
+      "muted": false,
+      "solo": false
     },
     "hihat": {
       "volume": -11,
@@ -62,16 +66,22 @@
       "pan": 0.22
     },
     "track-13": {
-      "volume": -12,
-      "pan": 0.32
+      "volume": -14,
+      "pan": 0.32,
+      "muted": false,
+      "solo": false
     },
     "track-14": {
-      "volume": -14,
-      "pan": -0.3
+      "volume": -16,
+      "pan": -0.3,
+      "muted": false,
+      "solo": false
     },
     "track-15": {
-      "volume": -16,
-      "pan": 0.42
+      "volume": -18,
+      "pan": 0.42,
+      "muted": false,
+      "solo": false
     }
   },
   "machines": {

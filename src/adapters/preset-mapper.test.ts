@@ -13,6 +13,26 @@ function setup() {
 }
 
 describe('PresetMapper', () => {
+  it('does not inherit mutes or solos from the previous session', () => {
+    const { store, mapper } = setup();
+    store.update(state => ({
+      ...state,
+      kit: {
+        ...state.kit,
+        tracks: {
+          ...state.kit.tracks,
+          kick: { ...state.kit.tracks.kick!, muted: true },
+          pad: { ...state.kit.tracks.pad!, solo: true }
+        }
+      }
+    }));
+
+    const config = mapper.fromDto({}, store.getState());
+
+    expect(config.kit.tracks.kick?.muted).toBe(false);
+    expect(config.kit.tracks.pad?.solo).toBe(false);
+  });
+
   it('maps delay feedback/time and reverb decay from a preset', () => {
     const { store, mapper } = setup();
     const current = store.getState();

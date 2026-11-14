@@ -19,11 +19,11 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **244 pasan / 35 archivos** en ~4 s | `npm test` |
+| tests unitarios | **245 pasan / 35 archivos** en ~4 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 578.46 kB (147.30 kB gzip) | salida de `npm run build` |
+| bundle principal | 578.56 kB (147.33 kB gzip) | salida de `npm run build` |
 | samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
 | código | 126 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 43 en `docs/specs/` | `ls docs/specs` |

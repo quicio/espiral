@@ -63,7 +63,9 @@ export class PresetMapper implements PresetCodec {
         asRecord(sceneData?.machines),
         false
       );
-      const kit = applyMix(withMachines, channels);
+      // Un preset es un estado musical completo: no hereda mutes ni solos
+      // de la sesión anterior. Los canales del preset pueden volver a fijarlos.
+      const kit = applyMix(resetMixState(withMachines), channels);
       const pattern = applyPatterns(
         snapshot.pattern,
         kit,
@@ -120,6 +122,18 @@ export class PresetMapper implements PresetCodec {
       selected
     };
   }
+}
+
+function resetMixState(kit: KitState): KitState {
+  return {
+    ...kit,
+    tracks: Object.fromEntries(
+      kitTracks(kit).map(track => [
+        track.id,
+        { ...track, muted: false, solo: false }
+      ])
+    )
+  };
 }
 
 function applyMachines(
