@@ -62,6 +62,15 @@
       </div>
 
       <div class="transport-field">
+        <label for="quality-mode">Calidad</label>
+        <select id="quality-mode" class="field-number" aria-label="Calidad de audio">
+          <option value="full">Alta</option>
+          <option value="lite" selected>Equilibrada</option>
+          <option value="eco">Estable</option>
+        </select>
+      </div>
+
+      <div class="transport-field">
         <label for="lookahead-control">Buffer</label>
         <div class="field-range">
           <input id="lookahead-control" type="range" min="20" max="300" step="5" value="150">

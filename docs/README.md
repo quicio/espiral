@@ -1,8 +1,8 @@
 ---
 id: docs-index
 status: vigente
-version: 1.16.0
-updated: 2026-11-13
+version: 1.17.0
+updated: 2026-11-14
 ---
 
 # Documentación
@@ -69,6 +69,7 @@ el código y la spec se corrige.
 | [40](specs/40-glue-sidechain-y-dinamica.md) | Glue, sidechain y dinámica: que la batería pegue | implementada |
 | [41](specs/41-acid-303.md) | Acid 303: voz mono con acento y slide | implementada |
 | [42](specs/42-eq-y-analizador.md) | EQ de 3 bandas y analizador espectral | implementada |
+| [43](specs/43-audiocore.md) | AudioCore propio y harness de calidad | aprobada; v0–v0.14 implementado; AudioCore default |
 
 ## ADR
 
@@ -80,6 +81,7 @@ el código y la spec se corrige.
 | [0004](adr/0004-verificacion-audio-offline.md) | Verificación por render offline determinista + Playwright | aceptada |
 | [0005](adr/0005-clips-respaldados-por-escenas.md) | Clips respaldados por escenas y patrón vivo | aceptada |
 | [0006](adr/0006-drum-kit-samples-dominio-publico.md) | Drum kits desde packs de dominio público, normalizados por kit | aceptada |
+| [0007](adr/0007-audiocore-propio.md) | AudioCore propio con render puro y adapter de AudioWorklet | aceptada |
 
 ## Cómo agregar una spec o un ADR
 

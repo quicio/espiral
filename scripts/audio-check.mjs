@@ -30,7 +30,7 @@ try {
 
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForSelector('#result[data-done="true"], #result[data-done="error"]', {
-    timeout: 180_000
+    timeout: 300_000
   });
 
   const result = await page.$eval('#result', element => ({

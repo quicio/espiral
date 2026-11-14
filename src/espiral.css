@@ -4168,3 +4168,8 @@ body.is-performance .instrument-body {
   height: 48px;
   background: rgba(0, 0, 0, 0.18);
 }
+
+#quality-mode {
+  width: 7.5rem;
+  text-align: left;
+}

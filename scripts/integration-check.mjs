@@ -2,7 +2,8 @@ import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const port = 4300 + Math.floor(Math.random() * 100);
-const url = `http://127.0.0.1:${port}/`;
+const engine = process.env.ESPIRAL_ENGINE === 'tone' ? 'tone' : 'core';
+const url = `http://127.0.0.1:${port}/?engine=${engine}`;
 
 const server = spawn(
   process.execPath,
@@ -119,9 +120,16 @@ try {
   if (playing !== 'Reproduciendo') throw new Error(`Estado inesperado al reproducir: ${playing}.`);
   if (pulse === '00' || !pulse) throw new Error('El pulso no avanzó.');
   if (clip === 'true') throw new Error('El master activó el clip latch.');
-  const samplerMode = await page.evaluate(() => window.__espiralSamplerMode);
-  if (samplerMode !== 'worklet') {
-    throw new Error(`El sampler no usa AudioWorklet: ${samplerMode}.`);
+  if (engine === 'tone') {
+    const samplerMode = await page.evaluate(() => window.__espiralSamplerMode);
+    if (samplerMode !== 'worklet') {
+      throw new Error(`El sampler no usa AudioWorklet: ${samplerMode}.`);
+    }
+  } else {
+    const activeEngine = await page.evaluate(() => window.__espiralEngine);
+    if (activeEngine !== 'core') {
+      throw new Error(`Se esperaba el AudioCore, se cargó: ${activeEngine}.`);
+    }
   }
 
   await page.locator('#transport-play').click();

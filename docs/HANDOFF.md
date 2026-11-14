@@ -2,7 +2,7 @@
 id: handoff
 status: vigente
 version: 1.2.0
-updated: 2026-11-13
+updated: 2026-11-14
 ---
 
 # Handoff — Espiral
@@ -15,20 +15,21 @@ AudioWorklet para plugins.
 
 Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
-## Estado medido (2026-11-13)
+## Estado medido (2026-11-14)
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **246 pasan / 35 archivos** en ~4 s | `npm test` |
+| tests unitarios | **284 pasan / 40 archivos** en ~3 s | `npm test` |
+| check del AudioCore | render determinista del kick en Node | `npm run test:core` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 578.67 kB (147.34 kB gzip) | salida de `npm run build` |
+| bundle principal | 622.13 kB (159.63 kB gzip) + core 40.92/15.14 kB | salida de `npm run build` |
 | samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
-| código | 126 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
-| specs | 43 en `docs/specs/` | `ls docs/specs` |
-| ADRs | 6 en `docs/adr/` | `ls docs/adr` |
-| git | árbol limpio al cerrar spec 40 | `git status` |
+| código | 170 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| specs | 44 en `docs/specs/` | `ls docs/specs` |
+| ADRs | 7 en `docs/adr/` | `ls docs/adr` |
+| git | cambios locales de AudioCore v0.2 | `git status` |
 
 **Los checks de Playwright ya corren en esta máquina** (Chromium instalado el
 2026-11-12). Un clone fresco sigue necesitando `npx playwright install chromium`;
@@ -65,6 +66,8 @@ Puertos en `src/domain/ports.ts`: `AudioEnginePort`, `ClockPort`,
 
 ```bash
 npm run typecheck && npm test                 # rápido, sin navegador
+npm run test:core                             # render determinista del AudioCore (Node)
+npm run test:core:live                        # AudioCore en la app, ?engine=core (Playwright)
 npm run test:kits                             # wavs declarados vs public/audio/kits
 npm run build                                 # verifica que el bundle arma
 npm run test:audio                            # PCM determinista (Playwright)
@@ -78,6 +81,53 @@ captura manual (`npx playwright screenshot` o el navegador) sigue siendo la
 prueba final de lo visual.
 
 Para performance, `docs/performance.md` resume benchmarks, tuning aplicado y opciones de AudioWorklet/WASM.
+
+## AudioCore (spec 43)
+
+El AudioCore es un núcleo DSP puro (sin Tone, sin DOM, sin `AudioContext`) que
+renderiza `Float32Array` en Node y en el hilo de audio. v0 implementa kick,
+mezcla, master y el harness de métricas (`src/audio-check/core-metrics.ts`); v0.1
+suma voces mono, poly, pluck y sampler con pools fijos y tests deterministas;
+v0.2 enchufa el core a la app con `?engine=core`; v0.3 suma inserts (delay,
+reverb, compressor, drive, filter), buses, sends, output bus y medidores por
+track/bus; v0.4 suma sidechain, glue, trim y EQ de master; v0.5 permite editar
+los parámetros de esos inserts en vivo; v0.6 suma eq3, tremolo y bitcrusher y
+expone los plugins built-in al rack (`supportsInserts=true`); v0.7 agrega preview
+de sonidos sin depender del transporte; v0.8 suma modulación audio-rate de
+parámetros de inserts; v0.9/0.10 suman patch bay de buses, `supportsRouting=true`
+y el instrument plugin FM Synth; v0.11 suma spectrum master/track y el AudioCore
+pasa a ser el motor por defecto (`?engine=tone` queda como fallback).
+
+Medición de `npm run test:core` (kick solo, 48 kHz, master −4/limiter −1);
+`npm run test:core -- /tmp/kick.wav` escribe el render para escucharlo:
+
+| métrica | valor |
+|---|---|
+| `peakDb` | −10.40 dBFS |
+| `rmsDb` | −27.05 dB |
+| `kickTailDb` | −32.92 dB |
+| `dc` | 8.1e−11 |
+| `maxStep` | 0.112 |
+
+El escenario de mezcla (kick + bajo mono + acorde poly + pluck + sampler, 2 s)
+da `peak` −2.05 dBFS, `rms` −16.94 dB, `dc` 1.7e−5 y renderiza en ~128 ms en
+Node (~15.6× tiempo real, un solo hilo). El AudioCore es el motor por defecto desde spec 43 v0.11. Desde v0.12 el reloj
+y el step scheduler viven en el worklet (`AudioCoreEngine` implementa
+`ClockPort`); `PlaybackService` sigue traduciendo estado a eventos. El export WAV usa el core
+(`CoreOfflineRenderer`); Tone queda como fallback con `?engine=tone`. La
+calidad se elige con `?quality=full|lite|eco` (default `lite`) y el selector del
+transporte. En Sound, los tracks de batería fijos (incluido kick) tienen selector
+de sonido; antes solo se podían cambiar desde el wizard. `npm run test:core:live` arranca la app, prueba preview, reproduce, cambia de
+escena y exporta un WAV verificando master y medidores por track.
+
+Límites del core por defecto: `PlaybackService` sigue generando los eventos
+musicales en el main thread; PDC no aplica porque los inserts del core no
+declaran latencia. El limiter usa 5 ms de lookahead, drive hace 2× oversampling y
+las voces/efectos cachean coeficientes. Tone queda solo como fallback y para el
+motor Tone del export opcional. Los locks de gain/pan e insert y la automatización básica de
+wet ya funcionan a través de `setInsertParam`/`setEffectWet`. `supportsInserts` y `supportsRouting` siguen en
+false para no ofrecer en la UI lo que el core aún no cubre. La UX queda congelada
+hasta la paridad completa y el retiro de Tone del camino de audio.
 
 ## Mezcla y dinámica (spec 40)
 

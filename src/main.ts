@@ -23,8 +23,10 @@ import { SceneService } from './application/scenes';
 import { SessionService } from './application/sessions';
 import { Store } from './application/store';
 import { TrackService } from './application/tracks';
+import type { AudioEnginePort, ClockPort } from './domain/ports';
 import { ToneClock } from './infrastructure/audio/tone-clock';
 import { ToneOfflineRenderer } from './infrastructure/audio/offline-renderer';
+import { CoreOfflineRenderer } from './infrastructure/audio/core/offline-core-renderer';
 import { UmbralGenerative } from './infrastructure/generative/umbral-generative';
 import { BrowserFileGateway } from './infrastructure/persistence/browser-file-gateway';
 import { HttpPresetRepository } from './infrastructure/persistence/http-preset-repository';
@@ -45,18 +47,51 @@ async function boot(): Promise<void> {
   const runtime = new PlaybackRuntime();
   const status = new DomStatus();
 
-  const [{ ModularAudioEngine }, { createEspiralGraph }] = await Promise.all([
-    import('./infrastructure/audio/modular/modular-audio-engine'),
-    import('./infrastructure/audio/modular/espiral-graph')
-  ]);
-  const engine = new ModularAudioEngine(
-    createEspiralGraph(initial.kit, initial.masterVolume, initial.masterEq)
+  const { createEspiralGraph } = await import(
+    './infrastructure/audio/modular/espiral-graph'
   );
-
-  const clock = new ToneClock(
-    initial.transport.bpm,
-    initial.transport.lookAhead
+  const engineParam = new URLSearchParams(globalThis.location.search).get(
+    'engine'
   );
+  const useAudioCore = engineParam !== 'tone';
+  const qualityParam = new URLSearchParams(globalThis.location.search).get(
+    'quality'
+  );
+  const quality =
+    qualityParam === 'full' || qualityParam === 'eco' ? qualityParam : 'lite';
+  const graph = createEspiralGraph(
+    initial.kit,
+    initial.masterVolume,
+    initial.masterEq
+  );
+  let engine: AudioEnginePort;
+  let clock: ClockPort;
+  if (useAudioCore) {
+    const { AudioCoreEngine } = await import(
+      './infrastructure/audio/core/audio-core-engine'
+    );
+    const core = new AudioCoreEngine(
+      graph,
+      initial.transport.bpm,
+      initial.transport.lookAhead,
+      quality
+    );
+    engine = core;
+    clock = core;
+  } else {
+    const { ModularAudioEngine } = await import(
+      './infrastructure/audio/modular/modular-audio-engine'
+    );
+    engine = new ModularAudioEngine(graph);
+    clock = new ToneClock(
+      initial.transport.bpm,
+      initial.transport.lookAhead
+    );
+  }
+  (globalThis as { __espiralEngine?: string }).__espiralEngine = useAudioCore
+    ? 'core'
+    : 'tone';
+  (globalThis as { __espiralQuality?: string }).__espiralQuality = quality;
   const patterns = new PatternService(store, generative, status, runtime);
   const browser = new BrowserService(store, engine, generative, status);
   const automation = new AutomationService(store, engine, status);
@@ -107,7 +142,9 @@ async function boot(): Promise<void> {
   );
   const exportService = new ExportService(
     store,
-    new ToneOfflineRenderer(),
+    useAudioCore
+      ? new CoreOfflineRenderer(quality)
+      : new ToneOfflineRenderer(),
     files,
     status
   );

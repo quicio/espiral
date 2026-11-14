@@ -17,7 +17,9 @@ npx playwright install chromium         # una sola vez, requerido por los checks
 
 npm run dev                             # Vite con HMR
 npm run typecheck                       # tsc --noEmit        (~3 s)
-npm test                                # guard de kits + vitest 221 tests, ~3 s
+npm test                                # guard de kits + vitest 284 tests, ~3 s
+npm run test:core                       # AudioCore: render determinista en Node
+npm run test:core:live                  # AudioCore en la app (?engine=core, Playwright)
 npm run test:kits                       # drum kits vs disco (wavs declarados/huérfanos)
 npm run build                           # typecheck + bundle  (~8 s)
 
@@ -46,8 +48,9 @@ npm run test:integration                # app viva en Chromium (Playwright)
 ## Definición de terminado
 
 - [ ] `npm run typecheck` limpio.
-- [ ] `npm test` verde (209+ tests, sin `.skip` nuevos).
+- [ ] `npm test` verde (284+ tests, sin `.skip` nuevos).
 - [ ] Si tocó audio: `npm run test:audio` verde (requiere Chromium instalado).
+- [ ] Si tocó AudioCore: `npm run test:core` y `npm run test:core:live` verdes.
 - [ ] Si tocó UI: `npm run test:integration` verde y captura revisada.
 - [ ] Spec actualizada (estado y decisiones) en el mismo commit.
 - [ ] Commit convencional en español: `feat: …`, `fix: …`, `docs: …`.

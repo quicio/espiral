@@ -43,7 +43,7 @@ Servicios de aplicación ──► Store (estado inmutable)
 AudioEnginePort / ClockPort   UI
   ▲
   │ implementados por
-ModularAudioEngine / ToneClock
+AudioCoreEngine (default) / ModularAudioEngine + ToneClock (fallback)
 ```
 
 - El estado de la aplicación es la fuente de verdad. El motor de audio no guarda la mezcla:
@@ -54,7 +54,15 @@ ModularAudioEngine / ToneClock
 
 ## Cadena de audio actual
 
-`ModularAudioEngine` construye tracks, buses y master desde el kit:
+Por defecto `AudioCoreEngine` construye el render desde el kit:
+
+```
+fuente → insert chain → gain → pan → mute ─┬→ bus(es) → inserts → return ─┐
+                                           └→ master                       ├→ master
+master: gain → DC block → glue → EQ3 → trim → limiter/clipper → Destination
+```
+
+El fallback `?engine=tone` usa `ModularAudioEngine`:
 
 ```
 fuente → insert chain → Tone.Volume → Pan → Mute ─┐
@@ -65,7 +73,8 @@ master: Tone.Volume → HPF(25Hz) → Compressor (glue) → Limiter(-2) → Safe
 La UI no conoce esta cadena. El motor es reemplazable detrás de `AudioEnginePort` sin tocar
 `application` ni `presentation`.
 
-El composition root usa `ModularAudioEngine`. Tiene tracks, buses, inserts, sends, PDC,
+El composition root usa `AudioCoreEngine` por defecto; `?engine=tone` carga
+`ModularAudioEngine`. El fallback Tone tiene tracks, buses, inserts, sends, PDC,
 instrument plugins y modulación audio-rate. Los cambios de máquina usan crossfade de
 fuente; los inserts cambian con crossfade y los tracks se reconcilian con `syncTracks`
 al cargar presets, escenas o sesiones. Los cambios estructurales hacen un duck breve de
@@ -82,8 +91,8 @@ sesiones v1 basadas en canales.
 
 La modulación vive en `ModulationState` (fuentes, rutas y enable) y es global, no parte de
 la escena. `ModulationService` evalúa a control-rate 60 Hz las fuentes macro/paso y los
-destinos sin `AudioParam`. Las rutas LFO hacia parámetros de plugins que exponen
-`AudioParam` se conectan directamente a audio-rate mediante `Tone.LFO` en el motor modular.
+destinos sin `AudioParam`. Las rutas LFO hacia parámetros de inserts se aplican audio-rate en el core cada
+128 frames; el fallback Tone usa `Tone.LFO`.
 
 Los parameter locks viven en `PatternState.locks` (track → 16 pasos → parámetros). Pueden
 apuntar a parámetros de inserts o al gain/pan del track. Playback los aplica en el
@@ -99,15 +108,25 @@ Los presets musicales incluyen BPM, mezcla, pan, sends, armonía y patrones por 
 
 Las máquinas de track viven en un catálogo (`MachinePreset`) con configuración de motor y
 `NoteSource`. `TrackState` guarda `machineId`, `machine`, `noteSource` y dos macros.
-El motor modular crea `PolySynth`, `MonoSynth`, `PluckSynth`, sampler o un instrument
-plugin (`InstrumentPluginHost`) según la máquina, y puede reemplazar la fuente en caliente
-con `setTrackMachine`.
+El fallback Tone crea `PolySynth`, `MonoSynth`, `PluckSynth`, sampler o un instrument
+plugin (`InstrumentPluginHost`) según la máquina. El core crea sus propias voces
+(membrane, mono, poly, pluck, sampler, FM Synth) y reemplaza la fuente con
+`setTrackMachine`.
 
 Las macros de track (`track-macro:<trackId>:<0|1>`) son fuentes de la mod matrix. Se
 resuelven desde el estado del track y se persisten en la sesión.
 
 La calidad de audio se verifica con `npm run test:audio`: renderiza 8 compases en un
 `OfflineAudioContext` real y falla si hay clipping, NaN, DC o silencio.
+
+### AudioCore
+
+`AudioCoreEngine` (spec 43) implementa el mismo `AudioEnginePort` y `ClockPort`
+con un núcleo DSP propio en un AudioWorklet. Es el motor por defecto;
+`?engine=tone` carga el motor Tone como fallback. El clock, los pasos de 16avos
+y el export WAV (`CoreOfflineRenderer`) viven del lado del core. El core no conoce Tone, DOM ni `AudioContext`: recibe eventos
+con timestamp y renderiza `Float32Array`. Inserts, buses, routing, sidechain y
+medidores por track todavía no están implementados en este adapter.
 
 El export WAV reutiliza ese camino offline: `ToneOfflineRenderer` renderiza el estado actual,
 `encodeWav` lo convierte a PCM 16-bit y `BrowserFileGateway` descarga el archivo.
@@ -136,9 +155,8 @@ El export WAV reutiliza ese camino offline: `ToneOfflineRenderer` renderiza el e
 ## Por qué esta base permite reemplazar el motor
 
 `PlaybackService` produce eventos genéricos (`kick`, `synth`, `sample`) con `channel` y,
-para tracks de usuario, `trackId`. `ToneAudioEngine` es una implementación de
-`AudioEnginePort`. Para pasar a un motor modular con tracks, buses y plugins, se implementa
-otro adapter y se cambia únicamente en `main.ts`.
+para tracks de usuario, `trackId`. `ModularAudioEngine` y `AudioCoreEngine` son implementaciones de
+`AudioEnginePort`. Para cambiar de motor se cambia únicamente en `main.ts`.
 
 ## Deuda deliberada
 

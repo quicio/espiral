@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vite-node scripts/check-drum-kits.ts && vitest run",
     "test:kits": "vite-node scripts/check-drum-kits.ts",
+    "test:core": "vite-node scripts/core-check.ts",
+    "test:core:live": "node scripts/core-live-check.mjs",
     "test:audio": "node scripts/audio-check.mjs",
     "test:integration": "node scripts/integration-check.mjs"
   },

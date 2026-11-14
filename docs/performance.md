@@ -109,6 +109,22 @@ defecto. Archivos:
 `src/infrastructure/audio/worklets/acid303.worklet.js`,
 `src/audio-check/acid303-bench.ts` y `scripts/acid303-bench.mjs`.
 
+## AudioCore (2026-11-14)
+
+Primer corte del motor propio (spec 43): DSP puro en TypeScript, sin Tone en el
+render. En Node, la mezcla de prueba de 2 s (kick + bajo mono + acorde poly +
+pluck + sampler) renderiza en ~128 ms: **~15.6× tiempo real en un solo hilo**,
+antes de contar el adapter vivo.
+
+En la app, `?engine=core` corre el core en un AudioWorklet (worklet de 40.92 kB).
+El flag es una preview: ya incluye inserts de delay/reverb/compressor/drive/filter,
+buses, sends, output bus, sidechain, glue/trim y EQ de master, medidores por
+track/bus, edición de parámetros de inserts en vivo y todos los efectos built-in
+(eq3, tremolo, bitcrusher incluidos). Faltan modulación audio-rate, patch bay, PDC,
+preview de sonidos, instrument plugins y spectrum por track.
+`npm run test:core:live` verifica arranque, master > 0, medidores por track y
+cambio de escena sin errores de consola. El motor Tone sigue siendo el default.
+
 ## Palancas de tuning pendientes (bajo riesgo)
 
 ### 1. Virtualizar Sound y el banco

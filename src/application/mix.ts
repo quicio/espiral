@@ -42,6 +42,16 @@ export class MixService {
     return this.engine.supportsMachineChange;
   }
 
+  get supportsQuality(): boolean {
+    return typeof (this.engine as { setQuality?: unknown }).setQuality === 'function';
+  }
+
+  setQuality(mode: 'full' | 'lite' | 'eco'): void {
+    (this.engine as { setQuality?: (mode: 'full' | 'lite' | 'eco') => void }).setQuality?.(
+      mode
+    );
+  }
+
   supportsAudioModulation(target: ModulationTarget): boolean {
     return this.engine.supportsAudioModulation(target);
   }

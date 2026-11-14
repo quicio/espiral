@@ -40,6 +40,7 @@ import {
   type SoundKit
 } from '../domain/sound-kits';
 import { DRUM_KITS } from '../domain/drum-kits';
+import { drumSound } from '../domain/drum-sounds';
 import { DEFAULT_SIDECHAIN } from '../domain/sidechain';
 import type { MixService } from '../application/mix';
 import type { PlaybackRuntime } from '../application/runtime';
@@ -969,16 +970,34 @@ export function renderSound(
       </div>`
     : '';
 
-  const machineControl = canEditTrackSound(selected)
-    ? `<select class="machine-select" data-machine="${selected.id}" aria-label="Máquina de ${selected.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
-        mixService
-      )
-        .map(
-          option =>
-            `<option value="${option.id}"${selected.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
-        )
-        .join('')}</select>`
-    : `<span class="machine-label">${machineLabel(selected.machineId)}</span>`;
+  const drumOptions = canEditTrackSound(selected)
+    ? []
+    : soundOptionsForTrack(selected.id);
+  const currentDrum = drumOptions.find(
+    option =>
+      JSON.stringify(drumSound(option.id)?.machine) ===
+      JSON.stringify(selected.machine)
+  );
+  const machineControl =
+    !canEditTrackSound(selected) && drumOptions.length > 0
+      ? `<select class="machine-select" data-drum-sound="${selected.id}" aria-label="Sonido de ${selected.name}">
+          ${drumOptions
+            .map(
+              option =>
+                `<option value="${option.id}"${option.id === currentDrum?.id ? ' selected' : ''}>${option.name}</option>`
+            )
+            .join('')}
+        </select>`
+      : canEditTrackSound(selected)
+        ? `<select class="machine-select" data-machine="${selected.id}" aria-label="Máquina de ${selected.name}"${mixService.supportsMachineChange ? '' : ' disabled'}>${machineOptions(
+            mixService
+          )
+            .map(
+              option =>
+                `<option value="${option.id}"${selected.machineId === option.id ? ' selected' : ''}>${option.name}</option>`
+            )
+            .join('')}</select>`
+        : `<span class="machine-label">${machineLabel(selected.machineId)}</span>`;
 
   const machineParams = canEditTrackSound(selected)
     ? renderMachineParams(selected, mixService)

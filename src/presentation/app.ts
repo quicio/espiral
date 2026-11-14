@@ -180,6 +180,22 @@ export class EspiralApp {
     this.deps.status.generative(
       `Semilla ${this.lastState.seed} · escena ${this.lastState.scenes[this.lastState.scene]?.name ?? this.deps.catalog.sceneLabel(this.lastState.scene)}.`
     );
+    const qualitySelect = view.q<HTMLSelectElement>('#quality-mode');
+    if (qualitySelect) {
+      qualitySelect.disabled = !this.deps.mix.supportsQuality;
+      const initialQuality = (
+        globalThis as { __espiralQuality?: string }
+      ).__espiralQuality;
+      if (initialQuality) qualitySelect.value = initialQuality;
+      qualitySelect.addEventListener('change', () => {
+        const value = qualitySelect.value;
+        if (value === 'full' || value === 'lite' || value === 'eco') {
+          this.deps.mix.setQuality(value);
+          this.deps.status.generative(`Calidad de audio: ${value}.`);
+        }
+      });
+    }
+
     this.startMeter();
   }
 
@@ -1162,6 +1178,12 @@ export class EspiralApp {
       const trackId = attr(event, 'data-machine');
       if (trackId && event.target instanceof HTMLSelectElement) {
         this.deps.tracks.setMachine(trackId, event.target.value);
+        return;
+      }
+
+      const drumTrackId = attr(event, 'data-drum-sound');
+      if (drumTrackId && event.target instanceof HTMLSelectElement) {
+        this.deps.tracks.applyKitSound(drumTrackId, event.target.value);
         return;
       }
 
