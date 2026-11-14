@@ -45,6 +45,15 @@ export interface MachineConfig {
   readonly params?: MachinePluginState;
 }
 
+export function machineVoiceCompatible(
+  previous: MachineConfig,
+  next: MachineConfig
+): boolean {
+  if (previous.kind !== next.kind) return false;
+  if (next.kind === 'plugin') return previous.pluginId === next.pluginId;
+  return true;
+}
+
 export interface InsertConfig {
   readonly id: string;
   readonly pluginId: string;

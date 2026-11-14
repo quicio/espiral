@@ -2,6 +2,7 @@ import * as Tone from 'tone';
 import type { EffectKind, NoteDuration, SoundEvent } from '../../../domain/audio';
 import {
   insertConfigsEqual,
+  machineVoiceCompatible,
   planLatency,
   validateGraph,
   type BusConfig,
@@ -225,6 +226,8 @@ export class ModularAudioEngine implements AudioEnginePort {
     previous: MachineConfig,
     next: MachineConfig
   ): boolean {
+    if (!machineVoiceCompatible(previous, next)) return false;
+
     if (source.kind === 'mono') {
       if (source.synth.oscillator.type !== (next.oscillator ?? 'sine')) {
         source.synth.oscillator.type = next.oscillator ?? 'sine';

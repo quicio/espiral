@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   insertConfigsEqual,
+  machineVoiceCompatible,
   planLatency,
   validateGraph,
   type GraphConfig,
+  type MachineConfig,
   type TrackConfig
 } from './graph';
 
@@ -102,6 +104,45 @@ describe('validateGraph', () => {
     });
 
     expect(validateGraph(invalid).some(error => error.includes('fuera de rango'))).toBe(true);
+  });
+});
+
+describe('machineVoiceCompatible', () => {
+  const membrane: MachineConfig = { kind: 'membrane' };
+  const sampler: MachineConfig = {
+    kind: 'sampler',
+    samples: ['./audio/kits/909/kick.wav']
+  };
+
+  it('rejects family changes that need a new voice', () => {
+    expect(machineVoiceCompatible(membrane, sampler)).toBe(false);
+    expect(machineVoiceCompatible(sampler, membrane)).toBe(false);
+    expect(machineVoiceCompatible(membrane, { kind: 'mono' })).toBe(false);
+  });
+
+  it('accepts parameter changes within the same voice', () => {
+    expect(
+      machineVoiceCompatible(membrane, {
+        kind: 'membrane',
+        oscillator: 'triangle',
+        envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 1 }
+      })
+    ).toBe(true);
+  });
+
+  it('requires the same plugin for instrument voices', () => {
+    expect(
+      machineVoiceCompatible(
+        { kind: 'plugin', pluginId: 'acid' },
+        { kind: 'plugin', pluginId: 'acid', params: { cutoff: 800 } }
+      )
+    ).toBe(true);
+    expect(
+      machineVoiceCompatible(
+        { kind: 'plugin', pluginId: 'acid' },
+        { kind: 'plugin', pluginId: 'pad' }
+      )
+    ).toBe(false);
   });
 });
 

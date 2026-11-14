@@ -47,6 +47,16 @@ try {
   if (metrics.renderMs > 90_000) {
     throw new Error(`mix-metrics tardó ${Math.round(metrics.renderMs)} ms (> 90 s).`);
   }
+  if (typeof metrics.kickTailDb === 'number' && metrics.kickTailDb < -45) {
+    throw new Error(
+      `kickTailDb ${metrics.kickTailDb.toFixed(2)} dB < -45 dB: el kick no está sonando.`
+    );
+  }
+  if (typeof metrics.bassDipDb === 'number' && metrics.bassDipDb < 3) {
+    throw new Error(
+      `bassDipDb ${metrics.bassDipDb.toFixed(2)} dB < 3 dB: el kick no dispara el sidechain.`
+    );
+  }
 
   console.log(JSON.stringify(metrics, null, 2));
   console.log('mix-metrics OK');
