@@ -5,6 +5,7 @@ import {
   planLatency,
   validateGraph,
   type BusConfig,
+  type EqSettings,
   type GraphConfig,
   type InsertConfig,
   type LatencyPlan,
@@ -503,6 +504,10 @@ export class ModularAudioEngine implements AudioEnginePort {
     this.master.setVolume(db);
   }
 
+  setMasterEq(eq: EqSettings): void {
+    this.master.setEq(eq);
+  }
+
   beginTransition(fadeOutMs = 6): void {
     this.master.beginTransition(fadeOutMs);
   }
@@ -517,6 +522,14 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   getTrackLevel(trackId: string): number {
     return this.tracks.get(trackId)?.getLevel() ?? -Infinity;
+  }
+
+  getTrackSpectrum(trackId: string, bins: number): readonly number[] {
+    return this.tracks.get(trackId)?.getSpectrum(bins) ?? [];
+  }
+
+  getMasterSpectrum(bins: number): readonly number[] {
+    return this.master.getSpectrum(bins);
   }
 
   getBusLevel(busId: string): number {

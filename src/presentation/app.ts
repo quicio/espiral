@@ -101,6 +101,38 @@ interface PresentationDependencies {
   readonly status: StatusPort;
 }
 
+const spectrumContexts = new WeakMap<
+  HTMLCanvasElement,
+  CanvasRenderingContext2D
+>();
+
+function drawSpectrum(
+  canvas: HTMLCanvasElement | null,
+  values: readonly number[]
+): void {
+  if (!canvas || values.length === 0) return;
+  let context = spectrumContexts.get(canvas);
+  if (!context) {
+    const created = canvas.getContext('2d');
+    if (!created) return;
+    context = created;
+    spectrumContexts.set(canvas, context);
+  }
+  const { width, height } = canvas;
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = '#c7b8ff';
+  const barWidth = width / values.length;
+  values.forEach((value, index) => {
+    const barHeight = Math.max(1, value * (height - 2));
+    context.fillRect(
+      index * barWidth + 0.5,
+      height - barHeight,
+      Math.max(1, barWidth - 1),
+      barHeight
+    );
+  });
+}
+
 export class EspiralApp {
   private lastState: InstrumentState | null = null;
   private unsubscribe: (() => void) | null = null;
@@ -177,6 +209,7 @@ export class EspiralApp {
     const masterFill = view.q('#master-meter-fill');
     const cpuFill = view.q('#cpu-meter-fill');
     const cpuValue = view.q('#cpu-value');
+    const masterSpectrum = view.q<HTMLCanvasElement>('#master-spectrum');
     const cpuBar = view.q('.cpu-meter');
     const resetClip = (): void => {
       clipping = false;
@@ -249,6 +282,15 @@ export class EspiralApp {
         }
 
         lastCpu = cpu;
+        const state = this.deps.store.getState();
+        drawSpectrum(masterSpectrum, this.deps.mix.getMasterSpectrum(32));
+        const trackSpectrum = view.q<HTMLCanvasElement>('#track-spectrum');
+        if (trackSpectrum && !document.hidden) {
+          drawSpectrum(
+            trackSpectrum,
+            this.deps.mix.getTrackSpectrum(state.selected, 32)
+          );
+        }
         cpuFill?.style.setProperty('--level', lastCpu.toFixed(3));
         if (cpuValue) cpuValue.textContent = `${Math.round(lastCpu * 100)}%`;
         if (cpuBar) {
@@ -492,6 +534,18 @@ export class EspiralApp {
       mix.setMasterVolume(value);
       const output = view.q('#master-volume-value');
       if (output) output.textContent = `${value.toFixed(1)} dB`;
+    });
+
+    (['low', 'mid', 'high'] as const).forEach(band => {
+      view.must<HTMLInputElement>(`#master-eq-${band}`).addEventListener(
+        'input',
+        event => {
+          const value = Number(inputValue(event));
+          mix.setMasterEq({ [band]: value });
+          const output = view.q(`#master-eq-${band}-value`);
+          if (output) output.textContent = `${value.toFixed(1)} dB`;
+        }
+      );
     });
 
     Object.keys(this.deps.store.getState().params).forEach(key => {

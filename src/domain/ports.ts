@@ -3,7 +3,13 @@ import type { DeviceChainPreset } from './device-chain';
 import type {
   PatternChannel
 } from './channels';
-import type { BusConfig, InsertConfig, MachineConfig, TrackConfig } from './graph';
+import type {
+  BusConfig,
+  EqSettings,
+  InsertConfig,
+  MachineConfig,
+  TrackConfig
+} from './graph';
 import type { KitState, BusState } from './kit';
 import type { SidechainConfig } from './sidechain';
 import type { PluginDefinition } from './plugin';
@@ -65,9 +71,12 @@ export interface AudioEnginePort {
   setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void>;
   setEffectWet(trackId: string, effect: EffectKind, wet: number, time?: number): void;
   setMasterVolume(db: number, time?: number): void;
+  setMasterEq(eq: EqSettings): void;
   beginTransition(fadeOutMs?: number): void;
   endTransition(fadeInMs?: number): void;
   getMasterLevel(): number;
+  getMasterSpectrum(bins: number): readonly number[];
+  getTrackSpectrum(trackId: string, bins: number): readonly number[];
   getTrackLevel(trackId: string): number;
   getBusLevel(busId: string): number;
   getAudioStats(): {

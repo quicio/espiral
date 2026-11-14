@@ -85,6 +85,13 @@
           <span class="master-meter__track"><span id="cpu-meter-fill" class="master-meter__fill"></span></span>
           <output id="cpu-value" class="master-meter__value">0%</output>
         </div>
+        <details class="master-eq">
+          <summary>EQ master</summary>
+          <label class="master-eq__field"><span>Low</span><input id="master-eq-low" type="range" min="-18" max="18" step="0.5" value="0" aria-label="EQ master low"><output id="master-eq-low-value">0.0 dB</output></label>
+          <label class="master-eq__field"><span>Mid</span><input id="master-eq-mid" type="range" min="-18" max="18" step="0.5" value="0" aria-label="EQ master mid"><output id="master-eq-mid-value">0.0 dB</output></label>
+          <label class="master-eq__field"><span>High</span><input id="master-eq-high" type="range" min="-18" max="18" step="0.5" value="0" aria-label="EQ master high"><output id="master-eq-high-value">0.0 dB</output></label>
+        </details>
+        <canvas id="master-spectrum" class="spectrum" width="220" height="48" aria-label="Espectro del master"></canvas>
       </div>
 
       <p id="instrument-error" class="instrument-error" role="alert"></p>

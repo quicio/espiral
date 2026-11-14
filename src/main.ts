@@ -50,7 +50,7 @@ async function boot(): Promise<void> {
     import('./infrastructure/audio/modular/espiral-graph')
   ]);
   const engine = new ModularAudioEngine(
-    createEspiralGraph(initial.kit, initial.masterVolume)
+    createEspiralGraph(initial.kit, initial.masterVolume, initial.masterEq)
   );
 
   const clock = new ToneClock(

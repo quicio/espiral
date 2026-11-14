@@ -70,6 +70,36 @@ const COMPRESSOR: PluginDefinition = {
   ]
 };
 
+const EQ3: PluginDefinition = {
+  id: 'eq3',
+  name: '3-Band EQ',
+  version: 1,
+  kind: 'effect',
+  params: [
+    { id: 'low', label: 'Low', min: -18, max: 18, defaultValue: 0, unit: 'db' },
+    { id: 'mid', label: 'Mid', min: -18, max: 18, defaultValue: 0, unit: 'db' },
+    { id: 'high', label: 'High', min: -18, max: 18, defaultValue: 0, unit: 'db' },
+    {
+      id: 'lowFrequency',
+      label: 'Low X',
+      min: 80,
+      max: 1000,
+      defaultValue: 250,
+      unit: 'hz',
+      curve: 'log'
+    },
+    {
+      id: 'highFrequency',
+      label: 'High X',
+      min: 1000,
+      max: 10000,
+      defaultValue: 3000,
+      unit: 'hz',
+      curve: 'log'
+    }
+  ]
+};
+
 const TREMOLO: PluginDefinition = {
   id: 'tremolo',
   name: 'Tremolo',
@@ -226,6 +256,48 @@ export const drivePlugin: PluginFactory = {
   }
 };
 
+export const eq3Plugin: PluginFactory = {
+  definition: EQ3,
+  create() {
+    const eq = new Tone.EQ3({
+      low: 0,
+      mid: 0,
+      high: 0,
+      lowFrequency: 250,
+      highFrequency: 3000
+    });
+    return {
+      input: eq,
+      output: eq,
+      setParam(id, value, time = Tone.now()) {
+        if (id === 'low') eq.low.rampTo(value, 0.05, time);
+        else if (id === 'mid') eq.mid.rampTo(value, 0.05, time);
+        else if (id === 'high') eq.high.rampTo(value, 0.05, time);
+        else if (id === 'lowFrequency') eq.lowFrequency.rampTo(value, 0.05, time);
+        else if (id === 'highFrequency') eq.highFrequency.rampTo(value, 0.05, time);
+      },
+      getParam(id) {
+        if (id === 'low') return eq.low.value;
+        if (id === 'mid') return eq.mid.value;
+        if (id === 'high') return eq.high.value;
+        if (id === 'lowFrequency') return Number(eq.lowFrequency.value);
+        return Number(eq.highFrequency.value);
+      },
+      getAudioParam(id) {
+        if (id === 'low') return eq.low;
+        if (id === 'mid') return eq.mid;
+        if (id === 'high') return eq.high;
+        if (id === 'lowFrequency') return eq.lowFrequency;
+        if (id === 'highFrequency') return eq.highFrequency;
+        return null;
+      },
+      dispose() {
+        eq.dispose();
+      }
+    };
+  }
+};
+
 export const compressorPlugin: PluginFactory = {
   definition: COMPRESSOR,
   create() {
@@ -332,6 +404,7 @@ export function createBuiltinPluginHost(): PluginHost {
     .register(delayPlugin)
     .register(reverbPlugin)
     .register(drivePlugin)
+    .register(eq3Plugin)
     .register(compressorPlugin)
     .register(tremoloPlugin)
     .register(bitcrusherPlugin)
@@ -343,6 +416,7 @@ export const builtinPlugins = [
   delayPlugin,
   reverbPlugin,
   drivePlugin,
+  eq3Plugin,
   compressorPlugin,
   tremoloPlugin,
   bitcrusherPlugin,

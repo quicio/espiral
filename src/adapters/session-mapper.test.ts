@@ -162,7 +162,8 @@ describe('SessionMapper', () => {
           }
         ]
       },
-      masterVolume: -7
+      masterVolume: -7,
+      masterEq: { low: 2, mid: -3, high: 1 }
     }));
 
     const original = store.getState();
@@ -194,6 +195,7 @@ describe('SessionMapper', () => {
     expect(restored.transport.bpm).toBe(132);
     expect(restored.transport.lookAhead).toBe(0.15);
     expect(restored.masterVolume).toBe(-7);
+    expect(restored.masterEq).toEqual({ low: 2, mid: -3, high: 1 });
     expect(restored.selected).toBe('track-08');
     expect(restored.pattern.steps['track-08']?.[4]).toBe(1);
     expect(restored.pattern.pulses['track-08']).toBe(5);

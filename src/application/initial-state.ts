@@ -137,6 +137,7 @@ export function createInitialState(generative: GenerativePort): InstrumentState 
     kit: initial.kit,
     modulation: createDefaultModulation(),
     masterVolume: initial.masterVolume,
+    masterEq: { low: 0, mid: 0, high: 0 },
     clips,
     activeClips: activeClipsForScene(clips, 'umbral'),
     clipQuantize: DEFAULT_CLIP_QUANTIZE,

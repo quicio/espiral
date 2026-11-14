@@ -112,9 +112,16 @@ export interface GlueConfig {
   readonly knee: number;
 }
 
+export interface EqSettings {
+  readonly low: number;
+  readonly mid: number;
+  readonly high: number;
+}
+
 export interface MasterConfig {
   readonly volumeDb: number;
   readonly limiterDb: number;
+  readonly eq?: EqSettings;
   /** Trim posterior al glue y anterior al limiter. No cambia la compresión. */
   readonly trimDb?: number;
   readonly glue: GlueConfig;

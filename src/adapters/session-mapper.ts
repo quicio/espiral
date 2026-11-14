@@ -26,7 +26,7 @@ import {
   type ClipState,
   type TrackPatternData
 } from '../domain/clip';
-import type { InsertConfig, MachineConfig, SendConfig } from '../domain/graph';
+import type { EqSettings, InsertConfig, MachineConfig, SendConfig } from '../domain/graph';
 import {
   cloneKit,
   kitTracks,
@@ -187,6 +187,7 @@ export interface SessionDto {
   readonly selected: string;
   readonly bpm: number;
   readonly master: number;
+  readonly masterEq?: EqSettings;
   readonly swing: number;
   readonly humanize: number;
   readonly lookAhead?: number;
@@ -251,6 +252,7 @@ export class SessionMapper implements SessionCodec {
       selected: state.selected,
       bpm: state.transport.bpm,
       master: state.masterVolume,
+      masterEq: state.masterEq,
       swing: state.transport.swing,
       humanize: state.transport.humanize,
       lookAhead: state.transport.lookAhead,
@@ -405,6 +407,7 @@ export class SessionMapper implements SessionCodec {
       },
       kit,
       masterVolume: clamp(numberOr(data.master, current.masterVolume), -60, 0),
+      masterEq: readMasterEq(data.masterEq, current.masterEq),
       history: [],
       clipboard: null,
       mutationCount: numberOr(data.mutationCount, 0),
@@ -731,6 +734,16 @@ function readSidechain(raw: unknown): SidechainConfig | undefined {
     depthDb: clamp(numberOr(data.depthDb, 4), 0, 24),
     attack: clamp(numberOr(data.attack, 0.006), 0, 2),
     release: clamp(numberOr(data.release, 0.16), 0, 4)
+  };
+}
+
+function readMasterEq(raw: unknown, fallback: EqSettings | undefined): EqSettings {
+  const data = asRecord(raw);
+  const base = fallback ?? { low: 0, mid: 0, high: 0 };
+  return {
+    low: clamp(numberOr(data?.low, base.low), -18, 18),
+    mid: clamp(numberOr(data?.mid, base.mid), -18, 18),
+    high: clamp(numberOr(data?.high, base.high), -18, 18)
   };
 }
 

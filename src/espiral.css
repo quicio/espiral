@@ -4131,3 +4131,40 @@ body.is-performance .instrument-dock {
 body.is-performance .instrument-body {
   margin-top: 1rem;
 }
+
+
+.master-eq {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--umbral-muted);
+}
+
+.master-eq summary {
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.master-eq__field {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr) 3.4rem;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.master-eq__field input {
+  min-width: 0;
+}
+
+.master-eq__field output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.spectrum {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.18);
+}

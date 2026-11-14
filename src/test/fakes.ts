@@ -3,7 +3,13 @@ import type {
   ChannelKey,
   PatternChannel
 } from '../domain/channels';
-import type { BusConfig, InsertConfig, MachineConfig, TrackConfig } from '../domain/graph';
+import type {
+  BusConfig,
+  EqSettings,
+  InsertConfig,
+  MachineConfig,
+  TrackConfig
+} from '../domain/graph';
 import type { BusState } from '../domain/kit';
 import type {
   ChannelSeed,
@@ -237,6 +243,7 @@ export class FakeAudioEngine implements AudioEnginePort {
   readonly effects: { channel: ChannelKey; effect: EffectKind; wet: number }[] = [];
   readonly inserts: { channel: ChannelKey; inserts: readonly InsertConfig[] }[] = [];
   readonly master: number[] = [];
+  readonly masterEq: EqSettings[] = [];
   transitions = 0;
   masterLevel = -60;
   readonly trackLevels: Record<string, number> = {};
@@ -401,6 +408,10 @@ export class FakeAudioEngine implements AudioEnginePort {
     this.master.push(db);
   }
 
+  setMasterEq(eq: EqSettings): void {
+    this.masterEq.push({ ...eq });
+  }
+
   beginTransition(): void {
     this.transitions += 1;
   }
@@ -411,6 +422,14 @@ export class FakeAudioEngine implements AudioEnginePort {
 
   getMasterLevel(): number {
     return this.masterLevel;
+  }
+
+  getMasterSpectrum(_bins: number): readonly number[] {
+    return [];
+  }
+
+  getTrackSpectrum(_trackId: string, _bins: number): readonly number[] {
+    return [];
   }
 
   getTrackLevel(trackId: string): number {

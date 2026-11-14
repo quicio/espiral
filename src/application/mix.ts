@@ -1,5 +1,5 @@
 import type { EffectKind } from '../domain/audio';
-import type { InsertConfig } from '../domain/graph';
+import type { EqSettings, InsertConfig } from '../domain/graph';
 import {
   busToConfig,
   kitEffectiveMute,
@@ -205,6 +205,14 @@ export class MixService {
     return this.engine.getMasterLevel();
   }
 
+  getMasterSpectrum(bins: number): readonly number[] {
+    return this.engine.getMasterSpectrum(bins);
+  }
+
+  getTrackSpectrum(trackId: string, bins: number): readonly number[] {
+    return this.engine.getTrackSpectrum(trackId, bins);
+  }
+
   getTrackLevel(trackId: string): number {
     return this.engine.getTrackLevel(trackId);
   }
@@ -244,6 +252,18 @@ export class MixService {
     const masterVolume = clamp(db, -60, 0);
     this.store.update(state => ({ ...state, masterVolume }));
     this.engine.setMasterVolume(masterVolume);
+  }
+
+  setMasterEq(patch: Partial<EqSettings>): void {
+    const state = this.store.getState();
+    const current = state.masterEq ?? { low: 0, mid: 0, high: 0 };
+    const masterEq: EqSettings = {
+      low: clamp(patch.low ?? current.low, -18, 18),
+      mid: clamp(patch.mid ?? current.mid, -18, 18),
+      high: clamp(patch.high ?? current.high, -18, 18)
+    };
+    this.store.update(next => ({ ...next, masterEq }));
+    this.engine.setMasterEq(masterEq);
   }
 
   beginTransition(): void {
@@ -340,6 +360,7 @@ export class MixService {
     });
 
     this.engine.setSidechain(state.kit.sidechain);
+    this.engine.setMasterEq(state.masterEq ?? { low: 0, mid: 0, high: 0 });
     this.engine.setMasterVolume(state.masterVolume);
   }
 

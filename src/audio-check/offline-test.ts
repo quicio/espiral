@@ -108,7 +108,7 @@ async function renderScenario(scenario: Scenario): Promise<Metrics> {
     const state = store.getState();
     const runtime = new PlaybackRuntime();
     const engine: AudioEnginePort = new ModularAudioEngine(
-      createEspiralGraph(state.kit, state.masterVolume)
+      createEspiralGraph(state.kit, state.masterVolume, state.masterEq)
     );
     engineRef = engine;
 

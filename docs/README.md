@@ -68,6 +68,7 @@ el código y la spec se corrige.
 | [39](specs/39-drum-kit-worklet-fixes.md) | Fixes de integración entre drum kits y sampler Worklet | implementada |
 | [40](specs/40-glue-sidechain-y-dinamica.md) | Glue, sidechain y dinámica: que la batería pegue | implementada |
 | [41](specs/41-acid-303.md) | Acid 303: voz mono con acento y slide | implementada |
+| [42](specs/42-eq-y-analizador.md) | EQ de 3 bandas y analizador espectral | implementada |
 
 ## ADR
 

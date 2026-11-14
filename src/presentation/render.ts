@@ -1017,6 +1017,7 @@ export function renderSound(
       ${sidechainControls}
     </div>
     <div class="machine-params" data-machine-params="${selected.id}">${machineParams}</div>
+    <canvas id="track-spectrum" class="spectrum" width="320" height="64" data-track-spectrum="${selected.id}" aria-label="Espectro de ${selected.name}"></canvas>
     <div class="sound-effects">
       <div class="insert-rack">${rack}</div>
       ${add}
@@ -1250,6 +1251,14 @@ export function syncTransport(state: InstrumentState): void {
   const masterValue = q('#master-volume-value');
   if (master) master.value = String(state.masterVolume);
   if (masterValue) masterValue.textContent = `${state.masterVolume.toFixed(1)} dB`;
+
+  const masterEq = state.masterEq ?? { low: 0, mid: 0, high: 0 };
+  (['low', 'mid', 'high'] as const).forEach(band => {
+    const input = q<HTMLInputElement>(`#master-eq-${band}`);
+    const output = q(`#master-eq-${band}-value`);
+    if (input) input.value = String(masterEq[band]);
+    if (output) output.textContent = `${masterEq[band].toFixed(1)} dB`;
+  });
 
   const label = q('#transport-label');
   if (label) {

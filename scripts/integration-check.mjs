@@ -62,6 +62,16 @@ try {
   );
   await page.locator('#tab-performance').click();
   await page.waitForTimeout(150);
+  await page.locator('.master-eq summary').click();
+  await page.locator('#master-eq-low').fill('3');
+  await page.waitForTimeout(100);
+  const masterEqLabel = (
+    await page.locator('#master-eq-low-value').textContent()
+  )?.trim();
+  if (masterEqLabel !== '3.0 dB') {
+    throw new Error(`El EQ de master no actualizó: ${masterEqLabel}.`);
+  }
+  await page.locator('#master-eq-low').fill('0');
 
   const armedBpm = (await page.locator('#bpm-value').textContent())?.trim();
   if (armedBpm !== '130') {
@@ -347,6 +357,12 @@ try {
   }
   if ((await bassMachine.locator('option[value="acid-303"]').count()) !== 1) {
     throw new Error('El selector del bajo no ofrece Acid 303.');
+  }
+  if ((await page.locator('#track-spectrum').count()) !== 1) {
+    throw new Error('Falta el analizador del track seleccionado.');
+  }
+  if ((await page.locator('[data-add-insert="bass"] option[value="eq3"]').count()) !== 1) {
+    throw new Error('El EQ de 3 bandas no está en el rack de inserts.');
   }
   const sidechainDepth = page.locator('[data-sidechain-depth]');
   if ((await sidechainDepth.count()) !== 1) {

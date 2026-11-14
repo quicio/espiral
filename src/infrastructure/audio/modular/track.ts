@@ -20,6 +20,7 @@ export class Track {
   private readonly panner: Tone.Panner;
   private readonly muteGain: Tone.Gain;
   private meter: Tone.Meter | null = null;
+  private spectrum: Tone.Analyser | null = null;
   private readonly compensation: Tone.Delay | null;
   private readonly host: PluginHost;
   private readonly chainMix = new Tone.Gain(1);
@@ -225,6 +226,22 @@ export class Track {
     return readMeter(this.meter!);
   }
 
+  getSpectrum(bins: number): readonly number[] {
+    if (!this.spectrum) {
+      this.spectrum = new Tone.Analyser({
+        type: 'fft',
+        size: 256,
+        smoothing: 0.8,
+        channels: 1
+      });
+      // `muteGain` no se desconecta cuando cambia el routing de salida.
+      this.muteGain.connect(this.spectrum);
+    }
+    const value = this.spectrum.getValue();
+    const data = (Array.isArray(value) ? value[0] : value) ?? new Float32Array(0);
+    return sampleSpectrum(data, bins);
+  }
+
   prepare(): Promise<void> {
     return this.chain.prepare();
   }
@@ -243,6 +260,7 @@ export class Track {
     this.muteGain.dispose();
     this.duckGain.dispose();
     this.meter?.dispose();
+    this.spectrum?.dispose();
     this.compensation?.dispose();
     this.output.dispose();
     this.input.dispose();
@@ -251,6 +269,18 @@ export class Track {
   findInsertByPlugin(pluginId: string): InsertSlot | undefined {
     return this.chain.findInsertByPlugin(pluginId);
   }
+}
+
+function sampleSpectrum(
+  data: Float32Array,
+  bins: number
+): readonly number[] {
+  const count = Math.max(1, Math.round(bins));
+  const step = Math.max(1, Math.floor(data.length / count));
+  return Array.from({ length: count }, (_, index) => {
+    const db = data[index * step] ?? -100;
+    return Math.max(0, Math.min(1, (db + 100) / 100));
+  });
 }
 
 export function readMeter(meter: Tone.Meter): number {

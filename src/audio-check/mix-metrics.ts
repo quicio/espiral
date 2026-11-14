@@ -96,7 +96,7 @@ async function renderScenario(
     const state = store.getState();
     const runtime = new PlaybackRuntime();
     engine = new ModularAudioEngine(
-      createEspiralGraph(state.kit, state.masterVolume)
+      createEspiralGraph(state.kit, state.masterVolume, state.masterEq)
     );
     const clock = new OfflineClock();
     const status = new NullStatus();

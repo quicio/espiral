@@ -87,7 +87,7 @@ export class ToneOfflineRenderer implements AudioExportPort {
       const runtime = new PlaybackRuntime();
       const generative = new UmbralGenerative();
       engine = new ModularAudioEngine(
-        createEspiralGraph(state.kit, state.masterVolume)
+        createEspiralGraph(state.kit, state.masterVolume, state.masterEq)
       );
       const automation = new AutomationService(store, engine, status);
       const evolver = { evolve(): void {} };

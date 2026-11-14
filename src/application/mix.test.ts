@@ -74,6 +74,15 @@ describe('MixService', () => {
     expect(engine.sidechain).toMatchObject({ depthDb: 9, enabled: false });
   });
 
+  it('updates the master EQ and sends it to the engine', () => {
+    const { store, engine, mix } = setup();
+
+    mix.setMasterEq({ low: 3, high: -4 });
+
+    expect(store.getState().masterEq).toEqual({ low: 3, mid: 0, high: -4 });
+    expect(engine.masterEq.at(-1)).toEqual({ low: 3, mid: 0, high: -4 });
+  });
+
   it('syncs the full mix to the engine', () => {
     const { engine, mix, store } = setup();
 
