@@ -169,7 +169,7 @@ export class TrackService {
     if (!track) return;
     if (!canEditTrackSound(track)) {
       this.status.generative(
-        'La máquina de bombo, bajo, hats y percusión es fija.'
+        'La máquina de bombo, hats y percusión es fija.'
       );
       return;
     }
@@ -457,7 +457,7 @@ export class TrackService {
   ): void {
     const state = this.store.getState();
     const track = state.kit.tracks[trackId];
-    if (!track || track.role !== 'user') return;
+    if (!track || !canEditTrackSound(track)) return;
     if (!this.engine.supportsMachineChange) return;
 
     const preset =

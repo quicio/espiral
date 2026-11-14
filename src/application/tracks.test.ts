@@ -118,6 +118,18 @@ describe('TrackService', () => {
     expect(engine.machines.at(-1)?.machine.envelope?.attack).toBe(2.5);
   });
 
+  it('edits the acid machine on the bass track', () => {
+    const { store, engine, tracks } = setup();
+    tracks.setMachine('bass', 'acid-303');
+
+    tracks.setMachineParam('bass', 'filter', 1200);
+
+    const machine = store.getState().kit.tracks.bass?.machine;
+    expect(machine?.kind).toBe('mono');
+    expect(machine?.filter?.frequency).toBe(1200);
+    expect(engine.machines.at(-1)?.trackId).toBe('bass');
+  });
+
   it('changes synth filter parameters', () => {
     const { store, tracks } = setup();
     tracks.setMachine('track-08', 'bass-synth');

@@ -53,6 +53,34 @@ scheduler llega tarde.
     fallback (spec 37). Los índices de sample se clampean y el kick sampler ya no
     se dispara como membrana (spec 39).
 
+## Cambios en caliente
+
+Un cambio de escena, de máquina o de insert no es un evento de nota: reconstruye
+nodos de Tone (`MonoSynth`, `InsertChain`, buses). Hacerlo 16 veces en el mismo
+tick produce un long task y puede cortar el audio.
+
+`SerialTaskQueue` (`infrastructure/audio/modular/serial-task-queue.ts`) resuelve
+tres cosas:
+
+- **serializa**: una mutación cara a la vez;
+- **cede el hilo**: `setTimeout(0)` entre tareas, para que el navegador pinte y
+  procese audio;
+- **coalesce máquinas**: si llegan dos cambios para el mismo track, sólo se
+  construye el último (`requestedMachines`).
+
+En offline el motor usa el camino directo: la cola no puede introducir
+diferencias de PCM. `prepare()` espera a que la cola se vacíe antes de preparar
+fuentes.
+
+Medición headless con 8 cambios de escena+máquina durante playback: **0 long
+tasks > 50 ms** y frame máximo 17 ms. El escenario no reprodujo el pico en esta
+máquina, así que la cola queda como garantía estructural para 16 cambios
+simultáneos, no como una mejora medida en ese probe.
+
+Lo que **no** va a la cola: triggers de nota, automatización, faders, pan y mute.
+Esos son baratos y necesitan aplicarse ya; encolarlos agregaría latencia
+musical.
+
 ## Palancas de tuning pendientes (bajo riesgo)
 
 ### 1. Virtualizar Sound y el banco

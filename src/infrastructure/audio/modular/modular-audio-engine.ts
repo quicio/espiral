@@ -33,6 +33,7 @@ import { SampleLibrary } from '../sample-library';
 import { Bus } from './bus';
 import { MasterBus } from './master-bus';
 import { Track } from './track';
+import { SerialTaskQueue } from './serial-task-queue';
 
 type TrackSource =
   | { readonly kind: 'membrane'; readonly synth: Tone.MembraneSynth }
@@ -40,7 +41,7 @@ type TrackSource =
   | {
       readonly kind: 'mono';
       readonly synth: Tone.MonoSynth;
-      readonly glide: number;
+      glide: number;
       /** Énfasis de filtro por nota para el acento 303. */
       readonly accentFilter: Tone.Filter;
     }
@@ -52,6 +53,7 @@ interface SourceNode {
   readonly source: TrackSource;
   readonly gain: Tone.Gain;
   readonly machineKey: string;
+  readonly machine: MachineConfig;
 }
 
 export class ModularAudioEngine implements AudioEnginePort {
@@ -77,6 +79,8 @@ export class ModularAudioEngine implements AudioEnginePort {
   private readonly samples = new SampleLibrary();
   private preview: { readonly track: Track; node: SourceNode } | null = null;
   private sidechain: SidechainConfig | undefined;
+  private readonly mutations = new SerialTaskQueue();
+  private readonly requestedMachines = new Map<string, string>();
   private prepared = false;
   private preparing: Promise<void> | null = null;
 
@@ -162,13 +166,42 @@ export class ModularAudioEngine implements AudioEnginePort {
     const track = this.tracks.get(trackId);
     if (!track) return;
     const key = machineKey(machine);
+    if (this.sources.get(trackId)?.machineKey === key) {
+      // Volver a la máquina vigente cancela cualquier cambio pendiente.
+      this.requestedMachines.delete(trackId);
+      return;
+    }
+
+    // Coalescing: si el usuario cambia dos veces seguidas, sólo se construye
+    // la última máquina pedida.
+    this.requestedMachines.set(trackId, key);
+    const run = () => {
+      if (this.requestedMachines.get(trackId) !== key) return;
+      this.requestedMachines.delete(trackId);
+      this.applyTrackMachine(trackId, machine);
+    };
+    if (isOfflineContext()) {
+      run();
+      return;
+    }
+    void this.mutations.enqueue(run);
+  }
+
+  private applyTrackMachine(trackId: string, machine: MachineConfig): void {
+    const track = this.tracks.get(trackId);
+    if (!track) return;
+    const key = machineKey(machine);
     const previous = this.sources.get(trackId);
     if (previous?.machineKey === key) return;
+    if (previous && this.updateSourceMachine(previous.source, previous.machine, machine)) {
+      this.sources.set(trackId, { ...previous, machine, machineKey: key });
+      return;
+    }
 
     const gain = new Tone.Gain(0);
     gain.connect(track.input);
     const source = this.createSource(machine, gain);
-    this.sources.set(trackId, { source, gain, machineKey: key });
+    this.sources.set(trackId, { source, gain, machineKey: key, machine });
     gain.gain.rampTo(1, 0.04, Tone.now());
 
     if (previous) {
@@ -179,6 +212,52 @@ export class ModularAudioEngine implements AudioEnginePort {
         previous.gain.dispose();
       }, 80);
     }
+  }
+
+  /**
+   * Actualiza en sitio los parámetros que Tone expone como setters. Evita
+   * reconstruir la voz mientras el usuario mueve un slider. Devuelve false si
+   * el cambio requiere un nodo nuevo (otro plugin, otros samples, etc.).
+   */
+  private updateSourceMachine(
+    source: TrackSource,
+    previous: MachineConfig,
+    next: MachineConfig
+  ): boolean {
+    if (source.kind === 'mono') {
+      if (source.synth.oscillator.type !== (next.oscillator ?? 'sine')) {
+        source.synth.oscillator.type = next.oscillator ?? 'sine';
+      }
+      applyEnvelope(source.synth.envelope, next.envelope);
+      source.synth.filter.frequency.value = next.filter?.frequency ?? 800;
+      source.synth.filter.Q.value = next.filter?.q ?? 1;
+      const env = next.filterEnvelope;
+      if (env) {
+        source.synth.filterEnvelope.octaves = env.octaves;
+        source.synth.filterEnvelope.attack = env.attack;
+        source.synth.filterEnvelope.decay = env.decay;
+        source.synth.filterEnvelope.sustain = env.sustain;
+        source.synth.filterEnvelope.release = env.release;
+      }
+      source.glide = next.glide ?? 0;
+      return true;
+    }
+
+    if (source.kind === 'membrane') {
+      source.synth.oscillator.type = next.oscillator ?? 'sine';
+      applyEnvelope(source.synth.envelope, next.envelope);
+      return true;
+    }
+
+    if (source.kind === 'instrument') {
+      if (next.pluginId !== previous.pluginId) return false;
+      Object.entries(next.params ?? {}).forEach(([id, value]) => {
+        source.instance.setParam(id, value);
+      });
+      return true;
+    }
+
+    return false;
   }
 
   syncTracks(tracks: readonly TrackConfig[]): void {
@@ -217,6 +296,7 @@ export class ModularAudioEngine implements AudioEnginePort {
 
   private async prepareInternal(): Promise<void> {
     if (!isOfflineContext()) await Tone.start();
+    await this.mutations.idle();
     if (!isOfflineContext()) {
       this.tracks.forEach(track => track.prepareMeter());
       this.buses.forEach(bus => bus.prepareMeter());
@@ -522,15 +602,25 @@ export class ModularAudioEngine implements AudioEnginePort {
   async setTrackInserts(trackId: string, inserts: readonly InsertConfig[]): Promise<void> {
     const track = this.tracks.get(trackId);
     if (!track || insertConfigsEqual(track.getInsertConfigs(), inserts)) return;
-    await this.loadInsertPlugins(inserts);
-    await track.setInserts(inserts);
+    const run = async () => {
+      if (insertConfigsEqual(track.getInsertConfigs(), inserts)) return;
+      await this.loadInsertPlugins(inserts);
+      await track.setInserts(inserts);
+    };
+    if (isOfflineContext()) return run();
+    await this.mutations.enqueue(run);
   }
 
   async setBusInserts(busId: string, inserts: readonly InsertConfig[]): Promise<void> {
     const bus = this.buses.get(busId);
     if (!bus || insertConfigsEqual(bus.getInsertConfigs(), inserts)) return;
-    await this.loadInsertPlugins(inserts);
-    await bus.setInserts(inserts);
+    const run = async () => {
+      if (insertConfigsEqual(bus.getInsertConfigs(), inserts)) return;
+      await this.loadInsertPlugins(inserts);
+      await bus.setInserts(inserts);
+    };
+    if (isOfflineContext()) return run();
+    await this.mutations.enqueue(run);
   }
 
   async addInsert(
@@ -543,15 +633,16 @@ export class ModularAudioEngine implements AudioEnginePort {
     const configs = [...owner.getInsertConfigs()];
     if (index < 0 || index >= configs.length) configs.push(insert);
     else configs.splice(index, 0, insert);
-    await this.loadInsertPlugins(configs);
-    await owner.setInserts(configs);
+    if (this.tracks.has(ownerId)) return this.setTrackInserts(ownerId, configs);
+    return this.setBusInserts(ownerId, configs);
   }
 
   async removeInsert(ownerId: string, insertId: string): Promise<void> {
     const owner = this.tracks.get(ownerId) ?? this.buses.get(ownerId);
     if (!owner) return;
     const configs = owner.getInsertConfigs().filter(insert => insert.id !== insertId);
-    await owner.setInserts(configs);
+    if (this.tracks.has(ownerId)) return this.setTrackInserts(ownerId, configs);
+    return this.setBusInserts(ownerId, configs);
   }
 
   setInsertParam(ownerId: string, insertId: string, param: string, value: number): void {
@@ -662,6 +753,7 @@ export class ModularAudioEngine implements AudioEnginePort {
   }
 
   dispose(): void {
+    this.mutations.dispose();
     this.stop();
     this.clearAudioModulations();
     this.sources.forEach(node => {
@@ -736,7 +828,8 @@ export class ModularAudioEngine implements AudioEnginePort {
     return {
       source: this.createSource(machine, gain),
       gain,
-      machineKey: machineKey(machine)
+      machineKey: machineKey(machine),
+      machine
     };
   }
 
@@ -870,6 +963,22 @@ export class ModularAudioEngine implements AudioEnginePort {
     );
     return { kind: 'sampler', source };
   }
+}
+
+function applyEnvelope(
+  envelope: {
+    attack: unknown;
+    decay: unknown;
+    sustain: unknown;
+    release: unknown;
+  },
+  config: MachineConfig['envelope']
+): void {
+  if (!config) return;
+  envelope.attack = config.attack;
+  envelope.decay = config.decay;
+  envelope.sustain = config.sustain;
+  envelope.release = config.release;
 }
 
 function machineKey(machine: MachineConfig): string {

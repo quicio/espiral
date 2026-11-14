@@ -19,13 +19,13 @@ Versión `0.6.0`. Node 22.23.1 en la máquina de referencia.
 
 | métrica | valor | comando |
 |---|---|---|
-| tests unitarios | **238 pasan / 34 archivos** en ~4 s | `npm test` |
+| tests unitarios | **242 pasan / 35 archivos** en ~4 s | `npm test` |
 | guard de drum kits | 9 máquinas · 71 one-shots · 3.77 MB | `npm run test:kits` |
 | typecheck | limpio, ~3 s | `npm run typecheck` |
 | build | ~8 s (Vite, con typecheck previo) | `npm run build` |
-| bundle principal | 568.62 kB (144.96 kB gzip) | salida de `npm run build` |
+| bundle principal | 570.63 kB (145.48 kB gzip) | salida de `npm run build` |
 | samples de batería | 4.0 MB en `public/audio/kits/` | `du -sh public/audio/kits` |
-| código | 123 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
+| código | 125 archivos `.ts` en `src/` | `find src -name '*.ts' \| wc -l` |
 | specs | 42 en `docs/specs/` | `ls docs/specs` |
 | ADRs | 6 en `docs/adr/` | `ls docs/adr` |
 | git | árbol limpio al cerrar spec 40 | `git status` |
@@ -112,6 +112,12 @@ circuito a circuito del TB-303.
 CPU: `#cpu-value` no se mueve en headless (queda en 0 %). Como proxy se comparó
 el render de los 7 escenarios de `test:audio`: **151.4 s en T3 → 139.9 s final
 (−7.6 %)**, una corrida por lado.
+
+Los cambios de máquina e inserts durante playback pasan por
+`SerialTaskQueue`: una mutación cara por macrotask, con coalescing de máquina
+por track. Las notas no se encolan. Los parámetros de las voces mono, membrana y
+plugin se actualizan en sitio en vez de reconstruir el nodo. Detalle y límites en
+`docs/performance.md`.
 
 ## Deuda y drift conocidos
 
