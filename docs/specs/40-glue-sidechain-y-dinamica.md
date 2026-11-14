@@ -365,7 +365,8 @@ Números fuera de rango = la tarea no está terminada, aunque los tests estén v
 ## Estado de implementación
 
 T0–T6 implementadas y verificadas. Commits: `59cf139` (T0), `81e8e48` (T1),
-`6921930` (T2), `2d6ac3e` (T3), `cae8af8` (T4), `a4d4e16` (T5), `b071d11` (T6).
+`6921930` (T2), `2d6ac3e` (T3), `cae8af8` (T4), `a4d4e16` (T5), `b071d11` (T6),
+más `7bf4934` (sesiones) y `6046aa9` (UI de sidechain y niveles de master).
 
 | métrica | T0 | final | objetivo | resultado |
 |---|---|---|---|---|
